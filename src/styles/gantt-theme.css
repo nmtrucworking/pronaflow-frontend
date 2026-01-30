@@ -1,0 +1,241 @@
+/**
+ * ENHANCED GANTT CHART STYLES
+ * Custom CSS overrides for gantt-task-react library with theme support
+ */
+
+/* Base container styles */
+.gantt-container {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --gantt-border-color: theme('colors.slate.200');
+  --gantt-header-bg: theme('colors.white');
+  --gantt-row-bg: theme('colors.white');
+  --gantt-row-hover: theme('colors.slate.50');
+  --gantt-text-primary: theme('colors.slate.900');
+  --gantt-text-secondary: theme('colors.slate.600');
+  --gantt-task-bg: theme('colors.blue.500');
+  --gantt-task-progress: theme('colors.blue.600');
+  --gantt-task-border: theme('colors.white');
+}
+
+/* Dark mode overrides */
+.dark .gantt-container {
+  --gantt-border-color: theme('colors.slate.700');
+  --gantt-header-bg: theme('colors.slate.800');
+  --gantt-row-bg: theme('colors.slate.800');
+  --gantt-row-hover: theme('colors.slate.700');
+  --gantt-text-primary: theme('colors.slate.100');
+  --gantt-text-secondary: theme('colors.slate.400');
+  --gantt-task-bg: theme('colors.blue.500');
+  --gantt-task-progress: theme('colors.blue.600');
+  --gantt-task-border: theme('colors.slate.600');
+}
+
+/* Header styles */
+.gantt-container ._2L_y3 {
+  background-color: var(--gantt-header-bg) !important;
+  border-bottom: 1px solid var(--gantt-border-color) !important;
+  color: var(--gantt-text-secondary) !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 12px 8px !important;
+}
+
+/* Task list panel */
+.gantt-container ._2W_9v {
+  background-color: var(--gantt-header-bg) !important;
+  border-right: 1px solid var(--gantt-border-color) !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Row styles */
+.gantt-container ._3_9D1 {
+  border-bottom: 1px solid var(--gantt-border-color) !important;
+  background-color: var(--gantt-row-bg) !important;
+  transition: background-color 0.2s ease;
+}
+
+.gantt-container ._3_9D1:nth-child(even) {
+  background-color: color-mix(in srgb, var(--gantt-row-bg) 95%, var(--gantt-border-color) 5%) !important;
+}
+
+.gantt-container ._3_9D1:hover {
+  background-color: var(--gantt-row-hover) !important;
+}
+
+/* Task text in list */
+.gantt-container ._3_G_S {
+  color: var(--gantt-text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  line-height: 1.4;
+}
+
+/* Task bars */
+.gantt-container ._1n_7C {
+  border-radius: 12px !important;
+  border: 2px solid var(--gantt-task-border) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.gantt-container ._1n_7C:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Progress bars */
+.gantt-container ._1rS_X {
+  font-weight: 800 !important;
+  fill: var(--gantt-text-secondary) !important;
+  font-size: 11px !important;
+}
+
+/* Task handles for resizing */
+.gantt-container ._3qyf6 {
+  background-color: transparent !important;
+  border-radius: 50% !important;
+  width: 8px !important;
+  height: 8px !important;
+  border: 2px solid var(--gantt-task-border) !important;
+}
+
+.gantt-container ._3qyf6:hover {
+  background-color: var(--gantt-task-progress) !important;
+  transform: scale(1.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Grid lines */
+.gantt-container ._20ZBH {
+  stroke: var(--gantt-border-color) !important;
+  stroke-width: 1 !important;
+}
+
+/* Today line */
+.gantt-container ._3FdOk {
+  stroke: theme('colors.red.500') !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: 4 4 !important;
+}
+
+/* Dependency arrows */
+.gantt-container ._2Jtb8 {
+  stroke: theme('colors.slate.400') !important;
+  stroke-width: 2 !important;
+  fill: theme('colors.slate.400') !important;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.gantt-container ._2Jtb8:hover {
+  opacity: 1;
+  stroke: theme('colors.blue.500') !important;
+  fill: theme('colors.blue.500') !important;
+}
+
+/* Calendar header */
+.gantt-container ._2OktW {
+  background-color: var(--gantt-header-bg) !important;
+  border-bottom: 1px solid var(--gantt-border-color) !important;
+  color: var(--gantt-text-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Scrollbar styling */
+.gantt-container ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.gantt-container ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gantt-container ::-webkit-scrollbar-thumb {
+  background: var(--gantt-border-color);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.gantt-container ::-webkit-scrollbar-thumb:hover {
+  background: var(--gantt-text-secondary);
+}
+
+/* Tooltip styles */
+.gantt-container ._2i2jG {
+  display: none !important; /* Hide default tooltip */
+}
+
+/* Selection styles */
+.gantt-container ._1n_7C._3lp_O {
+  outline: 2px solid theme('colors.blue.500') !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Milestone styles */
+.gantt-container ._2yF7S {
+  fill: theme('colors.amber.500') !important;
+  stroke: theme('colors.amber.600') !important;
+  stroke-width: 2 !important;
+}
+
+/* Critical path highlighting */
+.gantt-container ._1n_7C[data-critical="true"] {
+  background: linear-gradient(45deg, theme('colors.red.500'), theme('colors.red.600')) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gantt-container ._2W_9v {
+    width: 200px !important;
+  }
+  
+  .gantt-container ._3_G_S {
+    font-size: 11px !important;
+  }
+  
+  .gantt-container ._2L_y3 {
+    font-size: 9px !important;
+    padding: 8px 4px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gantt-container ._2W_9v {
+    width: 150px !important;
+  }
+  
+  .gantt-container ._1n_7C {
+    border-radius: 8px !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .gantt-container {
+    --gantt-border-color: theme('colors.slate.900');
+    --gantt-text-primary: theme('colors.black');
+    --gantt-text-secondary: theme('colors.slate.700');
+  }
+  
+  .gantt-container ._1n_7C {
+    border: 3px solid theme('colors.black') !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .gantt-container * {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .gantt-container ._1n_7C:hover {
+    transform: none !important;
+  }
+}

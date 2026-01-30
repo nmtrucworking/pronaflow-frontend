@@ -1,0 +1,154 @@
+/* frontend/src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Color Variables */
+  --color-urgent: #EF4444;
+  --color-done: #22C55E;
+  --color-in-progress: #0EA5E9;
+  
+  /* Spacing Variables */
+  --spacing-compact: 0.5rem;
+  --spacing-comfortable: 1rem;
+  
+  /* Typography Variables */
+  --font-size-micro: 0.625rem;      /* 10px */
+  --font-size-caption: 0.6875rem;   /* 11px */
+  --font-size-xs: 0.75rem;          /* 12px */
+  --font-size-sm: 0.875rem;         /* 14px */
+  --font-size-body: 0.9375rem;      /* 15px */
+  --font-size-base: 1rem;           /* 16px */
+  --font-size-subtitle: 1.0625rem;  /* 17px */
+  --font-size-lg: 1.125rem;         /* 18px */
+  --font-size-xl: 1.25rem;          /* 20px */
+  --font-size-2xl: 1.5rem;          /* 24px */
+  --font-size-3xl: 1.875rem;        /* 30px */
+  --font-size-4xl: 2.25rem;         /* 36px */
+  --font-size-5xl: 3rem;            /* 48px */
+  --font-size-6xl: 3.75rem;         /* 60px */
+}
+
+/* Base Layer Customizations */
+@layer base {
+  html {
+    @apply antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-variation-settings: normal;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans text-base leading-6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Typography Reset */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-slate-900 tracking-tight;
+  }
+
+  h1 { @apply text-3xl leading-tight; }
+  h2 { @apply text-2xl leading-tight; }
+  h3 { @apply text-xl leading-snug; }
+  h4 { @apply text-lg leading-snug; }
+  h5 { @apply text-base leading-normal; }
+  h6 { @apply text-sm leading-normal; }
+
+  p {
+    font-size: 0.9375rem;
+    line-height: 1.625;
+  }
+
+  small {
+    @apply text-sm;
+  }
+
+  /* Form Elements */
+  input, textarea, select {
+    @apply text-sm;
+  }
+
+  /* Code Elements */
+  code, kbd, samp {
+    @apply font-mono text-xs;
+  }
+
+  /* Lists */
+  ul, ol {
+    font-size: 0.9375rem;
+    line-height: 1.625;
+  }
+}
+
+/* Component Layer */
+@layer components {
+  /* Typography Utility Classes */
+  .text-display {
+    @apply text-4xl font-bold leading-none tracking-tight;
+  }
+
+  .text-title {
+    @apply text-2xl font-semibold leading-tight tracking-tight;
+  }
+
+  .text-headline {
+    @apply text-xl font-semibold leading-snug tracking-tight;
+  }
+
+  .text-subheading {
+    @apply text-lg font-medium leading-snug;
+  }
+
+  .text-body {
+    font-size: 0.9375rem;
+    line-height: 1.625;
+    letter-spacing: 0;
+  }
+
+  .text-caption {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+  }
+
+  .text-overline {
+    @apply text-xs font-bold uppercase tracking-widest;
+  }
+
+  /* Button Typography */
+  .btn-text {
+    @apply text-sm font-medium leading-none;
+  }
+
+  .btn-text-lg {
+    @apply text-base font-medium leading-none;
+  }
+
+  .btn-text-sm {
+    @apply text-xs font-medium leading-none;
+  }
+
+  /* Form Typography */
+  .label-text {
+    @apply text-sm font-medium text-slate-700;
+  }
+
+  .input-text {
+    @apply text-sm text-slate-900;
+  }
+
+  .helper-text {
+    @apply text-xs text-slate-500;
+  }
+
+  .error-text {
+    @apply text-xs text-red-600 font-medium;
+  }
+}

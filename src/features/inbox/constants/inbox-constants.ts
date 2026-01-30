@@ -1,0 +1,19 @@
+export const NOTIFICATION_FILTERS = {
+  ALL: 'ALL',
+  UNREAD: 'UNREAD',
+  MENTION: 'MENTION',
+} as const;
+
+export const NOTIFICATION_TYPES = {
+  TASK_ASSIGNED: 'TASK_ASSIGNED',
+  MENTION: 'MENTION',
+  DUE_SOON: 'DUE_SOON',
+  SYSTEM_ALERT: 'SYSTEM_ALERT',
+  COMMENT_REPLY: 'COMMENT_REPLY',
+} as const;
+
+export const NOTIFICATION_PRIORITIES = {
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  LOW: 'LOW',
+} as const;
