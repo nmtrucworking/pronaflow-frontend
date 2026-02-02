@@ -26,6 +26,13 @@ import { workspaceRoutes } from './features/workspace';
 import { TrashPage } from './features/trash';
 import { ArchivedPage } from './features/archived';
 
+// Import Integration Pages (Module 12)
+import IntegrationsPage from './features/integrations/pages/IntegrationsPage';
+import ApiTokensPage from './features/integrations/pages/ApiTokensPage';
+import WebhooksPage from './features/integrations/pages/WebhooksPage';
+import ConnectedAppsPage from './features/integrations/pages/ConnectedAppsPage';
+import PluginMarketplacePage from './features/integrations/pages/PluginMarketplacePage';
+
 // Import Error Pages
 import { Error404Page, Error500Page } from './features/error';
 
@@ -62,6 +69,12 @@ const router = createBrowserRouter([
       { path: 'workspace-settings', element: <WorkspaceSetting /> },
       { path: 'members' , element: <WorkspaceMemberPage /> },
       { path: 'archive', element: <ArchivedPage /> },
+      // Integration routes (Module 12)
+      { path: 'integrations', element: <IntegrationsPage /> },
+      { path: 'integrations/api-tokens', element: <ApiTokensPage /> },
+      { path: 'integrations/webhooks', element: <WebhooksPage /> },
+      { path: 'integrations/connected-apps', element: <ConnectedAppsPage /> },
+      { path: 'integrations/plugins', element: <PluginMarketplacePage /> },
       // Workspace routes
       ...workspaceRoutes,
       // Điều hướng mặc định nếu vào /

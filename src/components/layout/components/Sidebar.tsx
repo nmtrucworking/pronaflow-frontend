@@ -3,7 +3,7 @@ import {
   ChevronLeft, ChevronDown, LayoutDashboard, CheckCircle2,
   Calendar, Inbox, Activity, Star, Folder,
   GanttChart, Users, Archive, Trash2, Megaphone,
-  LifeBuoy, Search, PlusCircle, Settings,
+  LifeBuoy, Search, PlusCircle, Settings, Plug,
   User, Sliders, Moon, LogOut, Check, MoreHorizontal
 } from 'lucide-react';
 import { NavLink, Link } from 'react-router-dom';
@@ -46,6 +46,7 @@ const NAVIGATION_DATA: SectionData[] = [
       { id: 'inbox', label: 'Hộp thư đến', icon: Inbox, badge: 12, badgeType: 'count', path: '/inbox' },
       { id: 'workspaces', label: 'Workspaces', icon: Sliders, path: '/workspaces' },
       { id: 'settings-over', label: 'Workspace Settings', icon: Activity, path: '/workspace-settings' },
+      { id: 'integrations', label: 'Integrations', icon: Plug, path: '/integrations', badgeType: 'new' },
     ]
   },
   {
