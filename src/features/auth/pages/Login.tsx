@@ -1,296 +1,304 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import * as Label from '@radix-ui/react-label';
-import * as Checkbox from '@radix-ui/react-checkbox';
-import {
-  LogIn,
-  Loader2,
-  Github,
-  Mail,
-  Eye,
-  EyeOff,
-  Check,
-  Sun,
-  Moon,
-  ChevronRight,
-  ShieldCheck
-} from 'lucide-react';
-
 /**
- * PronaFlow Login Page Component
- * Framework: React 18+
- * Styling: Tailwind CSS
- * Primitives: Radix UI
+ * Login Page Component
+ * Module 1: Identity and Access Management
  */
 
-const logo = "/branding/logo-dark.svg";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useLogin, useMFA } from '@/hooks/useAuth';
+import authService from '@/services/authService';
+import { LogIn, Loader2, Github, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
-const App = () => {
-  // --- State Management ---
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+interface LoginState {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+  errors: Record<string, string>;
+  accountLocked: boolean;
+  lockoutTimeRemaining: number;
+}
+
+interface MFAState {
+  totpCode: string;
+  error: string | null;
+  isVerifying: boolean;
+}
+
+const Login = () => {
+  const navigate = useNavigate();
+  const { login, isLoading, error } = useLogin();
+  const { verifyMFACode, isLoading: isMFALoading, error: mfaError } = useMFA();
+
+  const [loginState, setLoginState] = useState<LoginState>({
+    email: '',
+    password: '',
+    rememberMe: false,
+    errors: {},
+    accountLocked: false,
+    lockoutTimeRemaining: 0,
+  });
+
+  const [mfaState, setMfaState] = useState<MFAState>({
+    totpCode: '',
+    error: null,
+    isVerifying: false,
+  });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [error, setError] = useState('');
+  const [showMFAModal, setShowMFAModal] = useState(false);
 
-  // Giả lập xử lý đăng nhập
-  const handleLogin = (e: { preventDefault: () => void; }) => {
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!loginState.email) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(loginState.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    if (!loginState.password || loginState.password.length < 8) {
+      newErrors.password = 'Password is required';
+    }
+    setLoginState((prev) => ({ ...prev, errors: newErrors }));
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.currentTarget;
+    setLoginState((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+      errors: { ...prev.errors, [name]: '' },
+    }));
+  };
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
+    if (!validateForm() || loginState.accountLocked) return;
 
-    // Validation cơ bản
-    if (!email.includes('@')) {
-      setError('Vui lòng nhập địa chỉ email hợp lệ.');
+    const result = await login({
+      email: loginState.email,
+      password: loginState.password,
+    });
+
+    if (result.success && !result.mfaRequired) {
+      if (loginState.rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('rememberedEmail', loginState.email);
+      }
+      navigate('/dashboard');
+    } else if (result.mfaRequired) {
+      setShowMFAModal(true);
+      authService.setTokens('', '');
+    }
+  };
+
+  const handleMFASubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!mfaState.totpCode || mfaState.totpCode.length !== 6) {
+      setMfaState((prev) => ({ ...prev, error: 'TOTP code must be 6 digits' }));
       return;
     }
 
-    setIsLoading(true);
-    // Giả lập API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Logic điều hướng sau khi đăng nhập thành công sẽ ở đây
-      console.log("Logged in with:", { email, password });
-    }, 2000);
+    setMfaState((prev) => ({ ...prev, isVerifying: true }));
+    const result = await verifyMFACode({
+      email: loginState.email,
+      totp_code: mfaState.totpCode,
+    });
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setMfaState((prev) => ({ ...prev, error: result.error || 'MFA verification failed' }));
+    }
+    setMfaState((prev) => ({ ...prev, isVerifying: false }));
   };
 
-  // --- Theme Toggle Logic (Module 9) ---
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+  const handleSocialLogin = (provider: 'google' | 'github') => {
+    window.location.href = `/api/v1/auth/oauth/${provider}`;
   };
 
   return (
-    <div className={`${isDarkMode ? 'dark' : ''} transition-colors duration-300`}>
-      <div className="min-h-screen grid lg:grid-cols-2 bg-background text-foreground font-sans selection:bg-primary/30">
-
-        {/* --- PHẦN TRÁI: BRANDING & VISUALS (Chỉ hiện trên Desktop) --- */}
-        <div className="hidden lg:flex relative flex-col justify-between p-12 overflow-hidden bg-slate-900">
-          {/* Background Wallpaper với hiệu ứng Overlay */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80"
-              alt="PronaFlow Workspace"
-              className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-slate-900/90" />
-          </div>
-
-          {/* Logo Section, which is button access landing page*/}
-          <Link
-            to="/"
-            className='relative z-10 flex items-center gap-3'>
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <img
-                src={logo}
-                alt="PronaFlow Logo"
-                className='w-10 h-10' />
-            </div>
-            <span className="text-2xl font-bold tracking-tighter text-white">PronaFlow</span>
-          </Link>
-
-          {/* Marketing Copy */}
-          <div className="relative z-10 space-y-6 max-w-md">
-            <h1 className="text-5xl font-extrabold text-white leading-tight">
-              Quản trị thông minh.<br />
-              <span className="text-primary-foreground/60">Cộng tác không giới hạn.</span>
-            </h1>
-            <p className="text-slate-300 text-lg leading-relaxed">
-              Hệ thống điều phối dự án thế hệ mới tích hợp AI giúp đội ngũ của bạn đạt hiệu suất tối ưu 40% ngay từ tháng đầu tiên.
-            </p>
-
-            {/* Social Proof Placeholder */}
-            <div className="flex items-center gap-4 pt-4">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-700 flex items-center justify-center text-[10px] text-white">
-                    U{i}
-                  </div>
-                ))}
-              </div>
-              <span className="text-sm text-slate-400 font-medium">+2,500 tổ chức tin dùng</span>
-            </div>
-          </div>
-
-          {/* Footer Copy */}
-          <div className="relative z-10 text-slate-500 text-sm">
-            © 2024 PronaFlow Inc. Hệ thống đạt chuẩn ISO/IEC 27001.
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">Sign in to PronaFlow</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Create one
+            </Link>
+          </p>
         </div>
 
-        {/* --- PHẦN PHẢI: AUTHENTICATION FORM --- */}
-        <div className="flex flex-col items-center justify-center p-6 sm:p-12 lg:p-20 relative bg-white dark:bg-slate-950">
-
-          {/* Theme Toggle Button (Góc trên phải) */}
-          <button
-            onClick={toggleTheme}
-            className="absolute top-8 right-8 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Chuyển chế độ sáng/tối"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-slate-600" />}
-          </button>
-
-          <div className="w-full max-w-[400px] space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
-            {/* Header Form */}
-            <div className="space-y-2 text-center lg:text-left">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Chào mừng trở lại</h2>
-              <p className="text-slate-500 dark:text-slate-400">Đăng nhập để quản lý dự án của bạn ngay hôm nay.</p>
-            </div>
-
-            {/* Social Login Buttons (Module 1 - AuthProvider) */}
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 h-11 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all font-medium text-sm">
-                <Mail className="w-4 h-4 text-red-500" /> Google
-              </button>
-              <button className="flex items-center justify-center gap-2 h-11 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all font-medium text-sm">
-                <Github className="w-4 h-4 dark:text-white" /> GitHub
-              </button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t dark:border-slate-800" /></div>
-              <div className="relative flex justify-center text-[10px] uppercase">
-                <span className="bg-white dark:bg-slate-950 px-4 text-slate-400 font-bold tracking-widest">Hoặc email công việc</span>
+        {!showMFAModal ? (
+          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm font-medium text-red-800">{error}</div>
               </div>
-            </div>
+            )}
 
-            {/* Main Form */}
-            <form onSubmit={handleLogin} className="space-y-5">
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label.Root
-                  className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1"
-                  htmlFor="email"
-                >
-                  Địa chỉ Email
-                </Label.Root>
-                <div className="relative group">
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="w-full h-11 px-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
-                  />
+            {loginState.accountLocked && (
+              <div className="rounded-md bg-yellow-50 p-4">
+                <div className="text-sm font-medium text-yellow-800">
+                  Account locked. Try again in {loginState.lockoutTimeRemaining} min.
                 </div>
               </div>
+            )}
 
-              {/* Password Field */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between ml-1">
-                  <Label.Root className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="password">Mật khẩu</Label.Root>
-                  <Link to="/help/contact" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">Quên mật khẩu?</Link>
-                </div>
-                <div className="relative group">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full h-11 px-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 text-xs font-medium animate-shake">
-                  {error}
-                </div>
-              )}
-
-              {/* Remember Me */}
-              <div className="flex items-center gap-2 ml-1">
-                <Checkbox.Root
-                  id="remember"
-                  className="w-4 h-4 rounded border border-slate-300 dark:border-slate-700 bg-transparent flex items-center justify-center data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors focus:ring-2 focus:ring-primary/20 outline-none"
-                >
-                  <Checkbox.Indicator className="text-white">
-                    <Check className="w-3 h-3 stroke-[3px]" />
-                  </Checkbox.Indicator>
-                </Checkbox.Root>
-                <label htmlFor="remember" className="text-sm text-slate-600 dark:text-slate-400 select-none cursor-pointer">Ghi nhớ đăng nhập</label>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={loginState.email}
+                onChange={handleInputChange}
+                className={`mt-1 block w-full px-3 py-2 border rounded-md ${
+                  loginState.errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="your@email.com"
                 disabled={isLoading}
-                className="w-full h-11 bg-primary text-white rounded-lg font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:translate-y-0 disabled:shadow-none"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Đang xác thực...
-                  </>
-                ) : (
-                  <>
-                    Tiếp tục <ChevronRight className="w-4 h-4" />
-                  </>
-                )}
-                {/* Btn name */}
-                <span>Đăng nhập</span>
-              </button>
-            </form>
+              />
+              {loginState.errors.email && <p className="mt-1 text-sm text-red-600">{loginState.errors.email}</p>}
+            </div>
 
-            {/* Footer Form */}
-            <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-              Chưa có tài khoản?{' '}
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
-              >
-                <span className='text-primary'>Đăng ký ngay</span>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={loginState.password}
+                  onChange={handleInputChange}
+                  className={`mt-1 block w-full px-3 py-2 pr-10 border rounded-md ${
+                    loginState.errors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="••••••••"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+                </button>
+              </div>
+              {loginState.errors.password && <p className="mt-1 text-sm text-red-600">{loginState.errors.password}</p>}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="rememberMe"
+                  name="rememberMe"
+                  type="checkbox"
+                  checked={loginState.rememberMe}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-indigo-600"
+                />
+                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">Remember me</label>
+              </div>
+              <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                Forgot password?
               </Link>
-            </p>
-          </div>
+            </div>
 
-          {/* Accessibility Info (Small) */}
-          <div className="absolute bottom-8 text-[10px] text-slate-400 text-center max-w-[300px]">
-            Bằng cách đăng nhập, bạn đồng ý với{' '}
-            <Link to="/help/terms" className="text-slate-500 hover:text-slate-700 underline">Điều khoản dịch vụ</Link>{' '}
-            và{' '}
-            <Link to="/help/privacy" className="text-slate-500 hover:text-slate-700 underline">Chính sách quyền riêng tư</Link>{' '}
-            của chúng tôi.
-          </div>
-        </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
 
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin('google')}
+                  className="w-full py-2 px-4 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin('github')}
+                  className="w-full py-2 px-4 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 flex items-center justify-center"
+                >
+                  <Github className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <form className="mt-8 space-y-6" onSubmit={handleMFASubmit}>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-6 h-6 text-indigo-600" />
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Enter 2FA Code</h3>
+                <p className="text-sm text-gray-600">Enter the 6-digit code from your authenticator app</p>
+              </div>
+            </div>
+
+            {(mfaError || mfaState.error) && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm font-medium text-red-800">{mfaError || mfaState.error}</div>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="totpCode" className="block text-sm font-medium text-gray-700">Code</label>
+              <input
+                id="totpCode"
+                type="text"
+                maxLength={6}
+                inputMode="numeric"
+                value={mfaState.totpCode}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  setMfaState((prev) => ({ ...prev, totpCode: value, error: null }));
+                }}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-center text-2xl tracking-widest"
+                placeholder="000000"
+                disabled={isMFALoading}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isMFALoading}
+              className="w-full py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {isMFALoading ? 'Verifying...' : 'Verify'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowMFAModal(false)}
+              className="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Back
+            </button>
+          </form>
+        )}
       </div>
-
-      {/* Global CSS for Animations */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
-        
-        :root {
-          --primary: #3B82F6;
-          --background: #FFFFFF;
-          --foreground: #0F172A;
-        }
-        .dark {
-          --primary: #60A5FA;
-          --background: #020617;
-          --foreground: #F8FAFC;
-        }
-      `}} />
     </div>
   );
 };
 
-export default App;
+export default Login;
