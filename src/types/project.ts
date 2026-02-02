@@ -92,3 +92,193 @@ export interface ProjectSettings {
   allow_file_uploads: boolean;
   default_task_status: string;
 }
+
+// ========================================================================
+// Project Templates
+// ========================================================================
+
+export interface ProjectTemplate {
+  template_id: string;
+  name: string;
+  description?: string;
+  structure?: Record<string, any>;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+  is_public?: boolean;
+}
+
+export interface CreateTemplateDTO {
+  name: string;
+  description?: string;
+  structure?: Record<string, any>;
+  is_public?: boolean;
+}
+
+export interface UpdateTemplateDTO {
+  name?: string;
+  description?: string;
+  structure?: Record<string, any>;
+  is_public?: boolean;
+}
+
+// ========================================================================
+// Change Requests
+// ========================================================================
+
+export type ChangeRequestStatus = 'pending' | 'approved' | 'rejected' | 'implemented';
+
+export interface ChangeRequest {
+  change_request_id: string;
+  project_id: string;
+  title: string;
+  description: string;
+  scope: string;
+  impact_analysis: string;
+  status: ChangeRequestStatus;
+  requested_changes: Record<string, any>;
+  created_by: string;
+  created_at: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  reviewer_notes?: string;
+}
+
+export interface CreateChangeRequestDTO {
+  title: string;
+  description: string;
+  scope: string;
+  impact_analysis: string;
+  requested_changes: Record<string, any>;
+}
+
+export interface UpdateChangeRequestDTO {
+  title?: string;
+  description?: string;
+  scope?: string;
+  impact_analysis?: string;
+  requested_changes?: Record<string, any>;
+}
+
+export interface ApproveChangeRequestDTO {
+  approved: boolean;
+  reviewer_notes?: string;
+}
+
+// ========================================================================
+// Project Metrics & Health
+// ========================================================================
+
+export type HealthStatus = 'green' | 'amber' | 'red';
+
+export interface ScheduleHealth {
+  status: string;
+  progress: number;
+  on_track: boolean;
+  days_remaining?: number;
+  days_overdue?: number;
+}
+
+export interface BudgetHealth {
+  status: string;
+  spent_percentage: number;
+  spent: number;
+  total_budget: number;
+  remaining: number;
+}
+
+export interface ResourceHealth {
+  status: string;
+  utilization: number;
+  allocated_resources: number;
+  available_resources: number;
+}
+
+export interface ProjectMetricsDetail {
+  schedule_health: ScheduleHealth;
+  budget_health: BudgetHealth;
+  resource_health: ResourceHealth;
+}
+
+export interface ProjectMetrics {
+  project_id: string;
+  health_status: HealthStatus;
+  metrics: ProjectMetricsDetail;
+  last_updated: string;
+}
+
+// ========================================================================
+// Project Member DTOs
+// ========================================================================
+
+export interface AddProjectMemberDTO {
+  user_id: string;
+  role: ProjectMemberRole;
+}
+
+export interface UpdateProjectMemberDTO {
+  role: ProjectMemberRole;
+}
+
+export interface AddMultipleMembersDTO {
+  members: Array<{
+    user_id: string;
+    role: ProjectMemberRole;
+  }>;
+}
+
+// ========================================================================
+// Project Status Update
+// ========================================================================
+
+export interface UpdateProjectStatusDTO {
+  status: ProjectStatus;
+  completion_date?: string;
+  notes?: string;
+}
+
+// ========================================================================
+// Project Clone
+// ========================================================================
+
+export interface CloneProjectDTO {
+  new_name: string;
+  copy_tasks?: boolean;
+  copy_members?: boolean;
+  copy_files?: boolean;
+  workspace_id?: string;
+}
+
+// ========================================================================
+// List Responses
+// ========================================================================
+
+export interface ProjectListResponse {
+  projects: Project[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
+export interface TemplateListResponse {
+  templates: ProjectTemplate[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
+export interface ChangeRequestListResponse {
+  change_requests: ChangeRequest[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+  };
+}
