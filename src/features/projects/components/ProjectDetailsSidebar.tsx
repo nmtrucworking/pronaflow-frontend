@@ -28,14 +28,9 @@ export default function ProjectDetailsSidebar({
   ];
 
   return (
-    <div 
-      className={cn(
-        "fixed top-0 right-0 h-full w-[900px] bg-white border-l border-slate-200 shadow-xl z-40 transition-transform duration-300 ease-out flex flex-col",
-        isOpen ? "translate-x-0" : "translate-x-full"
-      )}
-    >
+    <div className="h-full bg-white flex flex-col overflow-hidden">
       {/* Sidebar Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50 flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50 flex-shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={onFullPage}

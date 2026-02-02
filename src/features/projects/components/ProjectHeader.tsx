@@ -20,7 +20,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   onCreateClick,
 }) => {
   return (
-    <header className="px-6 py-6 bg-gradient-to-b from-white to-slate-50 border-b border-slate-200 sticky top-0 z-30 backdrop-blur-sm shadow-sm">
+    <header className="px-6 py-6 bg-gradient-to-b from-white to-slate-50 border-b border-slate-200 flex-shrink-0 z-10">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="animate-in fade-in slide-in-from-left-4 duration-500">

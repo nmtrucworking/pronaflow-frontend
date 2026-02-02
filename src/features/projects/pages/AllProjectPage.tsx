@@ -58,59 +58,59 @@ export const AllProjectsPage: React.FC = () => {
 
   // Render main layout
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100">
-      {/* Header */}
-      <ProjectHeader
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onFilterClick={() => {
-          // TODO: Open filter modal
-        }}
-        onCreateClick={() => {
-          // TODO: Open create modal
-        }}
-      />
+    <ProjectLayout
+      selectedProject={selectedProject}
+      showSidebar={showSidebar}
+      onCloseSidebar={closeSidebar}
+      onOpenFullPage={openFullPage}
+    >
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Header */}
+        <ProjectHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onFilterClick={() => {
+            // TODO: Open filter modal
+          }}
+          onCreateClick={() => {
+            // TODO: Open create modal
+          }}
+        />
 
-      {/* Quick Stats Bar */}
-      <div className="hidden md:flex gap-8 px-6 py-4 bg-white border-b border-slate-200 sticky top-20 z-20">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-indigo-600">{stats.total}</span>
-          <span className="text-sm text-slate-600">Tổng dự án</span>
+        {/* Quick Stats Bar */}
+        <div className="hidden md:flex gap-8 px-6 py-4 bg-white border-b border-slate-200 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold text-indigo-600">{stats.total}</span>
+            <span className="text-sm text-slate-600">Tổng dự án</span>
+          </div>
+          <div className="w-px h-6 bg-slate-200" />
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold text-blue-600">{stats.active}</span>
+            <span className="text-sm text-slate-600">Đang hoạt động</span>
+          </div>
+          <div className="w-px h-6 bg-slate-200" />
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold text-emerald-600">{stats.completed}</span>
+            <span className="text-sm text-slate-600">Đã hoàn thành</span>
+          </div>
+          <div className="w-px h-6 bg-slate-200" />
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold text-slate-600">{stats.archived}</span>
+            <span className="text-sm text-slate-600">Lưu trữ</span>
+          </div>
         </div>
-        <div className="w-px h-6 bg-slate-200" />
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-blue-600">{stats.active}</span>
-          <span className="text-sm text-slate-600">Đang hoạt động</span>
-        </div>
-        <div className="w-px h-6 bg-slate-200" />
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-emerald-600">{stats.completed}</span>
-          <span className="text-sm text-slate-600">Đã hoàn thành</span>
-        </div>
-        <div className="w-px h-6 bg-slate-200" />
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-bold text-slate-600">{stats.archived}</span>
-          <span className="text-sm text-slate-600">Lưu trữ</span>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <ProjectLayout
-        selectedProject={selectedProject}
-        showSidebar={showSidebar}
-        onCloseSidebar={closeSidebar}
-        onOpenFullPage={openFullPage}
-      >
+        {/* Main Content */}
         <ProjectList
           projects={filteredProjects}
           viewMode={viewMode}
           onProjectClick={selectProject}
           isEmpty={filteredProjects.length === 0}
         />
-      </ProjectLayout>
-    </div>
+      </div>
+    </ProjectLayout>
   );
 };
 
