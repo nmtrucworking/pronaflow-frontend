@@ -7,6 +7,8 @@ import {
   User, Sliders, Moon, LogOut, Check, MoreHorizontal
 } from 'lucide-react';
 import { NavLink, Link } from 'react-router-dom';
+import * as Popover from '@radix-ui/react-popover';
+import * as Tooltip from '@radix-ui/react-tooltip';
 
 /** * ĐỊNH NGHĨA TYPES & INTERFACES 
  * Đảm bảo tính minh bạch về kiểu dữ liệu và ngăn chặn lỗi runtime.
@@ -103,7 +105,6 @@ export default function App({
 }) {
   const [currentPath, setCurrentPath] = useState<string>(activePath);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [activePopover, setActivePopover] = useState<'workspace' | 'user' | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     overview: true,
     favorites: true,
@@ -112,7 +113,6 @@ export default function App({
     admin: true
   });
 
-  const sidebarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Update currentPath when activePath prop changes
@@ -120,20 +120,8 @@ export default function App({
     setCurrentPath(activePath);
   }, [activePath]);
 
-  // Xử lý sự kiện đóng popover khi click ra ngoài vùng chứa
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        setActivePopover(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const toggleSidebar = () => {
     setIsCollapsed(prev => !prev);
-    setActivePopover(null); // Đảm bảo đóng popover khi thay đổi kích thước sidebar
   };
 
   const toggleSection = (id: string) => {
@@ -174,29 +162,33 @@ export default function App({
         </button>
 
         {/* 1. Header: Thông tin Workspace */}
-        <header
-          className="relative h-16 px-4 flex items-center justify-between border-b border-slate-200 cursor-pointer hover:bg-slate-200/50 transition-colors group"
-          onClick={() => !isCollapsed && setActivePopover(activePopover === 'workspace' ? null : 'workspace')}
-        >
-          <div className="flex items-center gap-2 overflow-hidden w-full">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white flex items-center justify-center font-bold text-lg shadow-blue-200/50 shadow-md flex-shrink-0">
-              P
-            </div>
-            {!isCollapsed && (
-              <div className="flex flex-col overflow-hidden whitespace-nowrap flex-1">
-                <span className="font-semibold text-[15px] leading-tight truncate">PronaFlow Corp</span>
-                <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Enterprise Plan</span>
+        <header className="relative h-16 px-4 flex items-center justify-between border-b border-slate-200">
+          {!isCollapsed ? (
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button
+                  className="flex items-center gap-2 overflow-hidden w-full cursor-pointer hover:bg-slate-200/50 transition-colors group rounded-md px-2 py-1.5 -mx-2"
+                  aria-label="Switch workspace"
+                >
+                  <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white flex items-center justify-center font-bold text-lg shadow-blue-200/50 shadow-md flex-shrink-0">
+                    P
+                  </div>
+                  <div className="flex flex-col overflow-hidden whitespace-nowrap flex-1">
+                    <span className="font-semibold text-[15px] leading-tight truncate">PronaFlow Corp</span>
+                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Enterprise Plan</span>
+                  </div>
+                  <Popover.Anchor />
+                  <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
+                </button>
+              </Popover.Trigger>
+              <WorkspacePopover />
+            </Popover.Root>
+          ) : (
+            <RadixTooltip text="PronaFlow Corp">
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white flex items-center justify-center font-bold text-lg shadow-blue-200/50 shadow-md flex-shrink-0">
+                P
               </div>
-            )}
-            {!isCollapsed && (
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${activePopover === 'workspace' ? 'rotate-180' : ''}`} />
-            )}
-          </div>
-          {isCollapsed && <Tooltip text="PronaFlow Corp" />}
-
-          {/* Workspace Popover */}
-          {!isCollapsed && activePopover === 'workspace' && (
-            <WorkspacePopover onClose={() => setActivePopover(null)} />
+            </RadixTooltip>
           )}
         </header>
 
@@ -277,54 +269,86 @@ export default function App({
         {/* 4. Footer Section */}
         <footer className="mt-auto border-t border-slate-200 p-3 bg-slate-50/80 space-y-1">
           {/* Thông báo hệ thống */}
-          <NavLink
-            to="/inbox"
-            className="w-full flex items-center gap-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 hover:bg-green-100 transition-colors group relative overflow-hidden"
-          >
-            <Megaphone className="w-4 h-4 flex-shrink-0" />
-            {!isCollapsed && <span className="text-[13px] font-medium whitespace-nowrap truncate">Maintenance at 22:00</span>}
-            {isCollapsed && <Tooltip text="Maintenance: 22:00" />}
-          </NavLink>
+          {!isCollapsed ? (
+            <NavLink
+              to="/inbox"
+              className="w-full flex items-center gap-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 hover:bg-green-100 transition-colors group relative overflow-hidden"
+            >
+              <Megaphone className="w-4 h-4 flex-shrink-0" />
+              <span className="text-[13px] font-medium whitespace-nowrap truncate">Maintenance at 22:00</span>
+            </NavLink>
+          ) : (
+            <RadixTooltip text="Maintenance: 22:00">
+              <NavLink
+                to="/inbox"
+                className="w-full flex items-center justify-center p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
+              >
+                <Megaphone className="w-4 h-4 flex-shrink-0" />
+              </NavLink>
+            </RadixTooltip>
+          )}
 
           {/* Trợ giúp */}
-          <NavLink
-            to="/help"
-            className="w-full flex items-center gap-3 p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all group relative"
-          >
-            <LifeBuoy className="w-5 h-5 flex-shrink-0" />
-            {!isCollapsed && <span className="text-[14px] font-medium whitespace-nowrap">Help & Support</span>}
-            {isCollapsed && <Tooltip text="Help & Support" />}
-          </NavLink>
+          {!isCollapsed ? (
+            <NavLink
+              to="/help"
+              className="w-full flex items-center gap-3 p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all group relative"
+            >
+              <LifeBuoy className="w-5 h-5 flex-shrink-0" />
+              <span className="text-[14px] font-medium whitespace-nowrap">Help & Support</span>
+            </NavLink>
+          ) : (
+            <RadixTooltip text="Help & Support">
+              <NavLink
+                to="/help"
+                className="w-full flex items-center justify-center p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all"
+              >
+                <LifeBuoy className="w-5 h-5 flex-shrink-0" />
+              </NavLink>
+            </RadixTooltip>
+          )}
 
           {/* Thông tin người dùng */}
-          <div
-            className="relative flex items-center gap-3 p-2 rounded-lg hover:bg-slate-200 cursor-pointer group transition-colors"
-            onClick={() => !isCollapsed && setActivePopover(activePopover === 'user' ? null : 'user')}
-          >
-            <div className="relative flex-shrink-0">
-              <img
-                src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random"
-                className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
-                alt="Profile"
-              />
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
-            </div>
-            {!isCollapsed && (
-              <>
-                <div className="flex-1 overflow-hidden">
-                  <span className="block text-sm font-semibold truncate leading-tight">Nguyễn Văn A</span>
-                  <span className="block text-xs text-slate-500 truncate">nguyena@pronaflow.com</span>
+          {!isCollapsed ? (
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button
+                  className="relative flex items-center gap-3 p-2 rounded-lg hover:bg-slate-200 cursor-pointer group transition-colors w-full"
+                  aria-label="Account settings"
+                >
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random"
+                      className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
+                      alt="Profile"
+                    />
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <span className="block text-sm font-semibold truncate leading-tight">Nguyễn Văn A</span>
+                    <span className="block text-xs text-slate-500 truncate">nguyena@pronaflow.com</span>
+                  </div>
+                  <Popover.Anchor />
+                  <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+                </button>
+              </Popover.Trigger>
+              <UserPopover />
+            </Popover.Root>
+          ) : (
+            <RadixTooltip text="Account Settings">
+              <div className="relative flex items-center justify-center p-2">
+                <div className="relative flex-shrink-0">
+                  <img
+                    src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random"
+                    className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
+                    alt="Profile"
+                  />
+                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
-                <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
-              </>
-            )}
-            {isCollapsed && <Tooltip text="Account Settings" />}
-
-            {/* User Popover */}
-            {!isCollapsed && activePopover === 'user' && (
-              <UserPopover onClose={() => setActivePopover(null)} />
-            )}
-          </div>
+              </div>
+            </RadixTooltip>
+          )}
+        </footer>
         </footer>
       </aside>
 
@@ -397,20 +421,38 @@ function NavItem({
         </span>
       )}
 
-      {isCollapsed && <Tooltip text={data.label} />}
+      {isCollapsed && (
+        <RadixTooltip text={data.label}>
+          <span className="absolute inset-0" />
+        </RadixTooltip>
+      )}
     </button>
   );
 }
 
 /**
- * COMPONENT PHỤ: TOOLTIP
+ * COMPONENT PHỤ: RADIX TOOLTIP
+ * Sử dụng Radix UI Tooltip với hỗ trợ đầy đủ keyboard navigation
  */
-function Tooltip({ text }: { text: string }) {
+function RadixTooltip({ text, children }: { text: string; children: React.ReactNode }) {
   return (
-    <div className="absolute left-full ml-3 px-2 py-1 bg-slate-800 text-white text-[11px] font-medium rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-[60]">
-      {text}
-      <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-[4px] border-transparent border-r-slate-800" />
-    </div>
+    <Tooltip.Provider delayDuration={300}>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          {children}
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            side="right"
+            sideOffset={8}
+            className="px-2 py-1 bg-slate-800 text-white text-[11px] font-medium rounded shadow-lg whitespace-nowrap z-[60] data-[state=delayed-open]:data-[side=right]:animate-in data-[state=delayed-open]:data-[side=right]:fade-in-0 data-[state=delayed-open]:data-[side=right]:slide-in-from-left-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+          >
+            {text}
+            <Tooltip.Arrow className="fill-slate-800" />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
   );
 }
 
@@ -427,77 +469,98 @@ function StatusDot({ color, className }: { color: string; className?: string }) 
 }
 
 /**
- * COMPONENT PHỤ: WORKSPACE POPOVER
+ * COMPONENT PHỤ: WORKSPACE POPOVER (Radix UI)
+ * Hỗ trợ đầy đủ keyboard navigation và WCAG 2.1
  */
-function WorkspacePopover({ onClose }: { onClose: () => void }) {
+function WorkspacePopover() {
   return (
-    <div className="absolute top-16 left-3 right-3 bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] p-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-      <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Switch Workspace</div>
-      <Link
-        to="/workspaces"
-        onClick={onClose}
-        className="w-full flex items-center gap-3 p-2 bg-blue-50/50 text-blue-700 rounded-lg cursor-pointer border border-blue-100/50"
+    <Popover.Portal>
+      <Popover.Content
+        side="bottom"
+        align="start"
+        sideOffset={8}
+        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="w-6 h-6 bg-blue-600 rounded text-white text-[10px] flex items-center justify-center font-bold">P</div>
-        <span className="text-sm font-semibold flex-1 text-left">PronaFlow Corp</span>
-        <Check className="w-4 h-4" />
-      </Link>
-      <Link
-        to="/workspaces"
-        onClick={onClose}
-        className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-600 transition-colors mt-1"
-      >
-        <div className="w-6 h-6 bg-slate-400 rounded text-white text-[10px] flex items-center justify-center font-bold">M</div>
-        <span className="text-sm font-medium flex-1 text-left">My Freelance</span>
-      </Link>
-      <div className="h-px bg-slate-100 my-1.5" />
-      <Link
-        to="/workspaces"
-        onClick={onClose}
-        className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium"
-      >
-        <PlusCircle className="w-4 h-4 text-slate-400" /> Create Workspace
-      </Link>
-      <Link
-        to="/workspace-settings"
-        onClick={onClose}
-        className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium"
-      >
-        <Settings className="w-4 h-4 text-slate-400" /> Workspace Settings
-      </Link>
-    </div>
+        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Switch Workspace</div>
+        <Popover.Close asChild>
+          <Link
+            to="/workspaces"
+            className="w-full flex items-center gap-3 p-2 bg-blue-50/50 text-blue-700 rounded-lg cursor-pointer border border-blue-100/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            <div className="w-6 h-6 bg-blue-600 rounded text-white text-[10px] flex items-center justify-center font-bold">P</div>
+            <span className="text-sm font-semibold flex-1 text-left">PronaFlow Corp</span>
+            <Check className="w-4 h-4" />
+          </Link>
+        </Popover.Close>
+        <Popover.Close asChild>
+          <Link
+            to="/workspaces"
+            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-600 transition-colors mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            <div className="w-6 h-6 bg-slate-400 rounded text-white text-[10px] flex items-center justify-center font-bold">M</div>
+            <span className="text-sm font-medium flex-1 text-left">My Freelance</span>
+          </Link>
+        </Popover.Close>
+        <div className="h-px bg-slate-100 my-1.5" />
+        <Popover.Close asChild>
+          <Link
+            to="/workspaces"
+            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            <PlusCircle className="w-4 h-4 text-slate-400" /> Create Workspace
+          </Link>
+        </Popover.Close>
+        <Popover.Close asChild>
+          <Link
+            to="/workspace-settings"
+            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          >
+            <Settings className="w-4 h-4 text-slate-400" /> Workspace Settings
+          </Link>
+        </Popover.Close>
+      </Popover.Content>
+    </Popover.Portal>
   );
 }
 
 /**
- * COMPONENT PHỤ: USER POPOVER
+ * COMPONENT PHỤ: USER POPOVER (Radix UI)
+ * Hỗ trợ đầy đủ keyboard navigation và WCAG 2.1
  */
-function UserPopover({ onClose }: { onClose: () => void }) {
+function UserPopover() {
   return (
-    <div className="absolute bottom-full left-0 right-0 mb-3 bg-white border border-slate-200 rounded-xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] p-1 z-50 animate-in fade-in slide-in-from-bottom-2 duration-100">
-      <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Account</div>
-      <div className="space-y-0.5">
-        {[
-          { icon: User, label: 'Profile & Status', to: '/account-settings' },
-          { icon: Sliders, label: 'Preferences', to: '/settings' },
-          { icon: Moon, label: 'Dark Mode', to: '/settings' },
-        ].map((item, idx) => (
-          <Link
-            key={idx}
-            to={item.to}
-            onClick={onClose}
-            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium"
-          >
-            <item.icon className="w-4 h-4 text-slate-400" /> {item.label}
-          </Link>
-        ))}
-      </div>
-      <div className="h-px bg-slate-100 my-1.5" />
-      <button
-        onClick={onClose}
-        className="w-full flex items-center gap-3 p-2 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors font-semibold"
+    <Popover.Portal>
+      <Popover.Content
+        side="top"
+        align="start"
+        sideOffset={8}
+        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-2"
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <LogOut className="w-4 h-4" /> Log Out
+        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Account</div>
+        <div className="space-y-0.5">
+          {[
+            { icon: User, label: 'Profile & Status', to: '/account-settings' },
+            { icon: Sliders, label: 'Preferences', to: '/settings' },
+            { icon: Moon, label: 'Dark Mode', to: '/settings' },
+          ].map((item, idx) => (
+            <Popover.Close asChild key={idx}>
+              <Link
+                to={item.to}
+                className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              >
+                <item.icon className="w-4 h-4 text-slate-400" /> {item.label}
+              </Link>
+            </Popover.Close>
+          ))}
+        </div>
+        <div className="h-px bg-slate-100 my-1.5" />
+        <Popover.Close asChild>
+          <button
+            className="w-full flex items-center gap-3 p-2 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
+          >
+            <LogOut className="w-4 h-4" /> Log Out
       </button>
     </div>
   );
