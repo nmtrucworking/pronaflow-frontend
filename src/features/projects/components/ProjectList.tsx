@@ -1,8 +1,11 @@
 import { ProjectCard } from './ProjectCard';
 import { ProjectRow } from './ProjectRow';
-import { Inbox } from 'lucide-react';
+import { KanbanColumn } from './KanbanColumn';
+import { Inbox, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { Project } from '@/types/project';
 import type { ViewMode } from '../constants/viewModes';
+import type { ProjectStatus } from '@/types/project';
+import { cn } from '@/lib/utils';
 
 interface ProjectListProps {
   projects: Project[];
@@ -10,6 +13,9 @@ interface ProjectListProps {
   onProjectClick: (project: Project) => void;
   isLoading?: boolean;
   isEmpty?: boolean;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onColumnSort?: (column: string) => void;
 }
 
 export const ProjectList: React.FC<ProjectListProps> = ({
@@ -18,7 +24,31 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   onProjectClick,
   isLoading = false,
   isEmpty = false,
+  sortColumn,
+  sortDirection,
+  onColumnSort,
 }) => {
+  const renderSortIcon = (column: string) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+      : <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />;
+  };
+
+  const SortableHeader = ({ column, children, className = "" }: { column: string; children: React.ReactNode; className?: string }) => (
+    <button
+      onClick={() => onColumnSort?.(column)}
+      className={cn(
+        "flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-indigo-600 transition-colors group",
+        className
+      )}
+    >
+      {children}
+      {renderSortIcon(column)}
+    </button>
+  );
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -49,8 +79,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   return (
     <main className="flex-1 overflow-y-auto">
       {viewMode === 'GRID' && (
-        <div className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 animate-in fade-in duration-500">
+        <div className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
             {projects.map((project, index) => (
               <div 
                 key={project.id} 
@@ -68,15 +98,25 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       )}
 
       {viewMode === 'LIST' && (
-        <div className="p-6">
+        <div className="p-4">
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             {/* List Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 sticky top-0 z-20">
-              <div className="col-span-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Dự án</div>
-              <div className="col-span-2 text-xs font-semibold text-slate-700 uppercase tracking-wider">Trạng thái</div>
-              <div className="col-span-2 text-xs font-semibold text-slate-700 uppercase tracking-wider">Tiến độ</div>
-              <div className="col-span-2 text-xs font-semibold text-slate-700 uppercase tracking-wider">Thành viên</div>
-              <div className="col-span-2 text-xs font-semibold text-slate-700 uppercase tracking-wider text-right">Ngày kết thúc</div>
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 sticky top-0 z-20">
+              <div className="col-span-4">
+                <SortableHeader column="name">Dự án</SortableHeader>
+              </div>
+              <div className="col-span-2">
+                <SortableHeader column="status">Trạng thái</SortableHeader>
+              </div>
+              <div className="col-span-2">
+                <SortableHeader column="progress">Tiến độ</SortableHeader>
+              </div>
+              <div className="col-span-2">
+                <SortableHeader column="members">Thành viên</SortableHeader>
+              </div>
+              <div className="col-span-2">
+                <SortableHeader column="endDate" className="justify-end">Ngày kết thúc</SortableHeader>
+              </div>
             </div>
 
             {/* List Items */}
@@ -97,16 +137,33 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       )}
 
       {viewMode === 'KANBAN' && (
-        <div className="flex items-center justify-center h-96 p-6">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-50 rounded-full mb-4">
-              <span className="text-2xl">🔨</span>
-            </div>
-            <p className="text-lg font-semibold text-slate-900">Chế độ Kanban đang được phát triển</p>
-            <p className="text-slate-500 mt-2">Quay lại sau để trải nghiệm chế độ xem Kanban</p>
+        <div className="p-6">
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            <KanbanColumn
+              status="PLANNING"
+              projects={projects.filter(p => p.status === 'PLANNING')}
+              onProjectClick={onProjectClick}
+            />
+            <KanbanColumn
+              status="IN_PROGRESS"
+              projects={projects.filter(p => p.status === 'IN_PROGRESS')}
+              onProjectClick={onProjectClick}
+            />
+            <KanbanColumn
+              status="ON_HOLD"
+              projects={projects.filter(p => p.status === 'ON_HOLD')}
+              onProjectClick={onProjectClick}
+            />
+            <KanbanColumn
+              status="COMPLETED"
+              projects={projects.filter(p => p.status === 'COMPLETED')}
+              onProjectClick={onProjectClick}
+            />
           </div>
         </div>
       )}
     </main>
   );
 };
+
+export default ProjectList;

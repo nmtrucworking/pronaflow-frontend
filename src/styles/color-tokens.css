@@ -1,0 +1,246 @@
+/**
+ * COLOR TOKENS & CSS CLASSES
+ * Pre-defined color combinations for quick component styling
+ */
+
+/* ==================== COMPONENT COLOR TOKENS ==================== */
+
+/* Primary Action Tokens */
+.token-action-primary {
+  @apply bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-colors;
+}
+
+.token-action-primary-outline {
+  @apply border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 transition-colors;
+}
+
+.token-action-primary-ghost {
+  @apply text-emerald-600 hover:bg-emerald-50 transition-colors;
+}
+
+/* Secondary Action Tokens */
+.token-action-secondary {
+  @apply bg-slate-200 text-slate-900 hover:bg-slate-300 active:bg-slate-400 transition-colors;
+}
+
+.token-action-secondary-outline {
+  @apply border-2 border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors;
+}
+
+/* Success State Tokens */
+.token-success {
+  @apply bg-emerald-50 text-emerald-900 border border-emerald-200;
+}
+
+.token-success-badge {
+  @apply inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium;
+}
+
+/* Warning State Tokens */
+.token-warning {
+  @apply bg-amber-50 text-amber-900 border border-amber-200;
+}
+
+.token-warning-badge {
+  @apply inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-medium;
+}
+
+/* Error State Tokens */
+.token-error {
+  @apply bg-red-50 text-red-900 border border-red-200;
+}
+
+.token-error-badge {
+  @apply inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-medium;
+}
+
+/* Info State Tokens */
+.token-info {
+  @apply bg-emerald-50 text-emerald-900 border border-emerald-200;
+}
+
+.token-info-badge {
+  @apply inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium;
+}
+
+/* Priority Level Tokens */
+.token-priority-urgent {
+  @apply bg-red-100 text-red-700 border border-red-300;
+}
+
+.token-priority-high {
+  @apply bg-orange-100 text-orange-700 border border-orange-300;
+}
+
+.token-priority-normal {
+  @apply bg-emerald-100 text-emerald-700 border border-emerald-300;
+}
+
+.token-priority-low {
+  @apply bg-slate-100 text-slate-700 border border-slate-300;
+}
+
+/* Card Tokens */
+.token-card-base {
+  @apply bg-white text-slate-900 rounded-lg border border-slate-200 shadow-sm;
+}
+
+.token-card-elevated {
+  @apply bg-white text-slate-900 rounded-lg shadow-md;
+}
+
+.token-card-interactive {
+  @apply bg-white text-slate-900 rounded-lg border border-slate-200 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all;
+}
+
+/* Input Tokens */
+.token-input-base {
+  @apply px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent;
+}
+
+.token-input-error {
+  @apply border-red-500 focus:ring-red-500;
+}
+
+.token-input-success {
+  @apply border-emerald-500 focus:ring-emerald-500;
+}
+
+/* Text Tokens */
+.token-text-primary {
+  @apply text-slate-900;
+}
+
+.token-text-secondary {
+  @apply text-slate-600;
+}
+
+.token-text-muted {
+  @apply text-slate-500;
+}
+
+.token-text-inverse {
+  @apply text-white;
+}
+
+/* Badge Tokens */
+.token-badge-default {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-semibold;
+}
+
+.token-badge-success {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-semibold;
+}
+
+.token-badge-warning {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-100 text-amber-700 text-xs font-semibold;
+}
+
+.token-badge-error {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 text-red-700 text-xs font-semibold;
+}
+
+/* Tag Tokens */
+.token-tag {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-300 bg-slate-50 text-slate-700 text-xs font-medium;
+}
+
+.token-tag-primary {
+  @apply border-emerald-300 bg-emerald-50 text-emerald-700;
+}
+
+/* Alert Tokens */
+.token-alert-success {
+  @apply flex items-start gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900;
+}
+
+.token-alert-warning {
+  @apply flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900;
+}
+
+.token-alert-error {
+  @apply flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-900;
+}
+
+.token-alert-info {
+  @apply flex items-start gap-3 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900;
+}
+
+/* ==================== DARK MODE VARIANTS ==================== */
+
+.dark {
+  .token-card-base {
+    @apply bg-slate-900 text-slate-100 border-slate-700;
+  }
+
+  .token-card-interactive {
+    @apply bg-slate-900 text-slate-100 border-slate-700 hover:bg-slate-800 hover:border-slate-600;
+  }
+
+  .token-input-base {
+    @apply bg-slate-800 text-slate-100 border-slate-600 placeholder-slate-400 focus:ring-emerald-500;
+  }
+
+  .token-text-primary {
+    @apply text-slate-100;
+  }
+
+  .token-text-secondary {
+    @apply text-slate-300;
+  }
+
+  .token-text-muted {
+    @apply text-slate-400;
+  }
+
+  .token-badge-default {
+    @apply bg-slate-800 text-slate-200;
+  }
+
+  .token-tag {
+    @apply bg-slate-800 border-slate-700 text-slate-200;
+  }
+}
+
+/* ==================== UTILITY CLASSES FOR QUICK STYLING ==================== */
+
+/* Gradient backgrounds */
+.gradient-primary {
+  @apply bg-gradient-to-r from-emerald-50 to-emerald-100;
+}
+
+.gradient-primary-dark {
+  @apply bg-gradient-to-r from-emerald-900 to-emerald-800;
+}
+
+/* Hover effects */
+.hover-lift {
+  @apply hover:shadow-lg hover:-translate-y-0.5 transition-all;
+}
+
+.hover-glow {
+  @apply hover:shadow-lg hover:shadow-emerald-500/20 transition-all;
+}
+
+/* Focus states */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2;
+}
+
+.focus-ring-error {
+  @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+}
+
+/* Loading states */
+.loading-pulse {
+  @apply animate-pulse opacity-60;
+}
+
+.loading-spinner {
+  @apply animate-spin text-emerald-600;
+}
+
+/* Disabled states */
+.disabled-state {
+  @apply opacity-50 cursor-not-allowed pointer-events-none;
+}

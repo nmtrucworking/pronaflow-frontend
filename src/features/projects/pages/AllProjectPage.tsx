@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { Project, ProjectStatus } from '@/types/project';
+import type { Project, ProjectStatus, ProjectPriority } from '@/types/project';
 import { MOCK_PROJECTS } from '@/mocks/projects';
 import { ProjectHeader } from '../components/ProjectHeader';
 import { ProjectList } from '../components/ProjectList';
@@ -17,7 +17,22 @@ export const AllProjectsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('GRID');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'ALL'>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<ProjectPriority | 'ALL'>('ALL');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+  
+  // Column sorting
+  const [sortColumn, setSortColumn] = useState<'name' | 'status' | 'progress' | 'date'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleColumnSort = (column: 'name' | 'status' | 'progress' | 'date') => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   // Project selection state
   const {
@@ -30,13 +45,38 @@ export const AllProjectsPage: React.FC = () => {
     closeFullPage,
   } = useProjectSelection();
 
-  // Filtered projects
-  const filteredProjects = useFilteredProjects({
-    projects,
-    searchQuery,
-    statusFilter,
-    sortOption,
-  });
+  // Filtered and sorted projects
+  const filteredProjects = useMemo(() => {
+    let filtered = projects.filter(project => {
+      const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           project.key.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'ALL' || project.status === statusFilter;
+      const matchesPriority = priorityFilter === 'ALL' || project.priority === priorityFilter;
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+
+    // Apply column sorting
+    filtered.sort((a, b) => {
+      let compareValue = 0;
+      switch (sortColumn) {
+        case 'name':
+          compareValue = a.name.localeCompare(b.name);
+          break;
+        case 'status':
+          compareValue = a.status.localeCompare(b.status);
+          break;
+        case 'progress':
+          compareValue = a.progress - b.progress;
+          break;
+        case 'date':
+          compareValue = new Date(a.end_date).getTime() - new Date(b.end_date).getTime();
+          break;
+      }
+      return sortDirection === 'asc' ? compareValue : -compareValue;
+    });
+
+    return filtered;
+  }, [projects, searchQuery, statusFilter, priorityFilter, sortColumn, sortDirection]);
 
   // Project statistics
   const stats = useMemo(() => ({
@@ -71,9 +111,12 @@ export const AllProjectsPage: React.FC = () => {
           onSearchChange={setSearchQuery}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
-          onFilterClick={() => {
-            // TODO: Open filter modal
-          }}
+          showFilterPopover={showFilterPopover}
+          onFilterClick={() => setShowFilterPopover(!showFilterPopover)}
+          statusFilter={statusFilter}
+          priorityFilter={priorityFilter}
+          onStatusFilterChange={setStatusFilter}
+          onPriorityFilterChange={setPriorityFilter}
           onCreateClick={() => {
             // TODO: Open create modal
           }}
@@ -108,6 +151,9 @@ export const AllProjectsPage: React.FC = () => {
           viewMode={viewMode}
           onProjectClick={selectProject}
           isEmpty={filteredProjects.length === 0}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onColumnSort={handleColumnSort}
         />
       </div>
     </ProjectLayout>

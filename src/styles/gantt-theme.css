@@ -12,22 +12,22 @@
   --gantt-row-hover: theme('colors.slate.50');
   --gantt-text-primary: theme('colors.slate.900');
   --gantt-text-secondary: theme('colors.slate.600');
-  --gantt-task-bg: theme('colors.blue.500');
-  --gantt-task-progress: theme('colors.blue.600');
+  --gantt-task-bg: rgb(5 150 105 / 1);
+  --gantt-task-progress: #059669;
   --gantt-task-border: theme('colors.white');
 }
 
-/* Dark mode overrides */
+/* Dark mode overrides - Uses dark mode CSS variables */
 .dark .gantt-container {
-  --gantt-border-color: theme('colors.slate.700');
-  --gantt-header-bg: theme('colors.slate.800');
-  --gantt-row-bg: theme('colors.slate.800');
-  --gantt-row-hover: theme('colors.slate.700');
-  --gantt-text-primary: theme('colors.slate.100');
-  --gantt-text-secondary: theme('colors.slate.400');
-  --gantt-task-bg: theme('colors.blue.500');
-  --gantt-task-progress: theme('colors.blue.600');
-  --gantt-task-border: theme('colors.slate.600');
+  --gantt-border-color: var(--color-border-medium);
+  --gantt-header-bg: var(--color-bg-primary);
+  --gantt-row-bg: var(--color-bg-primary);
+  --gantt-row-hover: var(--color-bg-secondary);
+  --gantt-text-primary: var(--color-text-primary);
+  --gantt-text-secondary: var(--color-text-secondary);
+  --gantt-task-bg: var(--color-primary-500);
+  --gantt-task-progress: var(--color-primary-600);
+  --gantt-task-border: var(--color-border-medium);
 }
 
 /* Header styles */
@@ -113,26 +113,26 @@
   stroke-width: 1 !important;
 }
 
-/* Today line */
+/* Today line - Uses error color */
 .gantt-container ._3FdOk {
-  stroke: theme('colors.red.500') !important;
+  stroke: var(--color-error) !important;
   stroke-width: 2 !important;
   stroke-dasharray: 4 4 !important;
 }
 
-/* Dependency arrows */
+/* Dependency arrows - Uses primary color from palette */
 .gantt-container ._2Jtb8 {
-  stroke: theme('colors.slate.400') !important;
+  stroke: var(--color-text-secondary) !important;
   stroke-width: 2 !important;
-  fill: theme('colors.slate.400') !important;
+  fill: var(--color-text-secondary) !important;
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
 
 .gantt-container ._2Jtb8:hover {
   opacity: 1;
-  stroke: theme('colors.blue.500') !important;
-  fill: theme('colors.blue.500') !important;
+  stroke: var(--color-primary-500) !important;
+  fill: var(--color-primary-500) !important;
 }
 
 /* Calendar header */
@@ -168,23 +168,23 @@
   display: none !important; /* Hide default tooltip */
 }
 
-/* Selection styles */
+/* Selection styles - Uses focus border color */
 .gantt-container ._1n_7C._3lp_O {
-  outline: 2px solid theme('colors.blue.500') !important;
+  outline: 2px solid var(--color-border-focus) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1) !important;
 }
 
-/* Milestone styles */
+/* Milestone styles - Uses warning color from palette */
 .gantt-container ._2yF7S {
-  fill: theme('colors.amber.500') !important;
-  stroke: theme('colors.amber.600') !important;
+  fill: var(--color-warning) !important;
+  stroke: var(--color-priority-high) !important;
   stroke-width: 2 !important;
 }
 
-/* Critical path highlighting */
+/* Critical path highlighting - Uses error color */
 .gantt-container ._1n_7C[data-critical="true"] {
-  background: linear-gradient(45deg, theme('colors.red.500'), theme('colors.red.600')) !important;
+  background: linear-gradient(45deg, var(--color-error), var(--color-priority-high)) !important;
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.3) !important;
 }
 

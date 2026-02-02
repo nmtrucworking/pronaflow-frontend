@@ -5,9 +5,10 @@ interface ProgressBarProps {
   progress: number;
   showLabel?: boolean;
   className?: string;
+  size?: 'sm' | 'default';
 }
 
-export const ProgressBar = ({ progress, showLabel = true, className }: ProgressBarProps) => {
+export const ProgressBar = ({ progress, showLabel = true, className, size = 'default' }: ProgressBarProps) => {
   const isCompleted = progress === 100;
 
   return (
@@ -20,7 +21,10 @@ export const ProgressBar = ({ progress, showLabel = true, className }: ProgressB
           </span>
         </div>
       )}
-      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+      <div className={cn(
+        "w-full bg-slate-100 rounded-full overflow-hidden",
+        size === 'sm' ? 'h-1' : 'h-1.5'
+      )}>
         <div 
           className={cn(
             "h-full rounded-full transition-all duration-500 ease-out", 

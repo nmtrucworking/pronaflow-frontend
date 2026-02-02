@@ -1,3 +1,5 @@
+import COLORS from './src/config/colors.ts';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -5,6 +7,32 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    colors: {
+      // Transparent
+      transparent: 'transparent',
+      current: 'currentColor',
+
+      // Primary Brand Color - Emerald Green
+      emerald: COLORS.primary,
+      
+      // Neutral/Gray - Slate
+      slate: COLORS.neutral,
+      gray: COLORS.neutral,
+
+      // Semantic Colors
+      success: COLORS.semantic.success,
+      warning: COLORS.semantic.warning,
+      error: COLORS.semantic.error,
+      info: COLORS.semantic.info,
+
+      // Override blue for backward compatibility
+      blue: COLORS.primary,
+      
+      // Additional semantic
+      red: COLORS.semantic.error,
+      amber: COLORS.semantic.warning,
+      green: COLORS.semantic.success,
+    },
     extend: {
       fontSize: {
         // Base typography scale - sử dụng rem để đảm bảo tính nhất quán

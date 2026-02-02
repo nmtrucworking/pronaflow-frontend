@@ -11,16 +11,18 @@ const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string; bg: s
   DONE: { label: 'Hoàn thành', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: CheckCircle2 }
 };
 
-export const StatusBadge = ({ status, className }: { status: ProjectStatus; className?: string }) => {
+export const StatusBadge = ({ status, className, size = 'default' }: { status: ProjectStatus; className?: string; size?: 'sm' | 'default' }) => {
   const config = STATUS_CONFIG[status];
   const Icon = config.icon;
   
   return (
     <span className={cn(
-      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border transition-colors", 
-      config.bg, config.color, config.border, className
+      "inline-flex items-center rounded-full font-medium border transition-colors", 
+      config.bg, config.color, config.border,
+      size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs',
+      className
     )}>
-      <Icon className="w-3 h-3 mr-1" />
+      <Icon className={cn(size === 'sm' ? 'w-2.5 h-2.5 mr-0.5' : 'w-3 h-3 mr-1')} />
       {config.label}
     </span>
   );

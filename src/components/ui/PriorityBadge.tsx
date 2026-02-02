@@ -9,12 +9,13 @@ const PRIORITY_CONFIG: Record<ProjectPriority, { label: string; color: string; b
   LOW: { label: 'Thấp', color: 'text-slate-600', bg: 'bg-slate-100' },
 };
 
-export const PriorityBadge = ({ priority }: { priority: ProjectPriority }) => {
+export const PriorityBadge = ({ priority, size = 'default' }: { priority: ProjectPriority; size?: 'sm' | 'default' }) => {
   const config = PRIORITY_CONFIG[priority];
   return (
     <span className={cn(
-      "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", 
-      config.bg, config.color
+      "inline-flex items-center rounded font-bold uppercase tracking-wide", 
+      config.bg, config.color,
+      size === 'sm' ? 'px-1 py-0.5 text-[9px]' : 'px-1.5 py-0.5 text-[10px]'
     )}>
       {config.label}
     </span>
