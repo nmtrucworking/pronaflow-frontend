@@ -148,7 +148,6 @@ export default function App({
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans text-slate-900">
       <aside
-        ref={sidebarRef}
         className={`relative flex flex-col bg-slate-50 border-r border-slate-200 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-30 ${isCollapsed ? 'w-[72px]' : 'w-[260px]'
           }`}
       >
@@ -348,7 +347,6 @@ export default function App({
               </div>
             </RadixTooltip>
           )}
-        </footer>
         </footer>
       </aside>
 
@@ -561,7 +559,9 @@ function UserPopover() {
             className="w-full flex items-center gap-3 p-2 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
           >
             <LogOut className="w-4 h-4" /> Log Out
-      </button>
-    </div>
+          </button>
+        </Popover.Close>
+      </Popover.Content>
+    </Popover.Portal>
   );
 }

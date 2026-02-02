@@ -222,6 +222,30 @@ class WorkspaceService {
     );
   }
 
+  /**
+   * Accept workspace invitation
+   * POST /v1/workspaces/invitations/accept
+   */
+  async acceptInvitation(token: string): Promise<{ workspace_id: string; workspace_name: string }> {
+    const response = await this.api.post<{ workspace_id: string; workspace_name: string }>(
+      '/v1/workspaces/invitations/accept',
+      {},
+      { params: { token } }
+    );
+    return response.data;
+  }
+
+  /**
+   * Get last accessed workspace
+   * GET /v1/workspaces/me/last-accessed
+   */
+  async getLastAccessedWorkspace(): Promise<{ workspace_id: string; name: string; accessed_at: string }> {
+    const response = await this.api.get<{ workspace_id: string; name: string; accessed_at: string }>(
+      '/v1/workspaces/me/last-accessed'
+    );
+    return response.data;
+  }
+
   // ========================================================================
   // Settings Management
   // ========================================================================

@@ -238,6 +238,36 @@ export const useCancelInvitation = (workspaceId: string) => {
   });
 };
 
+/**
+ * Hook to accept workspace invitation
+ */
+export const useAcceptInvitation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => workspaceService.acceptInvitation(token),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      toast.success(`Successfully joined workspace: ${data.workspace_name}`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.detail || 'Failed to accept invitation';
+      toast.error(message);
+    },
+  });
+};
+
+/**
+ * Hook to get last accessed workspace
+ */
+export const useLastAccessedWorkspace = () => {
+  return useQuery({
+    queryKey: ['last-accessed-workspace'],
+    queryFn: () => workspaceService.getLastAccessedWorkspace(),
+    staleTime: 60 * 1000, // 1 minute
+  });
+};
+
 // ============================================================================
 // Settings Hooks
 // ============================================================================
