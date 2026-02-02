@@ -40,10 +40,16 @@ import {
   Calendar,
   Eye,
   Slack,
-  Building // Added missing import
+  Building, // Added missing import
+  LayoutGrid,
+  Keyboard
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+
+// Import Module 9 Components
+import AccessibilityPanel from '@/features/personalization/components/AccessibilityPanel';
+import DashboardCustomizer from '@/features/personalization/components/DashboardCustomizer';
 
 // --- UTILS ---
 function cn(...inputs: ClassValue[]) {
@@ -569,6 +575,86 @@ const PreferenceSettings = () => {
           </div>
         </div>
 
+        {/* Language & Localization */}
+        <div className="space-y-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white pb-2 flex items-center">
+            <Globe className="w-4 h-4 mr-2" /> Ngôn ngữ & Định dạng
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputGroup 
+              label="Ngôn ngữ hiển thị" 
+              id="language"
+              helpText="Chọn ngôn ngữ giao diện ứng dụng"
+            >
+              <div className="relative">
+                <select 
+                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                >
+                  <option value="vi-VN">🇻🇳 Tiếng Việt</option>
+                  <option value="en-US">🇺🇸 English (US)</option>
+                  <option value="ja-JP">🇯🇵 日本語</option>
+                  <option value="ko-KR">🇰🇷 한국어</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </InputGroup>
+
+            <InputGroup 
+              label="Múi giờ" 
+              id="timezone"
+              helpText="Thời gian hiển thị theo múi giờ của bạn"
+            >
+              <div className="relative">
+                <select 
+                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                >
+                  <option value="Asia/Ho_Chi_Minh">(GMT+7) Ho Chi Minh</option>
+                  <option value="Asia/Bangkok">(GMT+7) Bangkok</option>
+                  <option value="Asia/Tokyo">(GMT+9) Tokyo</option>
+                  <option value="Asia/Seoul">(GMT+9) Seoul</option>
+                  <option value="America/New_York">(GMT-5) New York</option>
+                  <option value="Europe/London">(GMT+0) London</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </InputGroup>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputGroup 
+              label="Định dạng ngày" 
+              id="date_format"
+            >
+              <div className="relative">
+                <select 
+                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                >
+                  <option value="DD/MM/YYYY">DD/MM/YYYY (03/02/2026)</option>
+                  <option value="MM/DD/YYYY">MM/DD/YYYY (02/03/2026)</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD (2026-02-03)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </InputGroup>
+
+            <InputGroup 
+              label="Định dạng thời gian" 
+              id="time_format"
+            >
+              <div className="relative">
+                <select 
+                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                >
+                  <option value="24h">24 giờ (14:30)</option>
+                  <option value="12h">12 giờ (2:30 PM)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </InputGroup>
+          </div>
+        </div>
+
         {/* Layout & Navigation */}
         <div className="space-y-5 pt-4 border-t border-slate-100 dark:border-slate-800">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white pb-2 flex items-center">
@@ -1076,6 +1162,9 @@ export default function GeneralSettingsPage() {
     { id: 'security', label: 'Bảo mật & Đăng nhập', icon: Lock, category: 'Tài khoản' },
     { id: 'preferences', label: 'Giao diện & Ứng dụng', icon: Palette, category: 'Tài khoản' },
     { id: 'notifications', label: 'Thông báo', icon: Bell, category: 'Tài khoản' },
+    { id: 'accessibility', label: 'Khả năng tiếp cận', icon: Eye, category: 'Cá nhân hóa' },
+    { id: 'dashboard', label: 'Tùy chỉnh Dashboard', icon: LayoutGrid, category: 'Cá nhân hóa' },
+    { id: 'shortcuts', label: 'Phím tắt', icon: Keyboard, category: 'Cá nhân hóa' },
   ];
 
   return (
@@ -1158,6 +1247,29 @@ export default function GeneralSettingsPage() {
                     </Tabs.Trigger>
                   )
                 })}
+
+                {/* Group: Cá nhân hóa */}
+                <div className="hidden md:block px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-4">
+                  Cá nhân hóa
+                </div>
+                {navItems.filter(i => i.category === 'Cá nhân hóa').map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Tabs.Trigger 
+                      key={item.id}
+                      value={item.id}
+                      className={cn(
+                        "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all w-full text-left whitespace-nowrap md:whitespace-normal shrink-0",
+                        activeTab === item.id 
+                          ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-800 md:border-l-4 md:border-l-indigo-600 md:rounded-l-none" 
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
+                      )}
+                    >
+                      <Icon className={cn("w-4 h-4 mr-3", activeTab === item.id ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400")} />
+                      {item.label}
+                    </Tabs.Trigger>
+                  )
+                })}
               </div>
 
               {/* Sidebar Footer Links */}
@@ -1192,6 +1304,32 @@ export default function GeneralSettingsPage() {
 
               <Tabs.Content value="notifications" className="outline-none">
                 <NotificationSettings />
+              </Tabs.Content>
+
+              <Tabs.Content value="accessibility" className="outline-none">
+                <AccessibilityPanel />
+              </Tabs.Content>
+
+              <Tabs.Content value="dashboard" className="outline-none">
+                <DashboardCustomizer />
+              </Tabs.Content>
+
+              <Tabs.Content value="shortcuts" className="outline-none">
+                <div className="space-y-6">
+                  <SectionHeader 
+                    title="Phím tắt"
+                    description="Xem và tùy chỉnh các phím tắt bàn phím"
+                  />
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center">
+                    <Keyboard className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+                      Nhấn <kbd className="px-3 py-1 bg-white dark:bg-slate-800 rounded border border-blue-300 dark:border-blue-600 font-mono">?</kbd> để xem tất cả phím tắt
+                    </h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Hoặc nhấn <kbd className="px-2 py-1 bg-white dark:bg-slate-800 rounded border border-blue-300 dark:border-blue-600 font-mono text-xs">Cmd/Ctrl + K</kbd> để mở bảng lệnh
+                    </p>
+                  </div>
+                </div>
               </Tabs.Content>
             </div>
           </Tabs.Root>
