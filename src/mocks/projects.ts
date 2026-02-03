@@ -42,7 +42,7 @@ export const MOCK_PROJECTS: Project[] = [
     name: "Website Redesign 2024",
     key: "WEB-24",
     description: "Nâng cấp giao diện người dùng và cải thiện trải nghiệm UX cho trang chủ.",
-    priority: "CRITICAL",
+    priority: "URGENT",
     status: "NOT_STARTED",
     progress: 65,
     start_date: "2024-01-10",

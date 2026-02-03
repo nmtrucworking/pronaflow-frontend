@@ -82,10 +82,10 @@ export const COLORS = {
 
   // Priority Colors
   priority: {
-    urgent: '#ef4444',    // Red
-    high: '#f97316',      // Orange
-    normal: 'rgb(5 150 105 / 1)', // Emerald
-    low: '#94a3b8',       // Slate
+    urgent: '#FF0000',    // Red
+    high: '#FFA500',      // Orange
+    medium: '#00BFFF',    // Deep Sky Blue
+    low: '#808080',       // Gray
   },
 
   // UI Colors

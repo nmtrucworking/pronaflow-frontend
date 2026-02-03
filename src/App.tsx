@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
-import { PublicLayout } from './components/layout/PublicLayout';
 import { HelpLayout } from './components/layout/HelpLayout';
 
 // Import Auth Pages
@@ -33,6 +32,10 @@ import ApiTokensPage from './features/integrations/pages/ApiTokensPage';
 import WebhooksPage from './features/integrations/pages/WebhooksPage';
 import ConnectedAppsPage from './features/integrations/pages/ConnectedAppsPage';
 import PluginMarketplacePage from './features/integrations/pages/PluginMarketplacePage';
+
+// Import Billing and Analytics Pages
+import { BillingPage } from './features/billing';
+import AnalyticsPage from './features/analytics/pages/AnalyticsPage';
 
 // Import Module 9 Components
 import CommandPalette from './components/CommandPalette';
@@ -83,6 +86,9 @@ const router = createBrowserRouter([
       { path: 'integrations/webhooks', element: <WebhooksPage /> },
       { path: 'integrations/connected-apps', element: <ConnectedAppsPage /> },
       { path: 'integrations/plugins', element: <PluginMarketplacePage /> },
+      // Billing and Analytics routes
+      { path: 'billing', element: <BillingPage /> },
+      { path: 'analytics', element: <AnalyticsPage /> },
       // Workspace routes
       ...workspaceRoutes,
       // Điều hướng mặc định nếu vào /

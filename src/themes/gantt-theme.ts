@@ -42,7 +42,7 @@ export interface GanttTheme {
     priority: {
       urgent: string;
       high: string;
-      normal: string;
+      medium: string;
       low: string;
     };
   };
@@ -128,7 +128,7 @@ export const lightTheme: GanttTheme = {
     priority: {
       urgent: COLORS.priority.urgent,
       high: COLORS.priority.high,
-      normal: COLORS.priority.normal,
+      medium: COLORS.priority.medium,
       low: COLORS.priority.low,
     },
   },
@@ -215,7 +215,7 @@ export const darkTheme: GanttTheme = {
     priority: {
       urgent: COLORS.priority.urgent,
       high: COLORS.priority.high,
-      normal: COLORS.priority.normal,
+      medium: COLORS.priority.medium,
       low: COLORS.priority.low,
     },
   },

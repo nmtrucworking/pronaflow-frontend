@@ -1,4 +1,5 @@
 import COLORS from './src/config/colors.ts';
+import colors from 'tailwindcss/colors';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -8,6 +9,7 @@ export default {
   ],
   theme: {
     colors: {
+      ...colors,
       // Transparent
       transparent: 'transparent',
       current: 'currentColor',
@@ -25,13 +27,13 @@ export default {
       error: COLORS.semantic.error,
       info: COLORS.semantic.info,
 
-      // Override blue for backward compatibility
-      blue: COLORS.primary,
-      
       // Additional semantic
       red: COLORS.semantic.error,
       amber: COLORS.semantic.warning,
       green: COLORS.semantic.success,
+
+      // Priority colors
+      priority: COLORS.priority,
     },
     extend: {
       fontSize: {

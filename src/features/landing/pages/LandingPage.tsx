@@ -324,7 +324,7 @@ const Hero = () => {
 
         <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight leading-[1.1]">
           Quản trị dự án đột phá <br className="hidden md:block" />
-          <span className="bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-transparent font-extrabold">
+          <span className="text-indigo-700 font-extrabold">
             Cho đội nhóm chuyên gia
           </span>
         </h1>
