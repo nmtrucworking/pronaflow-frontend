@@ -43,5 +43,26 @@ export * from './member';
 // References
 export * from './reference';
 
+// Integration (Module 12)
+export * from './integration';
+
+// Billing (Module 13)
+export * from './billing';
+
+// Analytics (Module 9)
+export * from './analytics';
+
+// Archive (Module 8)
+export * from './archive';
+
+// Admin (Module 14)
+export * from './admin';
+
+// Help Center (Module 15)
+export * from './help-center';
+
+// Onboarding (Module 16)
+export * from './onboarding';
+
 // Mocks
 export * from './mock-type';

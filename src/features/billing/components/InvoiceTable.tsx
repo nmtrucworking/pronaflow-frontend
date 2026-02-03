@@ -2,7 +2,7 @@ import React from 'react';
 import { Download, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { InvoiceEntity } from '../types';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 
 interface InvoiceTableProps {
   invoices: InvoiceEntity[];

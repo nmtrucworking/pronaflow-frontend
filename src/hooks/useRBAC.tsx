@@ -5,6 +5,7 @@
  * Permission checking and authorization utilities
  */
 
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 // ============================================================================

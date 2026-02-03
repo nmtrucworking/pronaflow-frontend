@@ -2,7 +2,7 @@ import React from 'react';
 import { Check, X, ShieldCheck } from 'lucide-react';
 import { PlanEntity } from '../types';
 import { cn } from '@/lib/utils'; // Giả sử có utility function clsx/tailwind-merge
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'; // Tái sử dụng base card
 
 interface PlanCardProps {

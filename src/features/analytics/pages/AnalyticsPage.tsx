@@ -7,7 +7,6 @@ import {
   Calendar as CalendarIcon,
   Filter
 } from 'lucide-react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui';
 import { StatCard } from '../components/StatCard';
 import { ChartPlaceholder } from '../components/ChartPlaceholder';
@@ -28,7 +27,7 @@ const AnalyticsPage = () => {
   };
 
   return (
-    <MainLayout title="Báo cáo & Phân tích">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-foreground">
       <div className="container mx-auto p-6 space-y-8 max-w-[1600px]">
         
         {/* Header Toolbar */}
@@ -111,7 +110,7 @@ const AnalyticsPage = () => {
 
         </section>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 

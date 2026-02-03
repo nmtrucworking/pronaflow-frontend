@@ -2,4 +2,4 @@
  * Settings Feature Module
  */
 
-export { SettingsPage } from './pages';
+export { SettingsPage, AccountSettingsPage } from './pages';

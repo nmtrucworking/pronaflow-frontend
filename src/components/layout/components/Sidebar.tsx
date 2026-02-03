@@ -1,14 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ChevronLeft, ChevronDown, LayoutDashboard, CheckCircle2,
-  Calendar, Inbox, Activity, Star, Folder,
+  Calendar, Inbox, Star, Folder,
   GanttChart, Users, Archive, Trash2, Megaphone,
   LifeBuoy, Search, PlusCircle, Settings, Plug,
   User, Sliders, Moon, LogOut, Check, MoreHorizontal
 } from 'lucide-react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import { useQuery } from '@tanstack/react-query';
+import { workspaceService } from '@/services/workspaceService';
+import { projectService } from '@/services/projectService';
+import { authService } from '@/services/authService';
+import { notificationService } from '@/services/notificationService';
+import type { Workspace, Project, CurrentUserResponse } from '@/types';
 
 /** * ĐỊNH NGHĨA TYPES & INTERFACES 
  * Đảm bảo tính minh bạch về kiểu dữ liệu và ngăn chặn lỗi runtime.
@@ -35,59 +41,50 @@ interface SectionData {
  * DỮ LIỆU CẤU CẤU TRÚC
  * Tách biệt logic hiển thị và dữ liệu để tăng khả năng tái sử dụng.
  */
-const NAVIGATION_DATA: SectionData[] = [
+const getNavigationData = (
+  taskCount: number = 0,
+  inboxCount: number = 0,
+  memberCount: number = 0,
+  projectCount: number = 0
+): SectionData[] => [
   {
     id: 'overview',
     title: 'Tổng quan',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-      { id: 'tasks', label: 'Công việc của tôi', icon: CheckCircle2, badge: 3, badgeType: 'urgent', path: '/tasks' },
-      { id: 'calendar', label: 'Lịch cá nhân', icon: Calendar, path: '/calendar' },
-      { id: 'inbox', label: 'Hộp thư đến', icon: Inbox, badge: 12, badgeType: 'count', path: '/inbox' },
-      { id: 'workspaces', label: 'Workspaces', icon: Sliders, path: '/workspaces' },
-      { id: 'settings-over', label: 'Workspace Settings', icon: Activity, path: '/workspace-settings' },
-      { id: 'integrations', label: 'Integrations', icon: Plug, path: '/integrations', badgeType: 'new' },
+      { id: 'dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/dashboard' },
+      { id: 'tasks', label: 'Việc của tôi', icon: CheckCircle2, badge: taskCount > 0 ? taskCount : undefined, badgeType: taskCount > 0 ? 'urgent' : undefined, path: '/tasks' },
+      { id: 'calendar', label: 'Lịch biểu', icon: Calendar, path: '/calendar' },
+      { id: 'inbox', label: 'Hộp thư', icon: Inbox, badge: inboxCount > 0 ? inboxCount : undefined, badgeType: 'count', path: '/inbox' },
     ]
   },
   {
-    id: 'favorites',
-    title: 'Yêu thích',
+    id: 'workspace',
+    title: 'Không gian làm việc',
     items: [
-      { id: 'marketing-q1', label: 'Q1 Marketing', icon: Star, statusColor: '#F59E0B', path: '/projects' }
+      { id: 'members', label: 'Thành viên', icon: Users, badge: memberCount > 0 ? memberCount : undefined, badgeType: 'count', path: '/members' },
+      { id: 'settings', label: 'Cấu hình', icon: Settings, path: '/workspace-settings' },
+      { id: 'integrations', label: 'Tích hợp', icon: Plug, path: '/integrations', badgeType: 'new' },
     ]
   },
   {
     id: 'collaboration',
-    title: 'Dự án & Cộng tác',
+    title: 'Dự án',
     items: [
-      { id: 'all-projects', label: 'Tất cả dự án', icon: Folder, badge: 5, badgeType: 'count', path: '/projects' },
-      { id: 'gantt', label: 'Gantt Chart', icon: GanttChart, badge: 'New', badgeType: 'new', path: '/gantt' },
-      { id: 'members', label: 'Thành viên', icon: Users, badge: 8, badgeType: 'count', path: '/members' },
+      { id: 'all-projects', label: 'Danh sách dự án', icon: Folder, badge: projectCount > 0 ? projectCount : undefined, badgeType: 'count', path: '/projects' },
+      { id: 'gantt', label: 'Biểu đồ Gantt', icon: GanttChart, badge: 'New', badgeType: 'new', path: '/gantt' },
     ]
   },
   {
-    id: 'active-projects',
-    title: 'Đang hoạt động',
-    items: [
-      { id: 'web-redesign', label: 'Website Redesign', icon: ({ className }) => <StatusDot color="#10B981" className={className} />, path: '/projects' },
-      { id: 'mobile-app', label: 'Mobile App MVP', icon: ({ className }) => <StatusDot color="#F59E0B" className={className} />, path: '/projects' },
-    ]
+    id: 'favorites',
+    title: 'Đã ghim',
+    items: []
   },
   {
-    id: 'admin',
-    title: 'Quản trị dữ liệu',
+    id: 'data',
+    title: 'Dữ liệu',
     items: [
-      { id: 'archive', label: 'Archive Store', icon: Archive, badge: '99+', badgeType: 'info', path: '/archive' },
+      { id: 'archive', label: 'Kho lưu trữ', icon: Archive, path: '/archive' },
       { id: 'trash', label: 'Thùng rác', icon: Trash2, path: '/trash' },
-    ]
-  },
-  {
-    id: 'footer',
-    title: 'Footer',
-    items: [
-      { id: 'notifications', label: 'Thông báo hệ thống', icon: Megaphone, badge: '1', badgeType: 'urgent', path: '/inbox' },
-      { id: 'help', label: 'Help & Support', icon: LifeBuoy, path: '/help' },
-      { id: 'account-settings', label: 'Account Settings', icon: User, path: '/account-settings' },
     ]
   }
 ];
@@ -104,15 +101,129 @@ export default function App({
   activePath?: string;
   onNavigate?: (path: string) => void;
 }) {
+  const navigate = useNavigate();
   const [currentPath, setCurrentPath] = useState<string>(activePath);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     overview: true,
-    favorites: true,
+    workspace: true,
     collaboration: true,
-    'active-projects': true,
-    admin: true
+    favorites: true,
+    data: true
   });
+
+  // Fetch current user
+  const { data: currentUser } = useQuery<CurrentUserResponse>({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await authService.getCurrentUser();
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+
+  // Fetch workspaces
+  const { data: workspacesData } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: async () => {
+      const response = await workspaceService.getWorkspaces({ page: 1, page_size: 10 });
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Fetch current workspace details
+  const currentWorkspaceId = currentWorkspace?.workspace_id || workspacesData?.workspaces?.[0]?.workspace_id;
+  
+  const { data: workspaceDetails } = useQuery({
+    queryKey: ['workspace', currentWorkspaceId],
+    queryFn: async () => {
+      if (!currentWorkspaceId) return null;
+      const response = await workspaceService.getWorkspace(currentWorkspaceId);
+      return response.data;
+    },
+    enabled: !!currentWorkspaceId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Fetch projects for current workspace
+  const { data: projectsData } = useQuery({
+    queryKey: ['projects', currentWorkspaceId],
+    queryFn: async () => {
+      if (!currentWorkspaceId) return null;
+      const response = await projectService.getProjects({
+        workspace_id: currentWorkspaceId,
+        page: 1,
+        page_size: 100,
+      });
+      return response.data;
+    },
+    enabled: !!currentWorkspaceId,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Fetch favorite projects
+  const { data: favoriteProjects } = useQuery({
+    queryKey: ['favoriteProjects', currentWorkspaceId],
+    queryFn: async () => {
+      if (!currentWorkspaceId) return [];
+      const response = await projectService.getProjects({
+        workspace_id: currentWorkspaceId,
+        is_favorite: true,
+        page: 1,
+        page_size: 10,
+      });
+      return response.data?.projects || [];
+    },
+    enabled: !!currentWorkspaceId,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+
+  // Fetch notifications count
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notificationsCount'],
+    queryFn: async () => {
+      const response = await notificationService.getUnreadCount();
+      return response.data;
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // Refetch every minute
+    retry: 1,
+  });
+
+  // Calculate counts with safe defaults when API is unavailable
+  const projectCount = projectsData?.pagination?.total || 0;
+  const memberCount = workspaceDetails?.members_count || 0;
+  const inboxCount = notificationsData?.unread_count || 0;
+  const taskCount = 0; // Will be implemented with task service
+
+  // Generate navigation data with real counts
+  const NAVIGATION_DATA = getNavigationData(taskCount, inboxCount, memberCount, projectCount);
+
+  // Add favorite projects to navigation
+  if (favoriteProjects && favoriteProjects.length > 0) {
+    const favoritesSection = NAVIGATION_DATA.find(s => s.id === 'favorites');
+    if (favoritesSection) {
+      favoritesSection.items = favoriteProjects.map((project: any) => ({
+        id: project.project_id,
+        label: project.name,
+        icon: Star,
+        statusColor: getProjectStatusColor(project.status),
+        path: `/projects/${project.project_id}`,
+      }));
+    }
+  }
+
+  // Detect OS for keyboard shortcut display
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    setIsMac(typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform));
+  }, []);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -142,9 +253,30 @@ export default function App({
     onNavigate?.(path);
   }, [onNavigate]);
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      authService.clearTokens();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   const cn = (...classes: (string | undefined | false)[]) => {
     return classes.filter(Boolean).join(' ');
   };
+
+  // Helper function to get project status color
+  function getProjectStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+      active: 'bg-green-500',
+      completed: 'bg-blue-500',
+      on_hold: 'bg-yellow-500',
+      cancelled: 'bg-red-500',
+    };
+    return colors[status] || 'bg-gray-500';
+  }
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans text-slate-900">
@@ -171,22 +303,29 @@ export default function App({
                   aria-label="Switch workspace"
                 >
                   <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white flex items-center justify-center font-bold text-lg shadow-blue-200/50 shadow-md flex-shrink-0">
-                    P
+                    {workspaceDetails?.name?.charAt(0).toUpperCase() || 'P'}
                   </div>
                   <div className="flex flex-col overflow-hidden whitespace-nowrap flex-1">
-                    <span className="font-semibold text-[15px] leading-tight truncate">PronaFlow Corp</span>
-                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Enterprise Plan</span>
+                    <span className="font-semibold text-[15px] leading-tight truncate">
+                      {workspaceDetails?.name || 'Loading...'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
+                      {workspaceDetails?.workspace_type || 'Workspace'}
+                    </span>
                   </div>
                   <Popover.Anchor />
                   <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
                 </button>
               </Popover.Trigger>
-              <WorkspacePopover />
+              <WorkspacePopover 
+                workspaces={workspacesData?.workspaces || []} 
+                currentWorkspaceId={currentWorkspaceId}
+              />
             </Popover.Root>
           ) : (
-            <RadixTooltip text="PronaFlow Corp">
+            <RadixTooltip text={workspaceDetails?.name || 'Workspace'}>
               <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white flex items-center justify-center font-bold text-lg shadow-blue-200/50 shadow-md flex-shrink-0">
-                P
+                {workspaceDetails?.name?.charAt(0).toUpperCase() || 'P'}
               </div>
             </RadixTooltip>
           )}
@@ -205,10 +344,10 @@ export default function App({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Quick Search... (⌘K)"
+                  placeholder={`Quick Search... (${isMac ? '⌘K' : 'Ctrl+K'})`}
                   className="w-full bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400"
                 />
-                <span className="text-[10px] bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 font-mono text-slate-400 font-medium">⌘K</span>
+                <span className="text-[10px] bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 font-mono text-slate-400 font-medium">{isMac ? '⌘K' : 'Ctrl+K'}</span>
               </>
             )}
           </div>
@@ -318,28 +457,32 @@ export default function App({
                 >
                   <div className="relative flex-shrink-0">
                     <img
-                      src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random"
+                      src={currentUser?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || currentUser?.username || 'User')}&background=random`}
                       className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
                       alt="Profile"
                     />
                     <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <span className="block text-sm font-semibold truncate leading-tight">Nguyễn Văn A</span>
-                    <span className="block text-xs text-slate-500 truncate">nguyena@pronaflow.com</span>
+                    <span className="block text-sm font-semibold truncate leading-tight">
+                      {currentUser?.full_name || currentUser?.username || 'Loading...'}
+                    </span>
+                    <span className="block text-xs text-slate-500 truncate">
+                      {currentUser?.email || ''}
+                    </span>
                   </div>
                   <Popover.Anchor />
                   <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
                 </button>
               </Popover.Trigger>
-              <UserPopover />
+              <UserPopover onLogout={handleLogout} />
             </Popover.Root>
           ) : (
             <RadixTooltip text="Account Settings">
               <div className="relative flex items-center justify-center p-2">
                 <div className="relative flex-shrink-0">
                   <img
-                    src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random"
+                    src={currentUser?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || currentUser?.username || 'User')}&background=random`}
                     className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
                     alt="Profile"
                   />
@@ -457,12 +600,12 @@ function RadixTooltip({ text, children }: { text: string; children: React.ReactN
 
 /**
  * COMPONENT PHỤ: STATUS DOT
+ * Uses Tailwind classes instead of hardcoded HEX for better theme support
  */
 function StatusDot({ color, className }: { color: string; className?: string }) {
   return (
     <span
-      className={`w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm flex-shrink-0 ${className}`}
-      style={{ backgroundColor: color }}
+      className={`w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm flex-shrink-0 ${color} ${className}`}
     />
   );
 }
@@ -471,7 +614,13 @@ function StatusDot({ color, className }: { color: string; className?: string }) 
  * COMPONENT PHỤ: WORKSPACE POPOVER (Radix UI)
  * Hỗ trợ đầy đủ keyboard navigation và WCAG 2.1
  */
-function WorkspacePopover() {
+function WorkspacePopover({ 
+  workspaces, 
+  currentWorkspaceId 
+}: { 
+  workspaces: any[]; 
+  currentWorkspaceId?: string 
+}) {
   return (
     <Popover.Portal>
       <Popover.Content
@@ -482,29 +631,32 @@ function WorkspacePopover() {
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Switch Workspace</div>
-        <Popover.Close asChild>
-          <Link
-            to="/workspaces"
-            className="w-full flex items-center gap-3 p-2 bg-blue-50/50 text-blue-700 rounded-lg cursor-pointer border border-blue-100/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            <div className="w-6 h-6 bg-blue-600 rounded text-white text-[10px] flex items-center justify-center font-bold">P</div>
-            <span className="text-sm font-semibold flex-1 text-left">PronaFlow Corp</span>
-            <Check className="w-4 h-4" />
-          </Link>
-        </Popover.Close>
-        <Popover.Close asChild>
-          <Link
-            to="/workspaces"
-            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-600 transition-colors mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            <div className="w-6 h-6 bg-slate-400 rounded text-white text-[10px] flex items-center justify-center font-bold">M</div>
-            <span className="text-sm font-medium flex-1 text-left">My Freelance</span>
-          </Link>
-        </Popover.Close>
+        
+        {workspaces.map((workspace) => (
+          <Popover.Close asChild key={workspace.workspace_id}>
+            <Link
+              to={`/workspaces/${workspace.workspace_id}`}
+              className={`w-full flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                workspace.workspace_id === currentWorkspaceId
+                  ? 'bg-blue-50/50 text-blue-700 border border-blue-100/50'
+                  : 'hover:bg-slate-100 text-slate-600'
+              }`}
+            >
+              <div className={`w-6 h-6 rounded text-white text-[10px] flex items-center justify-center font-bold ${
+                workspace.workspace_id === currentWorkspaceId ? 'bg-blue-600' : 'bg-slate-400'
+              }`}>
+                {workspace.name?.charAt(0).toUpperCase() || 'W'}
+              </div>
+              <span className="text-sm font-semibold flex-1 text-left truncate">{workspace.name}</span>
+              {workspace.workspace_id === currentWorkspaceId && <Check className="w-4 h-4" />}
+            </Link>
+          </Popover.Close>
+        ))}
+        
         <div className="h-px bg-slate-100 my-1.5" />
         <Popover.Close asChild>
           <Link
-            to="/workspaces"
+            to="/workspaces/create"
             className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             <PlusCircle className="w-4 h-4 text-slate-400" /> Create Workspace
@@ -527,7 +679,7 @@ function WorkspacePopover() {
  * COMPONENT PHỤ: USER POPOVER (Radix UI)
  * Hỗ trợ đầy đủ keyboard navigation và WCAG 2.1
  */
-function UserPopover() {
+function UserPopover({ onLogout }: { onLogout: () => void }) {
   return (
     <Popover.Portal>
       <Popover.Content
@@ -557,6 +709,7 @@ function UserPopover() {
         <div className="h-px bg-slate-100 my-1.5" />
         <Popover.Close asChild>
           <button
+            onClick={onLogout}
             className="w-full flex items-center gap-3 p-2 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
           >
             <LogOut className="w-4 h-4" /> Log Out

@@ -439,8 +439,8 @@ function ProjectSettings({ project }: { project: Project }) {
     ];
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-in fade-in duration-500">
-            <div className="lg:col-span-1 space-y-1">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-in fade-in duration-500 h-full min-h-0">
+            <div className="lg:col-span-1 space-y-1 lg:sticky lg:top-6 self-start">
                 <h3 className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Danh mục cấu hình</h3>
                 {subTabs.map(tab => (
                     <button
@@ -459,171 +459,173 @@ function ProjectSettings({ project }: { project: Project }) {
                 ))}
             </div>
 
-            <div className="lg:col-span-3 pb-20">
-                {activeSubTab === 'GENERAL' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">Thông tin chung</h3>
-                                <p className="text-sm text-slate-500 mt-1">Quản lý các tham số nhận diện cơ bản của dự án PronaFlow.</p>
+            <div className="lg:col-span-3 pb-20 min-h-0">
+                <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+                    {activeSubTab === 'GENERAL' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Thông tin chung</h3>
+                                    <p className="text-sm text-slate-500 mt-1">Quản lý các tham số nhận diện cơ bản của dự án PronaFlow.</p>
+                                </div>
+                                <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
+                                    <Save className="w-4 h-4" /> Lưu thay đổi
+                                </button>
                             </div>
-                            <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
-                                <Save className="w-4 h-4" /> Lưu thay đổi
-                            </button>
-                        </div>
 
-                        <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-8 shadow-sm">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tên dự án thực thi</label>
-                                    <input type="text" defaultValue={project.name} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+                            <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-8 shadow-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tên dự án thực thi</label>
+                                        <input type="text" defaultValue={project.name} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mã định danh (Key)</label>
+                                        <div className="relative">
+                                            <input type="text" defaultValue={project.key} disabled className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-400 cursor-not-allowed font-mono" />
+                                            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mã định danh (Key)</label>
-                                    <div className="relative">
-                                        <input type="text" defaultValue={project.key} disabled className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-400 cursor-not-allowed font-mono" />
-                                        <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mô tả mục tiêu dự án</label>
+                                    <textarea rows={4} defaultValue={project.description} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-none" />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Loại hình thực thi</label>
+                                        <select defaultValue={project.type} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                                            <option value="AGILE">Agile (Linh hoạt)</option>
+                                            <option value="WATERFALL">Waterfall (Tuần tự)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Độ ưu tiên mặc định</label>
+                                        <select defaultValue={project.priority} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                                            <option value="CRITICAL">Nghiêm trọng</option>
+                                            <option value="HIGH">Cao</option>
+                                            <option value="MEDIUM">Trung bình</option>
+                                            <option value="LOW">Thấp</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mô tả mục tiêu dự án</label>
-                                <textarea rows={4} defaultValue={project.description} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-none" />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Loại hình thực thi</label>
-                                    <select defaultValue={project.type} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                                        <option value="AGILE">Agile (Linh hoạt)</option>
-                                        <option value="WATERFALL">Waterfall (Tuần tự)</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Độ ưu tiên mặc định</label>
-                                    <select defaultValue={project.priority} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                                        <option value="CRITICAL">Nghiêm trọng</option>
-                                        <option value="HIGH">Cao</option>
-                                        <option value="MEDIUM">Trung bình</option>
-                                        <option value="LOW">Thấp</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="p-6 bg-red-50 rounded-2xl border border-red-200 space-y-4">
-                            <h4 className="text-sm font-bold text-red-700 flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Vùng quản trị rủi ro</h4>
-                            <div className="flex items-center justify-between py-2 border-b border-red-100">
-                                <div>
-                                    <p className="text-sm font-bold text-red-900">Lưu trữ dự án (Archive)</p>
-                                    <p className="text-xs text-red-600 mt-1">Dữ liệu sẽ được bảo toàn nhưng chỉ có thể đọc.</p>
+                            <div className="p-6 bg-red-50 rounded-2xl border border-red-200 space-y-4">
+                                <h4 className="text-sm font-bold text-red-700 flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Vùng quản trị rủi ro</h4>
+                                <div className="flex items-center justify-between py-2 border-b border-red-100">
+                                    <div>
+                                        <p className="text-sm font-bold text-red-900">Lưu trữ dự án (Archive)</p>
+                                        <p className="text-xs text-red-600 mt-1">Dữ liệu sẽ được bảo toàn nhưng chỉ có thể đọc.</p>
+                                    </div>
+                                    <button className="px-4 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors">Lưu trữ</button>
                                 </div>
-                                <button className="px-4 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors">Lưu trữ</button>
-                            </div>
-                            <div className="flex items-center justify-between pt-2">
-                                <div>
-                                    <p className="text-sm font-bold text-red-900">Xóa vĩnh viễn (Destroy)</p>
-                                    <p className="text-xs text-red-600 mt-1">Hành động này không thể hoàn tác.</p>
+                                <div className="flex items-center justify-between pt-2">
+                                    <div>
+                                        <p className="text-sm font-bold text-red-900">Xóa vĩnh viễn (Destroy)</p>
+                                        <p className="text-xs text-red-600 mt-1">Hành động này không thể hoàn tác.</p>
+                                    </div>
+                                    <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all shadow-md active:scale-95">Xác nhận xóa</button>
                                 </div>
-                                <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-all shadow-md active:scale-95">Xác nhận xóa</button>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {activeSubTab === 'MEMBERS' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">Nhân sự & Phân quyền</h3>
-                                <p className="text-sm text-slate-500 mt-1">Quản lý đội ngũ tham gia và ma trận quyền hạn.</p>
+                    {activeSubTab === 'MEMBERS' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Nhân sự & Phân quyền</h3>
+                                    <p className="text-sm text-slate-500 mt-1">Quản lý đội ngũ tham gia và ma trận quyền hạn.</p>
+                                </div>
+                                <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md">
+                                    <UserPlus className="w-4 h-4" /> Mời thành viên
+                                </button>
                             </div>
-                            <button className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md">
-                                <UserPlus className="w-4 h-4" /> Mời thành viên
-                            </button>
-                        </div>
-                        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50 border-b border-slate-200">
-                                    <tr>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Thành viên</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vai trò</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {project.members.map(m => (
-                                        <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <img src={m.avatar_url} className="w-10 h-10 rounded-full ring-2 ring-white shadow-sm" />
-                                                    <div>
-                                                        <div className="text-sm font-bold text-slate-800">{m.name}</div>
-                                                        <div className="text-xs text-slate-400 flex items-center gap-1"><Mail className="w-3 h-3" /> {m.email}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg w-fit">
-                                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" /> {m.role}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
-                                            </td>
+                            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Thành viên</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vai trò</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Hành động</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {project.members.map(m => (
+                                            <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <img src={m.avatar_url} className="w-10 h-10 rounded-full ring-2 ring-white shadow-sm" />
+                                                        <div>
+                                                            <div className="text-sm font-bold text-slate-800">{m.name}</div>
+                                                            <div className="text-xs text-slate-400 flex items-center gap-1"><Mail className="w-3 h-3" /> {m.email}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg w-fit">
+                                                        <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" /> {m.role}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {activeSubTab === 'FEATURES' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-900">Phân hệ chức năng</h3>
-                            <p className="text-sm text-slate-500 mt-1">Kích hoạt hoặc vô hiệu hóa các công cụ chuyên biệt.</p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4">
-                            {[
-                                { title: 'Quản lý Sprint (Agile)', desc: 'Kích hoạt Backlog và Burndown Chart.', icon: Zap, active: project.type === 'AGILE' },
-                                { title: 'Biểu đồ Gantt (Timeline)', desc: 'Theo dõi tiến độ trên trục thời gian.', icon: CalendarRange, active: true },
-                                { title: 'Module QA & Testing', desc: 'Quản lý Test Case và Bug Tracking.', icon: Bug, active: false },
-                                { title: 'Theo dõi thời gian', desc: 'Cho phép thành viên log thời gian thực hiện.', icon: Clock, active: true },
-                            ].map((f, i) => (
-                                <div key={i} className="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-200 hover:shadow-md transition-all group">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><f.icon className="w-6 h-6" /></div>
-                                        <div><h4 className="text-sm font-bold text-slate-800">{f.title}</h4><p className="text-xs text-slate-500 mt-1">{f.desc}</p></div>
+                    {activeSubTab === 'FEATURES' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900">Phân hệ chức năng</h3>
+                                <p className="text-sm text-slate-500 mt-1">Kích hoạt hoặc vô hiệu hóa các công cụ chuyên biệt.</p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                {[
+                                    { title: 'Quản lý Sprint (Agile)', desc: 'Kích hoạt Backlog và Burndown Chart.', icon: Zap, active: project.type === 'AGILE' },
+                                    { title: 'Biểu đồ Gantt (Timeline)', desc: 'Theo dõi tiến độ trên trục thời gian.', icon: CalendarRange, active: true },
+                                    { title: 'Module QA & Testing', desc: 'Quản lý Test Case và Bug Tracking.', icon: Bug, active: false },
+                                    { title: 'Theo dõi thời gian', desc: 'Cho phép thành viên log thời gian thực hiện.', icon: Clock, active: true },
+                                ].map((f, i) => (
+                                    <div key={i} className="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl hover:border-indigo-200 hover:shadow-md transition-all group">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><f.icon className="w-6 h-6" /></div>
+                                            <div><h4 className="text-sm font-bold text-slate-800">{f.title}</h4><p className="text-xs text-slate-500 mt-1">{f.desc}</p></div>
+                                        </div>
+                                        <ToggleSwitch checked={f.active} />
                                     </div>
-                                    <ToggleSwitch checked={f.active} />
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {activeSubTab === 'NOTIFICATIONS' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-900">Cấu hình thông báo</h3>
-                            <p className="text-sm text-slate-500 mt-1">Kiểm soát cơ chế thông tin liên lạc và cảnh báo.</p>
-                        </div>
-                        <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-8 shadow-sm">
-                            <div className="space-y-4">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Cpu className="w-3.5 h-3.5" /> Sự kiện hệ thống</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {['Khởi tạo task', 'Thay đổi trạng thái', 'Bình luận mới', 'Tài liệu cập nhật', 'Task quá hạn'].map(e => (
-                                        <label key={e} className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-xl cursor-pointer border border-transparent hover:border-slate-200">
-                                            <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                                            <span className="text-sm font-medium text-slate-700">{e}</span>
-                                        </label>
-                                    ))}
+                    {activeSubTab === 'NOTIFICATIONS' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900">Cấu hình thông báo</h3>
+                                <p className="text-sm text-slate-500 mt-1">Kiểm soát cơ chế thông tin liên lạc và cảnh báo.</p>
+                            </div>
+                            <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-8 shadow-sm">
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><Cpu className="w-3.5 h-3.5" /> Sự kiện hệ thống</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {['Khởi tạo task', 'Thay đổi trạng thái', 'Bình luận mới', 'Tài liệu cập nhật', 'Task quá hạn'].map(e => (
+                                            <label key={e} className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-xl cursor-pointer border border-transparent hover:border-slate-200">
+                                                <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                                <span className="text-sm font-medium text-slate-700">{e}</span>
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -731,22 +733,31 @@ export default function ProjectDetails({
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-8 self-start bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
-                                <div className="text-right">
-                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Project Manager</div>
-                                    <div className="flex items-center justify-end gap-2 group cursor-pointer">
-                                        <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{currentProject.manager.name}</span>
-                                        <img src={currentProject.manager.avatar_url} className="w-8 h-8 rounded-full ring-2 ring-white shadow-sm" />
+                            <div className="flex flex-col gap-3 self-start">
+                                <div className="flex items-center gap-8 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
+                                    <div className="text-right">
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Project Manager</div>
+                                        <div className="flex items-center justify-end gap-2 group cursor-pointer">
+                                            <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{currentProject.manager.name}</span>
+                                            <img src={currentProject.manager.avatar_url} className="w-8 h-8 rounded-full ring-2 ring-white shadow-sm" />
+                                        </div>
+                                    </div>
+                                    <div className="h-10 w-px bg-slate-200"></div>
+                                    <div className="text-right">
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Thời hạn cuối</div>
+                                        <div className="flex items-center justify-end gap-1.5 text-sm font-bold text-slate-800">
+                                            <Calendar className="w-4 h-4 text-indigo-500" />
+                                            {new Date(currentProject.end_date).toLocaleDateString('vi-VN')}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="h-10 w-px bg-slate-200"></div>
-                                <div className="text-right">
-                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Thời hạn cuối</div>
-                                    <div className="flex items-center justify-end gap-1.5 text-sm font-bold text-slate-800">
-                                        <Calendar className="w-4 h-4 text-indigo-500" />
-                                        {new Date(currentProject.end_date).toLocaleDateString('vi-VN')}
-                                    </div>
-                                </div>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow-sm hover:bg-indigo-700 transition-colors"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Xuất report analytics
+                                </button>
                             </div>
                         </div>
 

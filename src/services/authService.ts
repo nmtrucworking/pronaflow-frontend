@@ -188,6 +188,14 @@ class AuthService {
     return axiosClient.post(`${this.baseURL}/password-reset/confirm`, data);
   }
 
+  /**
+   * Change Password
+   * POST /api/v1/auth/password-change
+   */
+  async changePassword(data: { current_password: string; new_password: string }): Promise<AxiosResponse> {
+    return axiosClient.post(`${this.baseURL}/password-change`, data);
+  }
+
   // ========================================================================
   // MFA Methods
   // ========================================================================

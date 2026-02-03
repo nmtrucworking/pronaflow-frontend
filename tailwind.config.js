@@ -1,6 +1,8 @@
 import COLORS from './src/config/colors.ts';
 import colors from 'tailwindcss/colors';
 
+const { lightBlue, warmGray, trueGray, coolGray, blueGray, ...baseColors } = colors;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -9,7 +11,7 @@ export default {
   ],
   theme: {
     colors: {
-      ...colors,
+      ...baseColors,
       // Transparent
       transparent: 'transparent',
       current: 'currentColor',
