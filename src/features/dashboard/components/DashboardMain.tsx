@@ -128,9 +128,9 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
                   <CalendarDays className="w-4 h-4 mr-2 text-indigo-500" /> Lịch tháng
                   {new Date().getMonth() + 1}
                 </h3>
-                <button className="text-xs text-indigo-600 hover:underline">
+                <a href="#calendar" className="text-xs text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
                   Mở rộng
-                </button>
+                </a>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-center mb-2">
@@ -177,13 +177,13 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
                 <div className="relative pl-4 group">
                   <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500 shadow-sm group-hover:scale-125 transition-transform" />
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                    <a href="#profile/sarah" className="font-semibold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                       Sarah
-                    </span>{' '}
+                    </a>{' '}
                     đã hoàn thành task{' '}
-                    <span className="font-mono text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded">
+                    <a href="#task/MKT-88" className="font-mono text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
                       MKT-88
-                    </span>
+                    </a>
                   </p>
                   <p className="text-[10px] text-slate-400 mt-1">10 phút trước</p>
                 </div>
@@ -194,9 +194,9 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
                       Hệ thống
                     </span>{' '}
                     đã gán bạn vào{' '}
-                    <span className="font-mono text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded">
+                    <a href="#task/DOCS-205" className="font-mono text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
                       DOCS-205
-                    </span>
+                    </a>
                   </p>
                   <p className="text-[10px] text-slate-400 mt-1">1 giờ trước</p>
                 </div>
@@ -207,9 +207,9 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
                       Bạn
                     </span>{' '}
                     đã bình luận trong{' '}
-                    <span className="font-mono text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded">
+                    <a href="#task/PFLOW-101" className="font-mono text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
                       PFLOW-101
-                    </span>
+                    </a>
                   </p>
                   <p className="text-[10px] text-slate-400 mt-1">3 giờ trước</p>
                 </div>

@@ -10,7 +10,6 @@ import {
   X,
   Command,
   ArrowRight,
-  Hash,
   Folder,
   CheckCircle2,
   Calendar,
@@ -258,7 +257,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
               <div className="px-4 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                 {categoryLabels[category as keyof typeof categoryLabels]}
               </div>
-              {items.map((cmd, index) => {
+              {items.map((cmd) => {
                 const globalIndex = filteredCommands.indexOf(cmd);
                 const isSelected = globalIndex === selectedIndex;
                 const Icon = cmd.icon;

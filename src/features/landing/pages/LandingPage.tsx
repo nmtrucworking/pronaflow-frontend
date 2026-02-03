@@ -206,6 +206,38 @@ const Navbar = () => {
       </div>
     </nav>
 
+    {/* Mobile Menu */}
+    {isMobileMenuOpen && (
+      <div className="fixed top-20 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-lg md:hidden">
+        <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
+          <a href="#features" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            Tính năng
+          </a>
+          <a href="#" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            Tài liệu
+          </a>
+          <a href="#pricing" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            Bảng giá
+          </a>
+          <a href="#" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            Lộ trình
+          </a>
+          <div className="pt-4 border-t border-slate-200 space-y-3">
+            <button
+              onClick={handleLogin}
+              className="w-full px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg transition-colors">
+              Đăng nhập
+            </button>
+            <button
+              onClick={handleRegister}
+              className="w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-all shadow-md shadow-indigo-100">
+              Bắt đầu miễn phí
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Login Modal */}
       <ModalLogin 
         isOpen={isLoginModalOpen}
@@ -292,12 +324,12 @@ const Hero = () => {
 
         <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight leading-[1.1]">
           Quản trị dự án đột phá <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-500">
+          <span className="bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-transparent font-extrabold">
             Cho đội nhóm chuyên gia
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl text-slate-500 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+        <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
           Trải nghiệm hiệu năng tối thượng trên Desktop kết hợp linh hoạt trên Web. 
           Giúp đội nhóm của bạn luôn đồng bộ dù đang làm việc offline hay online.
         </p>
@@ -305,13 +337,13 @@ const Hero = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
           <button 
             onClick={handleGetStarted}
-            className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-xl flex items-center justify-center gap-3 group hover:scale-105 active:scale-95">
+            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-xl flex items-center justify-center gap-3 group hover:shadow-2xl active:scale-95 transform hover:-translate-y-1">
             <Download size={20} />
             Tải bản Desktop App
           </button>
           <button 
             onClick={handleTryWeb}
-            className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200 font-bold rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95">
+            className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-slate-200 hover:border-indigo-400 text-slate-900 hover:text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95">
             <Globe size={20} />
             Truy cập bản Web
           </button>
@@ -375,7 +407,7 @@ const Hero = () => {
                 <Monitor size={24} className="text-slate-600 group-hover:text-indigo-600" />
               </div>
               <h3 className="font-bold text-slate-900 mb-1">Windows</h3>
-              <p className="text-xs text-slate-500">Windows 10+</p>
+              <p className="text-xs text-slate-600">Windows 10+</p>
               <div className="mt-4 text-xs text-slate-400 font-medium">Version 1.0.0</div>
             </button>
 
@@ -388,7 +420,7 @@ const Hero = () => {
                 <Laptop size={24} className="text-slate-600 group-hover:text-indigo-600" />
               </div>
               <h3 className="font-bold text-slate-900 mb-1">macOS</h3>
-              <p className="text-xs text-slate-500">macOS 11+</p>
+              <p className="text-xs text-slate-600">macOS 11+</p>
               <div className="mt-4 text-xs text-slate-400 font-medium">Version 1.0.0</div>
             </button>
 
@@ -401,7 +433,7 @@ const Hero = () => {
                 <Code size={24} className="text-slate-600 group-hover:text-indigo-600" />
               </div>
               <h3 className="font-bold text-slate-900 mb-1">Linux</h3>
-              <p className="text-xs text-slate-500">Ubuntu 20.04+</p>
+              <p className="text-xs text-slate-600">Ubuntu 20.04+</p>
               <div className="mt-4 text-xs text-slate-400 font-medium">Version 1.0.0</div>
             </button>
           </div>

@@ -122,7 +122,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <span className="text-[10px] font-bold opacity-80 uppercase tracking-wider">
                   Hiệu suất tuần
                 </span>
-                <Clock className="w-4 h-4 opacity-80" />
               </div>
               <div className="relative z-10">
                 <div className="flex justify-between items-end mb-2">

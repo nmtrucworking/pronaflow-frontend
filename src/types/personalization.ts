@@ -44,6 +44,14 @@ export interface DoNotDisturbSchedule {
 
 // ==================== Accessibility ====================
 export interface AccessibilitySettings {
+  fontSize: number; // 12-20px
+  fontFamily: FontFamily;
+  colorBlindMode: ColorBlindMode;
+  highContrast: boolean;
+  reducedMotion: boolean;
+  screenReaderOptimized: boolean;
+  density: DensityMode;
+  // Snake_case versions for API compatibility
   high_contrast: boolean;
   reduced_motion: boolean;
   screen_reader_enabled: boolean;
@@ -81,6 +89,9 @@ export interface Widget {
   position: { x: number; y: number };
   config?: Record<string, any>;
 }
+
+// Alias for backward compatibility
+export type DashboardWidget = Widget;
 
 export interface DashboardLayout {
   id: string;

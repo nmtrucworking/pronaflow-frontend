@@ -8,14 +8,10 @@ import React, { useState } from 'react';
 import {
   LayoutGrid,
   Plus,
-  Settings,
   Trash2,
   GripVertical,
   Eye,
   EyeOff,
-  Save,
-  RotateCcw,
-  CheckCircle2,
   BarChart3,
   Calendar,
   ListTodo,
@@ -40,6 +36,10 @@ interface WidgetTemplate {
   icon: React.ElementType;
   defaultSize: { w: number; h: number };
   category: 'productivity' | 'analytics' | 'collaboration';
+}
+
+interface DashboardCustomizerProps {
+  userId?: string;
 }
 
 const WIDGET_TEMPLATES: WidgetTemplate[] = [
@@ -117,23 +117,22 @@ const WIDGET_TEMPLATES: WidgetTemplate[] = [
   },
 ];
 
-const DashboardCustomizer: React.FC = () => {
-  const { data: layouts, isLoading } = useDashboardLayouts();
-  const createLayout = useCreateDashboardLayout();
-  const updateLayout = useUpdateDashboardLayout();
-  const deleteLayout = useDeleteDashboardLayout();
+const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({ userId = 'current-user' }) => {
+  const { data: layouts, isLoading } = useDashboardLayouts(userId);
+  const createLayout = useCreateDashboardLayout(userId);
+  const updateLayout = useUpdateDashboardLayout(userId, selectedLayout?.id || '');
+  const deleteLayout = useDeleteDashboardLayout(userId);
 
   const [selectedLayout, setSelectedLayout] = useState<DashboardLayout | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const handleCreateLayout = () => {
-    const newLayout: Omit<DashboardLayout, 'id' | 'createdAt' | 'updatedAt'> = {
+    const newLayout: Omit<DashboardLayout, 'id' | 'created_at' | 'updated_at' | 'user_id'> = {
       name: `Dashboard ${(layouts?.length || 0) + 1}`,
-      isDefault: layouts?.length === 0,
+      is_default: layouts?.length === 0,
       widgets: [],
     };
-    createLayout.mutate(newLayout);
+    createLayout.mutate(newLayout as any);
   };
 
   const handleAddWidget = (template: WidgetTemplate) => {
@@ -141,45 +140,39 @@ const DashboardCustomizer: React.FC = () => {
 
     const newWidget: DashboardWidget = {
       id: `${template.type}-${Date.now()}`,
-      type: template.type,
+      type: template.type as any,
+      title: template.name,
+      description: template.description,
+      icon: template.id,
+      is_enabled: true,
+      size: 'medium',
       position: { x: 0, y: 0 },
-      size: template.defaultSize,
-      isVisible: true,
       config: {},
     };
 
     const updatedWidgets = [...selectedLayout.widgets, newWidget];
-    updateLayout.mutate({
-      id: selectedLayout.id,
-      widgets: updatedWidgets,
-    });
+    updateLayout.mutate({ widgets: updatedWidgets } as any);
   };
 
   const handleToggleWidget = (widgetId: string) => {
     if (!selectedLayout) return;
 
     const updatedWidgets = selectedLayout.widgets.map((w) =>
-      w.id === widgetId ? { ...w, isVisible: !w.isVisible } : w
+      w.id === widgetId ? { ...w, is_enabled: !w.is_enabled } : w
     );
 
-    updateLayout.mutate({
-      id: selectedLayout.id,
-      widgets: updatedWidgets,
-    });
+    updateLayout.mutate({ widgets: updatedWidgets } as any);
   };
 
   const handleRemoveWidget = (widgetId: string) => {
     if (!selectedLayout) return;
 
     const updatedWidgets = selectedLayout.widgets.filter((w) => w.id !== widgetId);
-    updateLayout.mutate({
-      id: selectedLayout.id,
-      widgets: updatedWidgets,
-    });
+    updateLayout.mutate({ widgets: updatedWidgets } as any);
   };
 
   const handleSetDefault = (layoutId: string) => {
-    updateLayout.mutate({ id: layoutId, isDefault: true });
+    updateLayout.mutate({ is_default: true } as any);
   };
 
   const filteredTemplates =
@@ -241,7 +234,7 @@ const DashboardCustomizer: React.FC = () => {
                       {layout.name}
                     </span>
                   </div>
-                  {layout.isDefault && (
+                  {layout.is_default && (
                     <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
                       Default
                     </span>
@@ -251,7 +244,7 @@ const DashboardCustomizer: React.FC = () => {
                   {layout.widgets.length} widgets
                 </p>
                 <div className="flex items-center gap-2">
-                  {!layout.isDefault && (
+                  {!layout.is_default && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -407,16 +400,16 @@ const DashboardCustomizer: React.FC = () => {
                           {template.name}
                         </div>
                         <div className="text-sm text-slate-500">
-                          {widget.size.w}x{widget.size.h} grid cells
+                          {widget.size} widget
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleToggleWidget(widget.id)}
                           className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
-                          title={widget.isVisible ? 'Hide widget' : 'Show widget'}
+                          title={widget.is_enabled ? 'Hide widget' : 'Show widget'}
                         >
-                          {widget.isVisible ? (
+                          {widget.is_enabled ? (
                             <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                           ) : (
                             <EyeOff className="w-4 h-4 text-slate-400" />

@@ -191,7 +191,7 @@ export const useResetKeyboardShortcuts = () => {
       toast.success('Keyboard shortcuts reset to defaults');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data||message || 'Failed to reset shortcuts');
+      toast.error(error.response?.data?.message || 'Failed to reset shortcuts');
     },
   });
 };

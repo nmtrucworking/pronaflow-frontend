@@ -5,13 +5,17 @@
  */
 
 import React from 'react';
-import { Eye, Type, Palette, Zap, Volume2, MousePointer2 } from 'lucide-react';
+import { Eye, Type, Palette, Zap } from 'lucide-react';
 import { useUserSettings, useUpdateUserSettings } from '@/hooks/usePersonalization';
-import { ColorBlindMode, FontFamily, DensityMode } from '@/types/personalization';
+import { FontFamily, DensityMode } from '@/types/personalization';
 
-const AccessibilityPanel: React.FC = () => {
-  const { data: settings, isLoading } = useUserSettings();
-  const updateSettings = useUpdateUserSettings();
+interface AccessibilityPanelProps {
+  userId?: string;
+}
+
+const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({ userId = 'current-user' }) => {
+  const { data: settings, isLoading } = useUserSettings(userId);
+  const updateSettings = useUpdateUserSettings(userId);
 
   if (isLoading || !settings) {
     return (
@@ -22,13 +26,36 @@ const AccessibilityPanel: React.FC = () => {
     );
   }
 
-  const accessibility = settings.accessibility;
+  const accessibility = settings.accessibility || {
+    fontSize: 14,
+    fontFamily: 'system' as FontFamily,
+    colorBlindMode: 'none' as const,
+    highContrast: false,
+    reducedMotion: false,
+    screenReaderOptimized: false,
+    density: 'comfortable' as DensityMode,
+    high_contrast: false,
+    reduced_motion: false,
+    screen_reader_enabled: false,
+    keyboard_navigation: false,
+    color_blind_mode: 'none' as const,
+  };
 
   const handleToggle = (key: keyof typeof accessibility, value: any) => {
+    // Convert camelCase to snake_case for API
+    const apiKey = key === 'fontSize' ? 'fontSize' :
+      key === 'fontFamily' ? 'font_family' :
+      key === 'colorBlindMode' ? 'color_blind_mode' :
+      key === 'highContrast' ? 'high_contrast' :
+      key === 'reducedMotion' ? 'reduced_motion' :
+      key === 'screenReaderOptimized' ? 'screen_reader_enabled' :
+      key === 'density' ? 'density' : key;
+    
     updateSettings.mutate({
       accessibility: {
         ...accessibility,
-        [key]: value,
+        [apiKey]: value,
+        [key]: value, // Keep both for UI consistency
       },
     });
   };

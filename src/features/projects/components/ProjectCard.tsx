@@ -1,5 +1,5 @@
-import React from 'react';
-import { Zap, Layers, ArrowUpRight, MoreHorizontal } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Zap, Layers, ArrowUpRight, MoreHorizontal, Copy, Edit2, Trash2, ArchiveIcon } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import type { Project } from '../../../types/project';
 
@@ -12,11 +12,53 @@ interface ProjectCardProps {
   project: Project;
   onProjectClick?: (project: Project) => void;
   compact?: boolean;
+  onDoubleClick?: (project: Project) => void;
+  isDraggable?: boolean;
 }
 
-export const ProjectCard = ({ project, onProjectClick, compact = false }: ProjectCardProps) => {
+export const ProjectCard = ({ project, onProjectClick, onDoubleClick, compact = false, isDraggable = false }: ProjectCardProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+  const doubleClickTimer = useRef<NodeJS.Timeout | null>(null);
+  const [clickCount, setClickCount] = useState(0);
+
   const handleClick = () => {
-    onProjectClick?.(project);
+    setClickCount(prev => prev + 1);
+
+    if (doubleClickTimer.current) {
+      clearTimeout(doubleClickTimer.current);
+    }
+
+    doubleClickTimer.current = setTimeout(() => {
+      if (clickCount === 1) {
+        onProjectClick?.(project);
+      }
+      setClickCount(0);
+    }, 300);
+  };
+
+  const handleDoubleClick = () => {
+    if (doubleClickTimer.current) {
+      clearTimeout(doubleClickTimer.current);
+    }
+    setClickCount(0);
+    onDoubleClick?.(project);
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/json', JSON.stringify(project));
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setShowContextMenu(true);
   };
 
   const isAgile = project.type === 'AGILE';
@@ -26,12 +68,48 @@ export const ProjectCard = ({ project, onProjectClick, compact = false }: Projec
 
   return (
     <div 
-      onClick={handleClick} 
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
+      onDragStart={isDraggable ? handleDragStart : undefined}
+      onDragEnd={isDraggable ? handleDragEnd : undefined}
+      draggable={isDraggable}
       className={cn(
-        "group relative bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 hover:-translate-y-2 transition-all duration-300 flex flex-col overflow-hidden h-full cursor-pointer",
+        "group relative bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-2xl hover:border-slate-300 hover:-translate-y-2 transition-all duration-300 flex flex-col overflow-hidden h-full",
+        isDraggable && "cursor-move",
+        "select-none",
+        isDragging && "opacity-50 scale-95 border-indigo-500 bg-indigo-50",
         compact && "hover:-translate-y-1 hover:shadow-lg"
       )}
     >
+      {/* Right-click Context Menu */}
+      {showContextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="absolute right-0 top-0 z-50 w-48 bg-white border border-slate-200 rounded-lg shadow-xl animate-in fade-in scale-in-95 origin-top-right duration-200"
+          onMouseLeave={() => setShowContextMenu(false)}
+        >
+          <div className="p-1">
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 text-sm hover:bg-slate-100 transition-colors group/item">
+              <Edit2 className="w-4 h-4 text-slate-500 group-hover/item:text-indigo-600" />
+              <span>Chỉnh sửa</span>
+            </button>
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 text-sm hover:bg-slate-100 transition-colors group/item">
+              <Copy className="w-4 h-4 text-slate-500 group-hover/item:text-indigo-600" />
+              <span>Nhân bản</span>
+            </button>
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 text-sm hover:bg-slate-100 transition-colors group/item">
+              <ArchiveIcon className="w-4 h-4 text-slate-500 group-hover/item:text-amber-600" />
+              <span>Lưu trữ</span>
+            </button>
+            <div className="border-t border-slate-100 my-1" />
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 text-sm hover:bg-red-50 transition-colors group/item">
+              <Trash2 className="w-4 h-4" />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      )}
       {/* Animated Top Stripe */}
       <div className={cn(
         "w-full opacity-70 group-hover:opacity-100 transition-all duration-300 bg-gradient-to-r transform",

@@ -26,6 +26,9 @@ import { TaskDetailPanel } from '../components/TaskDetailPanel';
 import { TaskGroupSection } from '../components/TaskGroupSection';
 import { TaskKanbanCard } from '../components/TaskKanbanCard';
 import { TaskListRow } from '../components/TaskListRow';
+import { TaskEmptyState } from '../components/TaskEmptyState';
+import { TaskBulkActionBar } from '../components/TaskBulkActionBar';
+import { taskService } from '../../../services/taskService';
 
 export default function TasksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
@@ -36,8 +39,20 @@ export default function TasksPage() {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ OVERDUE: false, TODAY: false, UPCOMING: false, DONE: true });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const toggleSection = (section: string) => setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  
+  const toggleTaskSelection = (taskId: string) => {
+    const newSelected = new Set(selectedTaskIds);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    setSelectedTaskIds(newSelected);
+  };
 
   // Filtering Logic
   const filteredTasks = useMemo(() => {
@@ -125,10 +140,21 @@ export default function TasksPage() {
         
         {viewMode === 'LIST' && (
           <div className="flex-1 w-full max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-            {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Quá hạn" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map(task => <TaskListRow key={task.id} task={task} onViewDetails={() => setSelectedTask(task)} />)}</TaskGroupSection>}
-            <TaskGroupSection title="Hôm nay" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map(task => <TaskListRow key={task.id} task={task} onViewDetails={() => setSelectedTask(task)}/>) : <div className="p-8 text-center text-slate-400 italic text-sm bg-slate-50/50">Không có công việc nào cần làm hôm nay.</div>}</TaskGroupSection>
-            <TaskGroupSection title="Sắp tới" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map(task => <TaskListRow key={task.id} task={task} onViewDetails={() => setSelectedTask(task)}/>)}</TaskGroupSection>
-            <TaskGroupSection title="Đã hoàn thành" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map(task => <TaskListRow key={task.id} task={task} onViewDetails={() => setSelectedTask(task)}/>)}</TaskGroupSection>
+            {filteredTasks.length === 0 ? (
+              <TaskEmptyState 
+                type={searchQuery ? "no-results" : "no-tasks"}
+                searchQuery={searchQuery}
+                onCreateTask={() => setIsCreateOpen(true)}
+                onClearSearch={() => setSearchQuery('')}
+              />
+            ) : (
+              <>
+                {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Quá hạn" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} />)}</TaskGroupSection>}
+                <TaskGroupSection title="Hôm nay" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)}/>) : <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateOpen(true)} />}</TaskGroupSection>
+                <TaskGroupSection title="Sắp tới" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)}/>)}</TaskGroupSection>
+                <TaskGroupSection title="Đã hoàn thành" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)}/>)}</TaskGroupSection>
+              </>
+            )}
           </div>
         )}
 
@@ -153,6 +179,39 @@ export default function TasksPage() {
       {/* MODALS */}
       <TaskDetailPanel task={selectedTask} onClose={() => setSelectedTask(null)} />
       <CsvImportModal isOpen={isCsvModalOpen} onClose={() => setIsCsvModalOpen(false)} onImportSuccess={(count) => { console.log(`Imported ${count}`); setIsCsvModalOpen(false); }} />
+
+      {/* BULK ACTION BAR */}
+      <TaskBulkActionBar
+        selectedCount={selectedTaskIds.size}
+        isVisible={selectedTaskIds.size > 0}
+        isLoading={isBulkLoading}
+        onClose={() => setSelectedTaskIds(new Set())}
+        onStatusChange={async (status) => {
+          setIsBulkLoading(true);
+          try {
+            await taskService.bulkUpdateTasks({
+              task_ids: Array.from(selectedTaskIds),
+              status: status.toLowerCase() as any,
+            });
+            setSelectedTaskIds(new Set());
+          } catch (error) {
+            console.error('Failed to update tasks:', error);
+          } finally {
+            setIsBulkLoading(false);
+          }
+        }}
+        onDelete={async () => {
+          setIsBulkLoading(true);
+          try {
+            await taskService.bulkDeleteTasks(Array.from(selectedTaskIds));
+            setSelectedTaskIds(new Set());
+          } catch (error) {
+            console.error('Failed to delete tasks:', error);
+          } finally {
+            setIsBulkLoading(false);
+          }
+        }}
+      />
     </div>
   );
 }

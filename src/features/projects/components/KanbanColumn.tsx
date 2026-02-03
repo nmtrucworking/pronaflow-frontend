@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import type { Project, ProjectStatus } from '@/types/project';
 import { Circle, Clock, Pause, CheckCircle2 } from 'lucide-react';
@@ -8,6 +8,7 @@ interface KanbanColumnProps {
   status: ProjectStatus;
   projects: Project[];
   onProjectClick: (project: Project) => void;
+  onStatusChange?: (projectId: string, newStatus: ProjectStatus) => void;
 }
 
 const statusConfig: Record<ProjectStatus, { 
@@ -51,9 +52,42 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   status,
   projects,
   onProjectClick,
+  onStatusChange,
 }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
   const config = statusConfig[status];
   const Icon = config.icon;
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // Only set to false if leaving the actual drop zone, not to child elements
+    if (e.currentTarget === e.target) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    try {
+      const projectData = e.dataTransfer.getData('application/json');
+      if (projectData) {
+        const project = JSON.parse(projectData);
+        // Only update if status is different
+        if (project.status !== status) {
+          onStatusChange?.(project.id, status);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse dropped project data:', error);
+    }
+  };
 
   return (
     <div className="flex-shrink-0 w-80">
@@ -77,10 +111,16 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
 
       {/* Column Content */}
-      <div className={cn(
-        "min-h-[500px] max-h-[calc(100vh-280px)] overflow-y-auto p-3 space-y-3 bg-white border-2 rounded-b-xl custom-scrollbar",
-        config.borderColor
-      )}>
+      <div 
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cn(
+          "min-h-[500px] max-h-[calc(100vh-280px)] overflow-y-auto p-3 space-y-3 bg-white border-2 rounded-b-xl custom-scrollbar transition-all duration-200",
+          config.borderColor,
+          isDragOver && "bg-gradient-to-b from-indigo-50 to-white border-indigo-400 shadow-inset"
+        )}
+      >
         {projects.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-slate-400 text-sm">
             Không có dự án
@@ -96,6 +136,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                 project={project} 
                 onProjectClick={onProjectClick}
                 compact
+                isDraggable={true}
               />
             </div>
           ))

@@ -6,7 +6,6 @@
 
 import React from 'react';
 import { X, Command, Keyboard } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ShortcutGroup {
   title: string;

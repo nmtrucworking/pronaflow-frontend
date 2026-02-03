@@ -41,6 +41,9 @@ import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 // Import Error Pages
 import { Error404Page, Error500Page } from './features/error';
 
+// Import Agentation
+import { Agentation } from 'agentation';
+
 /*
  * Configure routing for the application using React Router v6.
  * The MainLayout component wraps around internal pages to provide consistent layout with Sidebar.
@@ -142,6 +145,7 @@ function App() {
         isOpen={isShortcutsModalOpen}
         onClose={() => setIsShortcutsModalOpen(false)}
       />
+      <Agentation />
     </>
   );
 }

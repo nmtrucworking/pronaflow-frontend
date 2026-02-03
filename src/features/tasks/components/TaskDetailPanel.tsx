@@ -25,6 +25,7 @@ import type { TaskEntity, TaskPriority, TaskStatus } from '../types';
 import { PRIORITY_CONFIG, STATUS_CONFIG, USERS } from '../constants';
 import { cn } from '../utils';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { TaskCommentSection } from './TaskCommentSection';
 
 export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, onClose: () => void }) => {
   const [activePopover, setActivePopover] = useState<'status' | 'priority' | 'assignee' | 'deadline' | null>(null);
@@ -334,58 +335,14 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
               </div>
             </div>
 
-            {/* ACTIVITY */}
+            {/* ACTIVITY & COMMENTS */}
             <div className="border-t border-slate-200 pt-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-sm font-bold text-slate-800">Hoạt động</h3>
-                <div className="flex gap-2">
-                  <button className="text-xs font-medium text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-colors">Chỉ hiện bình luận</button>
-                  <button className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md shadow-sm">Tất cả</button>
-                </div>
-              </div>
-
-              <div className="space-y-8 relative">
-                <div className="absolute left-[15px] top-2 bottom-0 w-px bg-slate-200"></div>
-
-                <div className="flex gap-4 relative z-10 group">
-                  <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors shadow-sm">
-                    <History className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 pt-1">
-                    <p className="text-sm text-slate-600"><span className="font-semibold text-slate-800">Nguyen Truc</span> đã đổi trạng thái sang <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase align-middle">In Progress</span></p>
-                    <p className="text-xs text-slate-400 mt-1">2 giờ trước</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 relative z-10 group">
-                  <img src="https://ui-avatars.com/api/?name=Alice&background=ef4444&color=fff" className="w-8 h-8 rounded-full border-2 border-white ring-1 ring-slate-200 shadow-sm" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-slate-800">Alice Designer</span>
-                      <span className="text-xs text-slate-400">1 giờ trước</span>
-                    </div>
-                    <div className="bg-white p-3 rounded-md border border-slate-200 text-sm text-slate-700 shadow-sm">
-                      Đã cập nhật file mockup v2. Các bạn check nhé!
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <TaskCommentSection taskId={task.id} />
             </div>
           </div>
         </div>
 
-        {/* FOOTER COMMENT */}
-        <div className="p-4 bg-white border-t border-slate-200 flex-shrink-0 z-10">
-          <div className="flex gap-3 items-center">
-            <img src="https://ui-avatars.com/api/?name=Bob&background=random" className="w-9 h-9 rounded-full border border-slate-100 shadow-sm" />
-            <div className="flex-1 relative group">
-              <input type="text" placeholder="Viết bình luận..." className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-inner" />
-              <button className="absolute right-2 top-2 p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all transform active:scale-90">
-                <SendHorizontal className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* FOOTER - Removed, integrated comments in activity section */}
       </div>
     </div>
   );

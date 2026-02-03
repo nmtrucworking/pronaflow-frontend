@@ -307,12 +307,12 @@ const ProfileSettings = () => {
             </InputGroup>
             <InputGroup label="Phòng ban" id="department">
               <div className="relative group">
-                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
-                <select name="department" value={formData.department} onChange={handleChange} className="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none cursor-pointer">
+                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none z-10" />
+                <select name="department" value={formData.department} onChange={handleChange} className="w-full pl-9 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600">
                   <option value="" disabled>Chọn phòng ban</option>
                   {DEPARTMENTS.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 pointer-events-none transition-colors" />
               </div>
             </InputGroup>
           </div>
@@ -330,7 +330,7 @@ const ProfileSettings = () => {
                   <input type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Thành phố" className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" />
                 </div>
                 <div className="relative w-1/3 min-w-[120px]">
-                  <select name="country" value={formData.country} onChange={handleChange} className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none cursor-pointer">
+                  <select name="country" value={formData.country} onChange={handleChange} className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600">
                     {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -499,10 +499,10 @@ const PreferenceSettings = () => {
                   key={item.id}
                   onClick={() => setTheme(item.id as any)}
                   className={cn(
-                    "flex flex-col items-center p-3 rounded-xl border-2 transition-all active:scale-95",
+                    "flex flex-col items-center p-3 rounded-xl border-2 transition-all active:scale-95 relative group",
                     isActive 
-                      ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20" 
-                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
+                      ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 shadow-md shadow-indigo-500/20" 
+                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 hover:shadow-sm"
                   )}
                 >
                   <div className={cn(
@@ -516,6 +516,11 @@ const PreferenceSettings = () => {
                   <span className={cn("text-xs font-medium", isActive ? "text-indigo-700 dark:text-indigo-300" : "text-slate-600 dark:text-slate-400")}>
                     {item.label}
                   </span>
+                  {isActive && (
+                    <div className="absolute top-2 right-2 flex items-center justify-center w-5 h-5 bg-indigo-600 rounded-full text-white">
+                      <Check className="w-3 h-3" />
+                    </div>
+                  )}
                 </button>
               )
             })}
@@ -537,19 +542,32 @@ const PreferenceSettings = () => {
               </span>
             }
           >
-            <div className="relative">
-              <select 
-                value={colorMode}
-                onChange={(e) => setColorMode(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
-              >
-                <option value="default">Mặc định</option>
-                <option value="protanopia">Mù màu đỏ (Protanopia)</option>
-                <option value="deuteranopia">Mù màu lục (Deuteranopia)</option>
-                <option value="tritanopia">Mù màu lam (Tritanopia)</option>
-                <option value="high_contrast">Độ tương phản cao</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <div className="space-y-2">
+              <div className="relative">
+                <select 
+                  value={colorMode}
+                  onChange={(e) => setColorMode(e.target.value)}
+                  className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+                >
+                  <option value="default">Mặc định</option>
+                  <option value="protanopia">Mù màu đỏ (Protanopia)</option>
+                  <option value="deuteranopia">Mù màu lục (Deuteranopia)</option>
+                  <option value="tritanopia">Mù màu lam (Tritanopia)</option>
+                  <option value="high_contrast">Độ tương phản cao</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+              {colorMode !== 'default' && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-md text-[11px] font-medium text-indigo-700 dark:text-indigo-400">
+                  <Check className="w-3 h-3" />
+                  Đã bật: {
+                    colorMode === 'protanopia' ? 'Mù màu đỏ (Protanopia)' :
+                    colorMode === 'deuteranopia' ? 'Mù màu lục (Deuteranopia)' :
+                    colorMode === 'tritanopia' ? 'Mù màu lam (Tritanopia)' :
+                    'Độ tương phản cao'
+                  }
+                </div>
+              )}
             </div>
           </InputGroup>
 
@@ -589,7 +607,7 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
-                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="vi-VN">🇻🇳 Tiếng Việt</option>
                   <option value="en-US">🇺🇸 English (US)</option>
@@ -607,7 +625,7 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
-                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="Asia/Ho_Chi_Minh">(GMT+7) Ho Chi Minh</option>
                   <option value="Asia/Bangkok">(GMT+7) Bangkok</option>
@@ -628,7 +646,7 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
-                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="DD/MM/YYYY">DD/MM/YYYY (03/02/2026)</option>
                   <option value="MM/DD/YYYY">MM/DD/YYYY (02/03/2026)</option>
@@ -644,7 +662,7 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
-                  className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="24h">24 giờ (14:30)</option>
                   <option value="12h">12 giờ (2:30 PM)</option>
@@ -1273,17 +1291,18 @@ export default function GeneralSettingsPage() {
               </div>
 
               {/* Sidebar Footer Links */}
-              <div className="hidden md:block mt-auto pt-6 px-3 border-t border-slate-100 dark:border-slate-800 pb-2">
-                <a href="#" className="flex items-center text-xs text-slate-500 hover:text-indigo-600 transition-colors mb-2">
-                  <HelpCircle className="w-3.5 h-3.5 mr-2" />
+              <div className="hidden md:block mt-auto pt-6 px-3 border-t border-slate-100 dark:border-slate-800 pb-2 space-y-2">
+                <a href="#help" className="flex items-center text-xs text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium group">
+                  <HelpCircle className="w-3.5 h-3.5 mr-2 group-hover:scale-110 transition-transform" />
                   Trung tâm trợ giúp
+                  <ExternalLink className="w-2.5 h-2.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
-                <div className="flex gap-3 text-[10px] text-slate-400 mt-3">
-                  <a href="#" className="hover:text-slate-600">Privacy</a>
+                <div className="flex gap-2 text-[10px] text-slate-400 pt-1">
+                  <a href="#privacy" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">Bảo mật</a>
                   <span>•</span>
-                  <a href="#" className="hover:text-slate-600">Terms</a>
+                  <a href="#terms" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">Điều khoản</a>
                   <span>•</span>
-                  <span>v1.2.0</span>
+                  <span className="text-slate-500 font-medium">v1.2.0</span>
                 </div>
               </div>
             </Tabs.List>
@@ -1307,11 +1326,11 @@ export default function GeneralSettingsPage() {
               </Tabs.Content>
 
               <Tabs.Content value="accessibility" className="outline-none">
-                <AccessibilityPanel />
+                <AccessibilityPanel userId="current-user" />
               </Tabs.Content>
 
               <Tabs.Content value="dashboard" className="outline-none">
-                <DashboardCustomizer />
+                <DashboardCustomizer userId="current-user" />
               </Tabs.Content>
 
               <Tabs.Content value="shortcuts" className="outline-none">

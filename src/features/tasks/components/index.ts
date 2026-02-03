@@ -9,3 +9,7 @@ export { TaskListRow } from './TaskListRow';
 export { TaskKanbanCard } from './TaskKanbanCard';
 export { TaskGroupSection } from './TaskGroupSection';
 export { TaskDetailPanel } from './TaskDetailPanel';
+export { TaskEmptyState } from './TaskEmptyState';
+export { TaskBulkActionBar } from './TaskBulkActionBar';
+export { TaskSkeletonLoader } from './TaskSkeletonLoader';
+export { TaskCommentSection } from './TaskCommentSection';

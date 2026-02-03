@@ -16,6 +16,7 @@ interface ProjectListProps {
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   onColumnSort?: (column: string) => void;
+  onStatusChange?: (projectId: string, newStatus: ProjectStatus) => void;
 }
 
 export const ProjectList: React.FC<ProjectListProps> = ({
@@ -27,6 +28,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   sortColumn,
   sortDirection,
   onColumnSort,
+  onStatusChange,
 }) => {
   const renderSortIcon = (column: string) => {
     if (sortColumn !== column) {
@@ -79,8 +81,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   return (
     <main className="flex-1 overflow-y-auto">
       {viewMode === 'GRID' && (
-        <div className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 animate-in fade-in duration-500 auto-rows-max">
             {projects.map((project, index) => (
               <div 
                 key={project.id} 
@@ -89,7 +91,11 @@ export const ProjectList: React.FC<ProjectListProps> = ({
               >
                 <ProjectCard 
                   project={project} 
-                  onProjectClick={onProjectClick} 
+                  onProjectClick={onProjectClick}
+                  onDoubleClick={(proj) => {
+                    // Open full project details on double-click
+                    onProjectClick?.(proj);
+                  }}
                 />
               </div>
             ))}
@@ -143,21 +149,25 @@ export const ProjectList: React.FC<ProjectListProps> = ({
               status="PLANNING"
               projects={projects.filter(p => p.status === 'PLANNING')}
               onProjectClick={onProjectClick}
+              onStatusChange={onStatusChange}
             />
             <KanbanColumn
               status="IN_PROGRESS"
               projects={projects.filter(p => p.status === 'IN_PROGRESS')}
               onProjectClick={onProjectClick}
+              onStatusChange={onStatusChange}
             />
             <KanbanColumn
               status="ON_HOLD"
               projects={projects.filter(p => p.status === 'ON_HOLD')}
               onProjectClick={onProjectClick}
+              onStatusChange={onStatusChange}
             />
             <KanbanColumn
               status="COMPLETED"
               projects={projects.filter(p => p.status === 'COMPLETED')}
               onProjectClick={onProjectClick}
+              onStatusChange={onStatusChange}
             />
           </div>
         </div>

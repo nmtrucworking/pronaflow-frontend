@@ -1,4 +1,4 @@
-import { LayoutGrid, List as ListIcon, Kanban as KanbanIcon, Search, Plus, Settings2, X } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Kanban as KanbanIcon, Search, Plus, Settings2, X, Clipboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ViewMode } from '../constants/viewModes';
 import type { ProjectStatus, ProjectPriority } from '@/types/project';
@@ -55,7 +55,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="animate-in fade-in slide-in-from-left-4 duration-500">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-              📋 Tất cả dự án
+              <Clipboard className="w-8 h-8 text-indigo-600" />
+              Tất cả dự án
             </h1>
             <p className="text-slate-600 mt-1">Quản lý, theo dõi tiến độ và cộng tác trên các dự án của bạn</p>
           </div>
