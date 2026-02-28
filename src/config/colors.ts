@@ -1,22 +1,22 @@
 /**
  * PRONAFLOW COLOR PALETTE & DESIGN SYSTEM
  * Centralized color reference for professional design consistency
- * All colors derive from the primary emerald green: rgb(5 150 105)
+ * All colors derive from the primary logo teal: #14b8a6
  */
 
 export const COLORS = {
-  // Primary Brand Color - Emerald Green
+  // Primary Brand Color - Logo Teal
   primary: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: 'rgb(5 150 105 / 1)', // Main brand color
-    600: '#059669',
-    700: '#047857',
-    800: '#065f46',
-    900: '#064e3b',
+    50: '#f0fdfa',
+    100: '#ccfbf1',
+    200: '#99f6e4',
+    300: '#5eead4',
+    400: '#2dd4bf',
+    500: '#14b8a6', // Main brand color (logo light/dark midpoint)
+    600: '#0d9488',
+    700: '#0f766e',
+    800: '#115e59',
+    900: '#134e4a',
   },
 
   // Neutral Colors - Slate
@@ -36,12 +36,12 @@ export const COLORS = {
   // Semantic Colors
   semantic: {
     success: {
-      50: '#f0fdf4',
-      100: '#dcfce7',
-      500: 'rgb(5 150 105 / 1)',
-      600: '#059669',
-      700: '#047857',
-      900: '#064e3b',
+      50: '#f0fdfa',
+      100: '#ccfbf1',
+      500: '#14b8a6',
+      600: '#0d9488',
+      700: '#0f766e',
+      900: '#134e4a',
     },
     warning: {
       50: '#fffbeb',
@@ -62,21 +62,21 @@ export const COLORS = {
     info: {
       50: '#f0f9ff',
       100: '#e0f2fe',
-      500: 'rgb(5 150 105 / 1)',
-      600: '#059669',
-      700: '#047857',
-      900: '#064e3b',
+      500: '#14b8a6',
+      600: '#0d9488',
+      700: '#0f766e',
+      900: '#134e4a',
     },
   },
 
   // Status Colors
   status: {
-    success: 'rgb(5 150 105 / 1)',
+    success: '#14b8a6',
     warning: '#f59e0b',
     error: '#ef4444',
-    info: 'rgb(5 150 105 / 1)',
+    info: '#14b8a6',
     pending: '#f59e0b',
-    active: 'rgb(5 150 105 / 1)',
+    active: '#14b8a6',
     inactive: '#94a3b8',
   },
 
@@ -115,7 +115,7 @@ export const COLORS = {
       light: '#f1f5f9',
       medium: '#e2e8f0',
       strong: '#cbd5e1',
-      focus: 'rgb(5 150 105 / 1)',
+      focus: '#14b8a6',
     },
 
     // Shadow Colors
@@ -146,7 +146,7 @@ export const COLORS = {
       light: '#334155',
       medium: '#475569',
       strong: '#64748b',
-      focus: 'rgb(5 150 105 / 1)',
+      focus: '#14b8a6',
     },
   },
 } as const;

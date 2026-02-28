@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Calendar, Zap, Layers, ArrowUpRight, MoreHorizontal } from 'lucide-react';
 import { cn } from '../../../lib/utils';

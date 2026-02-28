@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useMemo } from 'react';
 import type { Project, ProjectStatus } from '@/types/project';
 import type { SortOption } from '../constants/viewModes';

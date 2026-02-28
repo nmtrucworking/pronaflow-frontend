@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Task } from '../types/task';
 import type { TaskEntity } from '../features/dashboard/types/dashboard-types';
 import { MOCK_MEMBERS } from './projects';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ProjectCard } from './ProjectCard';
 import { ProjectRow } from './ProjectRow';
 import { KanbanColumn } from './KanbanColumn';

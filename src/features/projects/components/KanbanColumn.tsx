@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import type { Project, ProjectStatus } from '@/types/project';

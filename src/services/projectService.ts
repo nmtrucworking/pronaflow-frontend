@@ -14,7 +14,7 @@ import {
   ProjectSettings,
 } from '@/types/project';
 
-interface ProjectListResponse {
+export interface ProjectListResponse {
   projects: Project[];
   pagination: {
     page: number;
@@ -24,14 +24,14 @@ interface ProjectListResponse {
   };
 }
 
-interface ProjectTemplate {
+export interface ProjectTemplate {
   template_id: string;
   name: string;
   description?: string;
   created_at: string;
 }
 
-interface ChangeRequest {
+export interface ChangeRequest {
   change_request_id: string;
   project_id: string;
   title: string;
@@ -40,7 +40,7 @@ interface ChangeRequest {
   created_at: string;
 }
 
-interface ProjectMetrics {
+export interface ProjectMetrics {
   project_id: string;
   health_status: 'green' | 'amber' | 'red';
   metrics: {

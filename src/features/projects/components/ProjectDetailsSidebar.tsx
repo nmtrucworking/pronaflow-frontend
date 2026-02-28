@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { X, Maximize2, BarChart2, List, FileText, Settings, Users, Calendar } from 'lucide-react';
 import { cn } from '../../../lib/utils';

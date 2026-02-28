@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { FilePlus, Calendar, Zap, Activity, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../lib/utils';

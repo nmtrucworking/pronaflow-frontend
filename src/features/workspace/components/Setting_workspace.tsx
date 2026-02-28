@@ -797,7 +797,7 @@ const TagActionPopover = ({ tag, onEdit, onDelete }: { tag: any, onEdit: () => v
 const WorkspaceTags = () => {
   const [tags, setTags] = useState(MOCK_TAGS);
   const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'usage', direction: 'asc' | 'desc' } | null>(null);
-  const [newTagColor, setNewTagColor] = useState(COLORS.semantic.info[500]);
+  const [newTagColor, setNewTagColor] = useState<string>(COLORS.semantic.info[500]);
   // State for Edit/Delete actions in real app would go here
 
   // Sorting Logic

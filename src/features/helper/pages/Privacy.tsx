@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { 
   ChevronRight, Shield, Heart, Database, UserCheck, 
   Lock, Users, Cookie, RefreshCw, Mail, 
@@ -63,9 +65,9 @@ const App: React.FC = () => {
       <div className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
-            <span className="hover:text-blue-600 cursor-pointer transition-colors">Hỗ trợ</span>
+                        <Link to={ROUTES.help.root} className="hover:text-blue-600 cursor-pointer transition-colors">Hỗ trợ</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-blue-600 cursor-pointer transition-colors">Pháp lý</span>
+                        <Link to={ROUTES.help.legal} className="hover:text-blue-600 cursor-pointer transition-colors">Pháp lý</Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-slate-900 font-semibold">Chính sách bảo mật</span>
           </nav>
@@ -120,16 +122,16 @@ const App: React.FC = () => {
                     </nav>
 
                     <div className="mt-8 pt-8 border-t border-slate-200 space-y-4">
-                        <button className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
+                        <Link to={ROUTES.help.terms} className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
                             <Download className="w-4 h-4" />
-                            Xuất tệp PDF lưu trữ
-                        </button>
+                            Mở điều khoản dịch vụ
+                        </Link>
                         <div className="pt-2">
                             <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Tài liệu bổ trợ</h5>
-                            <button className="flex items-center gap-2 text-sm text-blue-600 font-bold hover:underline">
+                            <Link to={ROUTES.help.terms} className="flex items-center gap-2 text-sm text-blue-600 font-bold hover:underline">
                                 <FileText className="w-4 h-4" />
                                 Điều khoản dịch vụ
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -331,10 +333,10 @@ const App: React.FC = () => {
                                 <h3 className="text-xl font-bold mb-2">Đội ngũ Hỗ trợ Pháp lý</h3>
                                 <p className="text-slate-400 text-sm max-w-sm">Chúng tôi luôn sẵn sàng hỗ trợ quý khách giải quyết các thắc mắc về bảo mật trong vòng 24 giờ làm việc.</p>
                             </div>
-                            <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+                            <a href="mailto:legal@pronaflow.com" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
                                 <Mail className="w-5 h-5" />
                                 Liên hệ ngay
-                            </button>
+                            </a>
                         </div>
                     </section>
 

@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ChevronRight, FileText, Calendar, ShieldCheck, Download, 
   Shield, User, Copyright, Scale, CreditCard, XCircle, 
   Edit, AlertTriangle, Mail 
 } from 'lucide-react';
+import { ROUTES } from '@/routes/paths';
 
 /**
  * TermsPage Component
@@ -78,8 +80,8 @@ const App: React.FC = () => {
           </div>
           
           <p className="text-lg text-slate-600 max-w-3xl leading-relaxed">
-            Tài liệu này quy định các điều kiện pháp lý ràng buộc giữa người dùng và hệ thống PronaFlow. 
-            Việc truy cập và sử dụng dịch vụ đồng nghĩa với việc quý khách xác nhận đã đọc, hiểu và chấp thuận hoàn toàn các nội dung dưới đây.
+            Điều khoản dịch vụ này điều chỉnh toàn bộ quan hệ giữa người dùng và PronaFlow khi truy cập, đăng ký hoặc sử dụng nền tảng.
+            Bằng việc tiếp tục sử dụng dịch vụ, bạn xác nhận đã đọc, hiểu và đồng ý bị ràng buộc bởi các điều khoản dưới đây.
           </p>
           
           <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-slate-400">
@@ -89,7 +91,7 @@ const App: React.FC = () => {
             </span>
             <span className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-500" /> 
-              Phiên bản: 2.1 (Ổn định)
+              Phiên bản: 2.2
             </span>
           </div>
         </div>
@@ -120,16 +122,29 @@ const App: React.FC = () => {
               </nav>
 
               <div className="mt-8 pt-8 border-t border-slate-200 space-y-4">
-                <button className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
+                >
                   <Download className="w-4 h-4" />
                   Tải bản PDF lưu trữ
                 </button>
                 <div className="pt-2">
                   <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Tài liệu liên quan</h5>
-                  <button className="flex items-center gap-2 text-sm text-emerald-600 font-medium hover:underline">
+                  <Link
+                    to={ROUTES.help.privacy}
+                    className="flex items-center gap-2 text-sm text-emerald-600 font-medium hover:underline"
+                  >
                     <Shield className="w-4 h-4" />
                     Chính sách bảo mật dữ liệu
-                  </button>
+                  </Link>
+                  <Link
+                    to={ROUTES.help.legal}
+                    className="mt-2 flex items-center gap-2 text-sm text-emerald-600 font-medium hover:underline"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Trung tâm pháp lý
+                  </Link>
                 </div>
               </div>
             </div>
@@ -148,11 +163,14 @@ const App: React.FC = () => {
                   <h2 className="text-2xl font-bold text-slate-900">1. Tài khoản người dùng</h2>
                 </div>
                 <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4">
-                  <p>Người dùng có trách nhiệm cung cấp thông tin chính xác, minh bạch trong quá trình đăng ký tài khoản hệ thống.</p>
+                  <p>
+                    Bạn phải đủ năng lực pháp lý theo quy định hiện hành để tạo tài khoản và sử dụng dịch vụ. Thông tin đăng ký
+                    cần chính xác, cập nhật và thuộc quyền sử dụng hợp pháp của bạn hoặc tổ chức mà bạn đại diện.
+                  </p>
                   <ul className="list-disc pl-5 space-y-2">
-                    <li>Bảo mật thông tin đăng nhập là trách nhiệm duy nhất của chủ tài khoản.</li>
-                    <li>Nghiêm cấm hành vi chia sẻ tài khoản cho bên thứ ba mà không có sự đồng ý bằng văn bản của PronaFlow.</li>
-                    <li>Mọi hoạt động thực hiện dưới định danh tài khoản cá nhân sẽ được quy kết trách nhiệm cho chủ sở hữu tài khoản đó.</li>
+                    <li>Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và mọi hành vi phát sinh từ tài khoản của mình.</li>
+                    <li>Không được chia sẻ tài khoản trái phép, mạo danh người khác hoặc tạo nhiều tài khoản nhằm lách giới hạn hệ thống.</li>
+                    <li>PronaFlow có thể yêu cầu xác minh danh tính hoặc quyền đại diện tổ chức khi cần thiết để đảm bảo an toàn dịch vụ.</li>
                   </ul>
                 </div>
               </section>
@@ -167,10 +185,17 @@ const App: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900">2. Quyền sở hữu trí tuệ</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed text-justify">
-                  Toàn bộ mã nguồn, giao diện, thuật toán và cơ sở dữ liệu thuộc quyền sở hữu độc quyền của PronaFlow. 
-                  Người dùng không được phép sao chép, trích xuất dữ liệu (scraping) hoặc thực hiện các hành vi kỹ thuật đảo ngược (reverse engineering) đối với hệ thống dưới mọi hình thức thương mại hoặc phi thương mại.
-                </p>
+                <div className="space-y-4 text-slate-600 leading-relaxed">
+                  <p>
+                    Toàn bộ mã nguồn, giao diện, nhãn hiệu, logo, tài liệu kỹ thuật và nội dung hiển thị trên hệ thống thuộc quyền sở hữu
+                    hoặc quyền khai thác hợp pháp của PronaFlow và các bên cấp phép liên quan.
+                  </p>
+                  <p>
+                    PronaFlow cấp cho bạn quyền sử dụng dịch vụ có giới hạn, không độc quyền, không chuyển nhượng và có thể thu hồi theo
+                    đúng phạm vi gói dịch vụ đã đăng ký. Bạn không được sao chép, chỉnh sửa, phân phối lại, bán lại, đảo ngược kỹ thuật
+                    hoặc khai thác trái phép bất kỳ thành phần nào của hệ thống.
+                  </p>
+                </div>
               </section>
 
               <hr className="border-slate-100" />
@@ -184,15 +209,22 @@ const App: React.FC = () => {
                   <h2 className="text-2xl font-bold text-slate-900">3. Quy định sử dụng hợp lý</h2>
                 </div>
                 <p className="text-slate-600 leading-relaxed mb-6">
-                  Dịch vụ được cung cấp nhằm phục vụ các mục đích nghiệp vụ hợp pháp. Hành vi sử dụng tài nguyên hệ thống quá mức bình thường hoặc tấn công từ chối dịch vụ (DoS) sẽ bị ngăn chặn tự động.
+                  Bạn cam kết sử dụng dịch vụ cho mục đích hợp pháp, không gây gián đoạn hạ tầng kỹ thuật và không vi phạm quyền, lợi ích
+                  hợp pháp của bên thứ ba.
                 </p>
+                <ul className="list-disc pl-5 space-y-2 text-slate-600 mb-6">
+                  <li>Nghiêm cấm phát tán mã độc, tấn công từ chối dịch vụ, khai thác lỗ hổng hoặc thu thập dữ liệu trái phép.</li>
+                  <li>Nghiêm cấm đăng tải nội dung vi phạm pháp luật, xâm phạm quyền sở hữu trí tuệ hoặc thông tin cá nhân của người khác.</li>
+                  <li>Không được sử dụng hệ thống để gửi thư rác, lừa đảo hoặc các hoạt động gian lận tài chính, thương mại.</li>
+                </ul>
                 <div className="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="w-5 h-5 text-amber-600" />
                     <h4 className="text-amber-800 font-bold text-sm uppercase">Cảnh báo pháp lý</h4>
                   </div>
                   <p className="text-amber-700 text-sm">
-                    Vi phạm các điều khoản này có thể dẫn đến việc đình chỉ tài khoản vĩnh viễn và tiến hành các thủ tục pháp lý cần thiết để bảo vệ quyền lợi hợp pháp của nhà cung cấp dịch vụ.
+                    Vi phạm các điều khoản sử dụng có thể dẫn đến hạn chế chức năng, tạm khóa hoặc chấm dứt tài khoản và/hoặc áp dụng biện
+                    pháp pháp lý phù hợp theo quy định hiện hành.
                   </p>
                 </div>
               </section>
@@ -207,11 +239,17 @@ const App: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900">4. Điều khoản thanh toán</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Các gói dịch vụ trả phí được thực hiện theo chu kỳ thanh toán đã đăng ký. 
-                  Hệ thống không thực hiện hoàn trả chi phí đối với các dịch vụ đã được kích hoạt và sử dụng trong chu kỳ hiện tại. 
-                  Thông báo điều chỉnh mức phí sẽ được gửi trước ít nhất 30 ngày qua email chính thức.
-                </p>
+                <div className="space-y-4 text-slate-600 leading-relaxed">
+                  <p>
+                    Các gói trả phí được tính theo chu kỳ đã đăng ký (tháng/năm) và tự động gia hạn nếu bạn không hủy trước thời điểm gia
+                    hạn theo hướng dẫn tại trang thanh toán.
+                  </p>
+                  <p>
+                    Trừ trường hợp pháp luật bắt buộc khác đi hoặc có cam kết riêng bằng văn bản, phí dịch vụ đã thanh toán không được hoàn
+                    lại cho phần thời gian đã kích hoạt. Mức phí, tính năng và hạn mức có thể được điều chỉnh; mọi thay đổi sẽ được thông báo
+                    trước trong thời hạn hợp lý.
+                  </p>
+                </div>
               </section>
 
               <hr className="border-slate-100" />
@@ -224,10 +262,16 @@ const App: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900">5. Chấm dứt dịch vụ</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Người dùng có quyền hủy bỏ sử dụng dịch vụ vào bất kỳ thời điểm nào thông qua bảng điều khiển quản trị. 
-                  PronaFlow bảo lưu quyền chấm dứt cung cấp dịch vụ nếu người dùng vi phạm nghiêm trọng các quy định về an ninh mạng hoặc pháp luật hiện hành.
-                </p>
+                <div className="space-y-4 text-slate-600 leading-relaxed">
+                  <p>
+                    Bạn có thể chấm dứt sử dụng dịch vụ bất kỳ lúc nào bằng cách hủy gói hoặc yêu cầu đóng tài khoản. Sau khi chấm dứt,
+                    quyền truy cập vào một số dữ liệu có thể bị giới hạn theo chính sách lưu trữ và bảo mật hiện hành.
+                  </p>
+                  <p>
+                    PronaFlow có quyền tạm ngưng hoặc chấm dứt cung cấp dịch vụ nếu phát hiện vi phạm nghiêm trọng điều khoản, rủi ro an
+                    ninh hoặc yêu cầu từ cơ quan có thẩm quyền. Trong phạm vi khả thi, chúng tôi sẽ thông báo lý do và hướng dẫn xử lý.
+                  </p>
+                </div>
               </section>
 
               <hr className="border-slate-100" />
@@ -240,10 +284,17 @@ const App: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900">6. Thay đổi điều khoản</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed text-justify">
-                  Hệ thống định kỳ cập nhật các điều khoản để phù hợp với quy định pháp luật và sự thay đổi về mặt kỹ thuật. 
-                  Phiên bản mới nhất luôn có hiệu lực kể từ thời điểm công bố trên trang này. Việc tiếp tục sử dụng hệ thống sau thời điểm cập nhật được hiểu là sự chấp thuận đối với phiên bản điều khoản mới nhất.
-                </p>
+                <div className="space-y-4 text-slate-600 leading-relaxed">
+                  <p>
+                    Điều khoản có thể được cập nhật để phản ánh thay đổi về sản phẩm, mô hình vận hành hoặc yêu cầu pháp lý. Phiên bản mới
+                    sẽ được công bố tại trang này kèm ngày hiệu lực tương ứng.
+                  </p>
+                  <p>
+                    Nếu thay đổi có ảnh hưởng đáng kể đến quyền và nghĩa vụ của người dùng, PronaFlow sẽ nỗ lực thông báo trước qua email
+                    hoặc thông báo trong hệ thống. Việc bạn tiếp tục sử dụng dịch vụ sau thời điểm điều khoản có hiệu lực được xem là chấp
+                    thuận điều khoản cập nhật.
+                  </p>
+                </div>
               </section>
 
               <hr className="border-slate-100" />
@@ -256,10 +307,17 @@ const App: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900">7. Miễn trừ trách nhiệm</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Dịch vụ được cung cấp dựa trên thực trạng kỹ thuật hiện có. Chúng tôi cam kết duy trì độ ổn định tối đa 
-                  nhưng không chịu trách nhiệm đối với các tổn thất gián tiếp phát sinh từ việc tạm ngưng dịch vụ do sự cố hạ tầng internet quốc tế hoặc các trường hợp bất khả kháng theo quy định của pháp luật.
-                </p>
+                <div className="space-y-4 text-slate-600 leading-relaxed">
+                  <p>
+                    Dịch vụ được cung cấp trên cơ sở nỗ lực hợp lý để đảm bảo tính sẵn sàng, an toàn và liên tục. Tuy nhiên, không có cam kết
+                    tuyệt đối rằng dịch vụ sẽ luôn không gián đoạn hoặc không có lỗi trong mọi thời điểm.
+                  </p>
+                  <p>
+                    Trong phạm vi tối đa pháp luật cho phép, PronaFlow không chịu trách nhiệm đối với thiệt hại gián tiếp, ngẫu nhiên, đặc biệt
+                    hoặc hệ quả phát sinh từ việc sử dụng/không thể sử dụng dịch vụ, bao gồm sự cố hạ tầng bên thứ ba, tấn công mạng diện rộng
+                    hoặc sự kiện bất khả kháng.
+                  </p>
+                </div>
               </section>
 
               <hr className="border-slate-100" />
@@ -272,9 +330,21 @@ const App: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-slate-900">8. Thông tin liên hệ</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Mọi phản hồi hoặc yêu cầu làm rõ về các điều khoản dịch vụ, vui lòng liên hệ trực tiếp với bộ phận Pháp chế của chúng tôi để được giải quyết chính thức.
-                </p>
+                <div className="space-y-4 text-slate-600 leading-relaxed">
+                  <p>
+                    Mọi yêu cầu làm rõ liên quan đến điều khoản dịch vụ, quyền và nghĩa vụ của người dùng vui lòng liên hệ bộ phận pháp chế
+                    và hỗ trợ chính thức của PronaFlow.
+                  </p>
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li>Email pháp chế: legal@pronaflow.com</li>
+                    <li>Email hỗ trợ: support@pronaflow.com</li>
+                    <li>Thời gian phản hồi mục tiêu: 01-03 ngày làm việc</li>
+                  </ul>
+                  <p>
+                    Điều khoản này được điều chỉnh và giải thích theo pháp luật Việt Nam. Mọi tranh chấp phát sinh sẽ được ưu tiên giải quyết
+                    thông qua thương lượng thiện chí trước khi đưa ra cơ quan có thẩm quyền.
+                  </p>
+                </div>
               </section>
 
               {/* CTA LIÊN HỆ CUỐI TRANG */}
@@ -283,10 +353,13 @@ const App: React.FC = () => {
                 <p className="text-slate-600 text-sm mb-6 max-w-2xl leading-relaxed">
                   Đội ngũ chuyên viên của chúng tôi luôn sẵn sàng hỗ trợ phân tích các yêu cầu đặc thù để đảm bảo quá trình sử dụng hệ thống diễn ra thuận lợi nhất.
                 </p>
-                <button className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/10">
+                <a
+                  href="mailto:support@pronaflow.com"
+                  className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/10"
+                >
                   <Mail className="w-4 h-4" />
                   Liên hệ bộ phận Hỗ trợ
-                </button>
+                </a>
               </div>
             </div>
           </main>

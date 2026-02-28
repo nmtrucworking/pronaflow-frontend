@@ -184,7 +184,7 @@
 
 .dark {
   .token-page-shell {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-slate-900 text-slate-100;
   }
 
   .token-page-header {

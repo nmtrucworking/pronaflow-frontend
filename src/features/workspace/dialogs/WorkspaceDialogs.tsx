@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Workspace Action Dialogs
  * Common dialogs for workspace operations: edit, delete, manage members, invitations

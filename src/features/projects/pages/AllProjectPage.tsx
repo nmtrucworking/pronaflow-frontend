@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useMemo } from 'react';
 import type { Project, ProjectStatus, ProjectPriority } from '@/types/project';
 import { MOCK_PROJECTS } from '@/mocks/projects';

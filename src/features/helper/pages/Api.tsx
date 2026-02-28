@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { 
   Code, Terminal, Layers, Folder, CheckSquare, 
   Webhook, Github, Mail, ChevronDown, ChevronRight, 
@@ -105,12 +107,12 @@ const App: React.FC = () => {
                 Tối ưu hóa khả năng mở rộng hệ thống bằng cách tích hợp trực tiếp vào hạ tầng của PronaFlow. Giao thức REST API của chúng tôi cung cấp quyền truy cập toàn diện vào các thực thể dữ liệu và tiến trình nghiệp vụ một cách an toàn và chuẩn xác.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2">
+                <Link to={ROUTES.help.root} className="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2">
                   <BookOpen className="w-5 h-5" /> Bắt đầu tích hợp
-                </button>
-                <button className="px-8 py-3.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700 active:scale-95">
+                </Link>
+                <Link to={ROUTES.help.legal} className="px-8 py-3.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700 active:scale-95">
                   Tài liệu tham chiếu
-                </button>
+                </Link>
               </div>
             </div>
             
@@ -175,9 +177,9 @@ const App: React.FC = () => {
                 </div>
                 <h3 className="font-bold text-slate-900 text-lg mb-3">{item.title}</h3>
                 <p className="text-slate-500 text-sm mb-6 leading-relaxed italic">{item.desc}</p>
-                <button className="text-blue-600 text-sm font-bold hover:underline flex items-center gap-1 group-hover:gap-2 transition-all">
+                <Link to={ROUTES.help.root} className="text-blue-600 text-sm font-bold hover:underline flex items-center gap-1 group-hover:gap-2 transition-all">
                   {item.link} <ChevronRight className="w-4 h-4" />
-                </button>
+                </Link>
               </div>
             ))}
           </div>
@@ -271,12 +273,12 @@ const App: React.FC = () => {
             Đội ngũ chuyên gia kỹ thuật của PronaFlow luôn sẵn sàng hỗ trợ quý khách trong quá trình triển khai các giải pháp tích hợp phức tạp.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
+            <a href="mailto:support@pronaflow.com" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
               <Mail className="w-5 h-5" /> Liên hệ Developer Support
-            </button>
-            <button className="px-8 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700 flex items-center justify-center gap-2 active:scale-95">
+            </a>
+            <a href="https://github.com" target="_blank" rel="noreferrer" className="px-8 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all border border-slate-700 flex items-center justify-center gap-2 active:scale-95">
               <Github className="w-5 h-5" /> Mã nguồn mở (GitHub)
-            </button>
+            </a>
           </div>
         </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>

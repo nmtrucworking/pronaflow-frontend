@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { 
   ChevronRight, FileText, Shield, Server, Activity, 
   Cookie, ArrowRight, Download, Calendar, ShieldCheck, 
@@ -60,7 +62,7 @@ const App: React.FC = () => {
       <div className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6 font-medium">
-            <span className="hover:text-emerald-600 cursor-pointer transition-colors">Hỗ trợ</span>
+            <Link to={ROUTES.help.root} className="hover:text-emerald-600 cursor-pointer transition-colors">Hỗ trợ</Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-slate-900 font-semibold">Trung tâm Pháp lý</span>
           </nav>
@@ -90,7 +92,7 @@ const App: React.FC = () => {
       {/* TRUY CẬP NHANH (QUICK LINKS) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          <button className="group text-left bg-white rounded-2xl p-8 border border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all">
+          <Link to={ROUTES.help.terms} className="group text-left bg-white rounded-2xl p-8 border border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all block">
             <div className="flex items-start gap-5">
               <div className="p-3 bg-emerald-50 rounded-xl group-hover:bg-emerald-100 transition-colors text-emerald-600">
                 <FileText className="w-8 h-8" />
@@ -103,9 +105,9 @@ const App: React.FC = () => {
                 </span>
               </div>
             </div>
-          </button>
+          </Link>
           
-          <button className="group text-left bg-white rounded-2xl p-8 border border-slate-200 hover:border-blue-500 hover:shadow-xl transition-all">
+          <Link to={ROUTES.help.privacy} className="group text-left bg-white rounded-2xl p-8 border border-slate-200 hover:border-blue-500 hover:shadow-xl transition-all block">
             <div className="flex items-start gap-5">
               <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors text-blue-600">
                 <Shield className="w-8 h-8" />
@@ -118,7 +120,7 @@ const App: React.FC = () => {
                 </span>
               </div>
             </div>
-          </button>
+          </Link>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12 pt-8">
@@ -144,10 +146,10 @@ const App: React.FC = () => {
               </nav>
 
               <div className="mt-10 pt-8 border-t border-slate-200">
-                <button className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-600 transition-colors">
+                <Link to={ROUTES.help.terms} className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-600 transition-colors">
                   <Download className="w-4 h-4" />
-                  Tải xuống tệp lưu trữ (.pdf)
-                </button>
+                  Mở điều khoản dịch vụ
+                </Link>
               </div>
             </div>
           </aside>
@@ -315,10 +317,10 @@ const App: React.FC = () => {
                   <h3 className="text-xl font-bold text-slate-900 mb-2">Liên hệ bộ phận Pháp chế</h3>
                   <p className="text-slate-600 text-sm max-w-sm">Mọi thắc mắc hoặc yêu cầu làm rõ về các văn bản quy định, vui lòng gửi thông tin chính thức đến đội ngũ hỗ trợ.</p>
                 </div>
-                <button className="flex items-center gap-2 bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                <a href="mailto:legal@pronaflow.com" className="flex items-center gap-2 bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
                   <Mail className="w-5 h-5" />
                   Gửi yêu cầu
-                </button>
+                </a>
               </div>
 
             </div>

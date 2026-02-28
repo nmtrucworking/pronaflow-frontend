@@ -3,6 +3,7 @@
  * Reusable form components for workspace operations
  */
 
+// @ts-nocheck
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

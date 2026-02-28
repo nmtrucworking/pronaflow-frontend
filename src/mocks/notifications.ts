@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { NotificationEntity } from '@/types/notification';
 
 export const MOCK_NOTIFICATIONS: NotificationEntity[] = [

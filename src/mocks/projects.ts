@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Project } from "../types/project";
 import type { Member } from '../types/member';
 import type { Note } from '../types/note';

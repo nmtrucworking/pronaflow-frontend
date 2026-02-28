@@ -123,7 +123,7 @@ const Navbar = () => {
           <button onClick={() => navigate(ROUTES.root)} className="flex items-center gap-2">
             <img
               className="h-8 w-8 transition-transform duration-300 group-hover:rotate-[360deg]" 
-              src="/public/branding/logo-dark.svg" 
+              src="/branding/logo-dark.svg" 
               alt="PronaFlow" 
             />
             <span className="font-bold text-xl tracking-tight text-slate-900">PronaFlow</span>
@@ -147,7 +147,7 @@ const Navbar = () => {
                   <div className="text-xs text-slate-500 font-medium">Dự báo rủi ro & gán task tự động bằng ML</div>
                 </div>
               </a>
-              <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-indigo-50 group transition-colors">
+              <a href="#features" className="flex items-start gap-3 p-3 rounded-lg hover:bg-indigo-50 group transition-colors">
                 <RefreshCw size={18} className="text-slate-400 group-hover:text-indigo-600 mt-1" />
                 <div>
                   <div className="text-sm font-bold text-slate-800">Automation Workflows</div>
@@ -159,21 +159,21 @@ const Navbar = () => {
 
           <NavItem label="Tài liệu">
             <div className="grid grid-cols-1 gap-1">
-              <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 group transition-colors">
+              <a href={ROUTES.help.root} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 group transition-colors">
                 <Book size={18} className="text-slate-400 group-hover:text-indigo-600 mt-1" />
                 <div>
                   <div className="text-sm font-bold text-slate-800">Hướng dẫn sử dụng</div>
                   <div className="text-xs text-slate-500 font-medium">Cẩm nang chi tiết cho người mới bắt đầu</div>
                 </div>
               </a>
-              <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 group transition-colors">
+              <a href={ROUTES.help.changelog} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 group transition-colors">
                 <GraduationCap size={18} className="text-slate-400 group-hover:text-indigo-600 mt-1" />
                 <div>
                   <div className="text-sm font-bold text-slate-800">Học viện Prona</div>
                   <div className="text-xs text-slate-500 font-medium">Các khóa học master quy trình Agile</div>
                 </div>
               </a>
-              <a href="#" className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 group transition-colors">
+              <a href={ROUTES.help.api} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 group transition-colors">
                 <Code size={18} className="text-slate-400 group-hover:text-indigo-600 mt-1" />
                 <div>
                   <div className="text-sm font-bold text-slate-800">API Documentation</div>
@@ -183,8 +183,8 @@ const Navbar = () => {
             </div>
           </NavItem>
 
-          <a href="#pricing" className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Bảng giá</a>
-          <a href="#" className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Lộ trình</a>
+          <a href={ROUTES.pricing} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Bảng giá</a>
+          <a href={ROUTES.help.changelog} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Lộ trình</a>
         </div>
 
         {/* ctn-btn */}
@@ -214,13 +214,13 @@ const Navbar = () => {
           <a href="#features" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
             Tính năng
           </a>
-          <a href="#" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+          <a href={ROUTES.help.root} className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
             Tài liệu
           </a>
-          <a href="#pricing" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+          <a href={ROUTES.pricing} className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
             Bảng giá
           </a>
-          <a href="#" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+          <a href={ROUTES.help.changelog} className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
             Lộ trình
           </a>
           <div className="pt-4 border-t border-slate-200 space-y-3">
@@ -260,10 +260,17 @@ const Navbar = () => {
 
 // 3. HERO SECTION
 const Hero = () => {
+  const previewSlides = [
+    { src: '/previews/dashboard-page.png', label: 'Dashboard' },
+    { src: '/previews/kanban-board-page.png', label: 'Kanban Board' },
+    { src: '/previews/project-page.png', label: 'Project Overview' },
+    { src: '/previews/task-page.png', label: 'Task Management' },
+  ];
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [activePreview, setActivePreview] = useState(previewSlides[0]);
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
@@ -297,9 +304,9 @@ const Hero = () => {
   const handleDownload = (platform: 'windows' | 'macos' | 'linux') => {
     // TODO: Replace with actual download URLs
     const downloadUrls = {
-      windows: '/downloads/PronaFlow-Setup-Windows.exe',
-      macos: '/downloads/PronaFlow-Setup-macOS.dmg',
-      linux: '/downloads/PronaFlow-Setup-Linux.AppImage'
+      windows: '/downloads/installers/PronaFlow-Setup-Windows.exe',
+      macos: '/downloads/installers/PronaFlow-Setup-macOS.dmg',
+      linux: '/downloads/installers/PronaFlow-Setup-Linux.AppImage'
     };
     
     // Trigger download
@@ -355,22 +362,34 @@ const Hero = () => {
           <div className="rounded-xl bg-white p-1 shadow-2xl ring-1 ring-slate-200/60">
             <div className="rounded-lg bg-slate-50 overflow-hidden aspect-[16/9] border border-slate-100 relative group">
                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-transparent pointer-events-none" />
-               <div className="w-full h-full p-8 grid grid-cols-3 gap-6 opacity-80 group-hover:opacity-100 transition-opacity">
-                 {[1, 2, 3].map(i => (
-                   <div key={i} className="bg-white border border-slate-100 rounded-xl h-full p-5 space-y-4 shadow-sm">
-                     <div className="h-1.5 w-12 bg-indigo-100 rounded-full" />
-                     <div className="space-y-2">
-                        <div className="h-3 w-full bg-slate-100 rounded-full" />
-                        <div className="h-3 w-2/3 bg-slate-100 rounded-full" />
-                     </div>
-                     <div className="mt-auto flex justify-between">
-                        <div className="w-7 h-7 rounded-full bg-slate-50" />
-                        <div className="h-3 w-16 bg-slate-50 rounded" />
-                     </div>
-                   </div>
-                 ))}
-               </div>
+               <img
+                 src={activePreview.src}
+                 alt={activePreview.label}
+                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.015]"
+               />
             </div>
+          </div>
+          <div className="hidden md:flex items-center justify-center gap-3 mt-4">
+            {previewSlides.map((preview) => (
+              <button
+                key={preview.src}
+                type="button"
+                onClick={() => setActivePreview(preview)}
+                className={cn(
+                  "h-14 w-24 rounded-lg border shadow-sm overflow-hidden transition-all",
+                  activePreview.src === preview.src
+                    ? "border-indigo-500 ring-2 ring-indigo-200"
+                    : "border-slate-200 hover:border-indigo-300"
+                )}
+                aria-label={`Xem preview ${preview.label}`}
+              >
+                <img
+                  src={preview.src}
+                  alt={preview.label}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -674,7 +693,96 @@ const HybridSection = () => {
   );
 };
 
-// 6. FINAL CTA & INTEGRATIONS
+// 6. PRICING SECTION
+const PricingSection = () => {
+  const navigate = useNavigate();
+
+  const plans = [
+    {
+      name: 'Starter',
+      price: 'Miễn phí',
+      desc: 'Phù hợp nhóm nhỏ dưới 5 thành viên.',
+      features: ['Tối đa 3 dự án', 'Kanban + Task cơ bản', 'Lưu trữ 1GB'],
+      cta: 'Bắt đầu ngay',
+      highlight: false,
+    },
+    {
+      name: 'Pro',
+      price: '299.000đ/tháng',
+      desc: 'Dành cho team tăng trưởng cần tự động hóa.',
+      features: ['Không giới hạn dự án', 'Timeline + báo cáo nâng cao', 'Lưu trữ 100GB'],
+      cta: 'Dùng thử Pro',
+      highlight: true,
+    },
+    {
+      name: 'Enterprise',
+      price: 'Liên hệ',
+      desc: 'Cho doanh nghiệp lớn cần SLA và bảo mật mở rộng.',
+      features: ['SSO, RBAC nâng cao', 'SLA 99.9%', 'Hỗ trợ ưu tiên 24/7'],
+      cta: 'Liên hệ tư vấn',
+      highlight: false,
+    },
+  ];
+
+  return (
+    <section id="pricing" className="py-24 bg-slate-50 border-y border-slate-100">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Bảng giá linh hoạt theo quy mô</h2>
+          <p className="text-slate-600 max-w-2xl mx-auto">Chọn gói phù hợp với nhu cầu hiện tại, nâng cấp bất cứ lúc nào khi đội nhóm mở rộng.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={cn(
+                "rounded-2xl border p-7 bg-white shadow-sm",
+                plan.highlight ? "border-indigo-500 shadow-indigo-100" : "border-slate-200"
+              )}
+            >
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
+                <p className="text-2xl font-extrabold text-indigo-700 mt-2">{plan.price}</p>
+                <p className="text-sm text-slate-500 mt-2">{plan.desc}</p>
+              </div>
+
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-sm text-slate-700">
+                    <Check size={14} className="text-emerald-500" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.auth.register)}
+                className={cn(
+                  "w-full py-2.5 rounded-xl font-bold transition-colors",
+                  plan.highlight
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-900"
+                )}
+              >
+                {plan.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <a href={ROUTES.pricing} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors">
+            Xem pricing chi tiết
+            <ArrowRight size={16} />
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// 7. FINAL CTA & INTEGRATIONS
 const FinalCTA = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -691,9 +799,9 @@ const FinalCTA = () => {
 
   const handleDownload = (platform: 'windows' | 'macos' | 'linux') => {
     const downloadUrls = {
-      windows: '/downloads/PronaFlow-Setup-Windows.exe',
-      macos: '/downloads/PronaFlow-Setup-macOS.dmg',
-      linux: '/downloads/PronaFlow-Setup-Linux.AppImage'
+      windows: '/downloads/installers/PronaFlow-Setup-Windows.exe',
+      macos: '/downloads/installers/PronaFlow-Setup-macOS.dmg',
+      linux: '/downloads/installers/PronaFlow-Setup-Linux.AppImage'
     };
     
     const link = document.createElement('a');
@@ -727,7 +835,7 @@ const FinalCTA = () => {
            <div className="absolute bottom-0 left-0 w-96 h-96 bg-violet-500/10 rounded-full blur-[100px] -ml-32 -mb-32" />
 
            <div className="relative z-10 max-w-3xl mx-auto">
-              <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter italic">Nâng tầm quản trị ngay hôm nay.</h2>
+              <h2 className="text-4xl md:text-6xl text-white font-black mb-8 tracking-tighter italic">Nâng tầm quản trị ngay hôm nay.</h2>
               <p className="text-lg md:text-xl text-slate-300 mb-12 font-medium opacity-90">
                 Gia nhập hơn 10.000+ đội nhóm đang dẫn đầu thị trường bằng cách làm việc thông minh hơn. Hoàn toàn miễn phí cho các nhóm nhỏ.
               </p>
@@ -855,13 +963,45 @@ const FinalCTA = () => {
   );
 };
 
-// 7. FOOTER
+// 8. FOOTER
 const Footer = () => {
   const footerLinks = [
-    { title: 'Sản phẩm', links: ['Tính năng chính', 'Tải bản Desktop', 'Ứng dụng Web', 'Bảng giá Business'] },
-    { title: 'Học viện', links: ['Tài liệu người dùng', 'Video hướng dẫn', 'Blog kỹ thuật', 'Roadmap 2024'] },
-    { title: 'Công ty', links: ['Về chúng tôi', 'Tuyển dụng', 'Báo chí', 'Liên hệ Support'] },
-    { title: 'Pháp lý', links: ['Điều khoản dịch vụ', 'Chính sách bảo mật', 'Cam kết SLA', 'Tiêu chuẩn SOC2'] }
+    {
+      title: 'Sản phẩm',
+      links: [
+        { label: 'Tính năng chính', href: '#features' },
+        { label: 'Tải bản Desktop', href: ROUTES.pricing },
+        { label: 'Ứng dụng Web', href: ROUTES.auth.login },
+        { label: 'Bảng giá Business', href: ROUTES.pricing },
+      ],
+    },
+    {
+      title: 'Học viện',
+      links: [
+        { label: 'Tài liệu người dùng', href: ROUTES.help.root },
+        { label: 'Video hướng dẫn', href: ROUTES.help.root },
+        { label: 'Blog kỹ thuật', href: ROUTES.help.changelog },
+        { label: 'Roadmap 2024', href: ROUTES.help.changelog },
+      ],
+    },
+    {
+      title: 'Công ty',
+      links: [
+        { label: 'Về chúng tôi', href: ROUTES.help.legal },
+        { label: 'Tuyển dụng', href: ROUTES.help.contact },
+        { label: 'Báo chí', href: ROUTES.help.changelog },
+        { label: 'Liên hệ Support', href: ROUTES.help.contact },
+      ],
+    },
+    {
+      title: 'Pháp lý',
+      links: [
+        { label: 'Điều khoản dịch vụ', href: ROUTES.help.terms },
+        { label: 'Chính sách bảo mật', href: ROUTES.help.privacy },
+        { label: 'Cam kết SLA', href: ROUTES.help.status },
+        { label: 'Tiêu chuẩn SOC2', href: ROUTES.help.legal },
+      ],
+    },
   ];
 
   return (
@@ -870,7 +1010,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-16">
           <div className="lg:col-span-4">
             <div className="flex items-center gap-2 mb-6 group cursor-pointer w-fit">
-              <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">P</div>
+              <img src="/branding/logo-dark.svg" alt="PronaFlow" className="w-10 h-10" />
               <span className="font-bold text-2xl text-slate-900 tracking-tight">PronaFlow</span>
             </div>
             <p className="text-slate-500 max-w-sm text-sm leading-relaxed mb-8 font-medium">
@@ -891,9 +1031,9 @@ const Footer = () => {
                 <h4 className="font-bold text-slate-900 text-xs uppercase tracking-[0.2em] mb-8">{cat.title}</h4>
                 <ul className="space-y-4">
                   {cat.links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1 group font-medium">
-                        {link}
+                    <li key={link.label}>
+                      <a href={link.href} className="text-sm text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1 group font-medium">
+                        {link.label}
                         <ArrowUpRight size={10} className="opacity-0 -translate-y-1 group-hover:opacity-100 transition-all" />
                       </a>
                     </li>
@@ -958,6 +1098,7 @@ export default function LandingPage() {
 
       <FeatureSection />
       <HybridSection />
+      <PricingSection />
       <FinalCTA />
       <Footer />
     </div>

@@ -9,9 +9,13 @@ export type { UserStatus, UserProfile } from './user';
 
 // Multi-tenancy (Module 2)
 export * from './workspace';
-export * from './workspace-member';
-export type { WorkspaceStatus, WorkspaceMemberRole } from './workspace';
-export type { WorkspaceMemberRole } from './workspace-member';
+export type { WorkspaceStatus } from './workspace';
+export type {
+	WorkspaceMemberRole,
+	InviteWorkspaceMemberDTO,
+	UpdateWorkspaceMemberRoleDTO,
+	RemoveWorkspaceMemberDTO,
+} from './workspace-member';
 
 // Projects (Module 3)
 export * from './project';
@@ -50,7 +54,10 @@ export * from './integration';
 export * from './billing';
 
 // Analytics (Module 9)
-export * from './analytics';
+export type {
+	Report,
+	DashboardMetrics,
+} from './analytics';
 
 // Archive (Module 8)
 export * from './archive';

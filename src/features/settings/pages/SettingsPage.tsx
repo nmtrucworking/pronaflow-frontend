@@ -1,4 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Avatar from '@radix-ui/react-avatar';
 import * as Switch from '@radix-ui/react-switch';
@@ -1173,6 +1175,7 @@ const NotificationSettings = () => {
 
 export default function GeneralSettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Navigation Items
   const navItems = [
@@ -1184,6 +1187,25 @@ export default function GeneralSettingsPage() {
     { id: 'dashboard', label: 'Tùy chỉnh Dashboard', icon: LayoutGrid, category: 'Cá nhân hóa' },
     { id: 'shortcuts', label: 'Phím tắt', icon: Keyboard, category: 'Cá nhân hóa' },
   ];
+
+  useEffect(() => {
+    const tabFromQuery = searchParams.get('tab');
+    if (!tabFromQuery) return;
+
+    const isValidTab = navItems.some((item) => item.id === tabFromQuery);
+    if (isValidTab && tabFromQuery !== activeTab) {
+      setActiveTab(tabFromQuery);
+    }
+  }, [searchParams, navItems, activeTab]);
+
+  useEffect(() => {
+    const current = searchParams.get('tab');
+    if (current === activeTab) return;
+
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', activeTab);
+    setSearchParams(next, { replace: true });
+  }, [activeTab, searchParams, setSearchParams]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col h-screen overflow-hidden">
@@ -1292,15 +1314,15 @@ export default function GeneralSettingsPage() {
 
               {/* Sidebar Footer Links */}
               <div className="hidden md:block mt-auto pt-6 px-3 border-t border-slate-100 dark:border-slate-800 pb-2 space-y-2">
-                <a href="#help" className="flex items-center text-xs text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium group">
+                <a href={ROUTES.help.root} className="flex items-center text-xs text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium group">
                   <HelpCircle className="w-3.5 h-3.5 mr-2 group-hover:scale-110 transition-transform" />
                   Trung tâm trợ giúp
                   <ExternalLink className="w-2.5 h-2.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
                 <div className="flex gap-2 text-[10px] text-slate-400 pt-1">
-                  <a href="#privacy" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">Bảo mật</a>
+                  <a href={ROUTES.help.privacy} className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">Bảo mật</a>
                   <span>•</span>
-                  <a href="#terms" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">Điều khoản</a>
+                  <a href={ROUTES.help.terms} className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">Điều khoản</a>
                   <span>•</span>
                   <span className="text-slate-500 font-medium">v1.2.0</span>
                 </div>

@@ -8,12 +8,12 @@ import { HelpLayout } from './components/layout/HelpLayout';
 import { LoginPage, RegisterPage } from './features/auth';
 
 // Import pages
-import { LandingPage } from './features/landing';
+import { LandingPage, PricingPage } from './features/landing';
 import { DashboardPage } from './features/dashboard';
 import { AllProjectsPage } from './features/projects';
 import { TasksPage } from './features/tasks';
 import { InboxPage } from './features/inbox';
-import { SettingsPage, AccountSettingsPage } from './features/settings';
+import { SettingsPage } from './features/settings';
 import { HelperCenterPage, ApiPage, ChangelogPage, ContactSupportPage, LegalPage, PrivacyPage, StatusPage, TermsPage } from './features/helper';
 import { CalendarPage } from './features/calendar';
 import { GanttChartPage, WorkspaceMemberPage } from './features/workspace/pages';
@@ -58,6 +58,10 @@ const router = createBrowserRouter([
     errorElement: <Error500Page />,
   },
   {
+    path: ROUTES.pricing,
+    element: <PricingPage />,
+  },
+  {
     path: ROUTES.auth.login,
     element: <LoginPage />
   },
@@ -74,7 +78,6 @@ const router = createBrowserRouter([
       { path: toChildPath(ROUTES.app.tasks), element: <TasksPage /> },
       { path: toChildPath(ROUTES.app.inbox), element: <InboxPage /> },
       { path: toChildPath(ROUTES.app.settings), element: <SettingsPage /> },
-      { path: toChildPath(ROUTES.app.accountSettings), element: <AccountSettingsPage /> },
       { path: toChildPath(ROUTES.app.accountBilling), element: <PrivateBillingPage /> },
       { path: toChildPath(ROUTES.app.trash), element: <TrashPage /> },
       { path: toChildPath(ROUTES.app.calendar), element: <CalendarPage /> },

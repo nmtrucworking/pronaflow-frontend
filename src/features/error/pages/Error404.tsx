@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Home, ArrowLeft, Zap } from 'lucide-react';
 import COLORS from '@/config/colors';

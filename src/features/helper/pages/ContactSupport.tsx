@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { 
   MessageCircle, Building2, Users, MapPin, 
   Phone, Mail, Facebook, Twitter, Linkedin, 
@@ -263,10 +265,10 @@ const App: React.FC = () => {
               <p className="text-emerald-100/70 text-sm mb-6 leading-relaxed text-justify">
                 Hệ thống Cơ sở kiến thức (Knowledge Base) của chúng tôi chứa hàng nghìn tài liệu kỹ thuật và hướng dẫn vận hành chi tiết giúp quý khách tự xử lý các vấn đề phổ biến.
               </p>
-              <button className="inline-flex items-center gap-2 bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-900/50">
+              <Link to={ROUTES.help.root} className="inline-flex items-center gap-2 bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-900/50">
                 Truy cập Help Center
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

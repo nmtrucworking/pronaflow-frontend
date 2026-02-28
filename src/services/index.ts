@@ -41,7 +41,6 @@ export * from './archiveService';
 // Module 9: Reports & Analytics
 import analyticsService from './analyticsService';
 export { default as analyticsService } from './analyticsService';
-export * from './analyticsService';
 
 // Module 12: Integration Ecosystem
 import integrationService from './integrationService';
@@ -61,7 +60,6 @@ export * from './billingService';
 // Module 14: System Administration
 import adminService from './adminService';
 export { default as adminService } from './adminService';
-export * from './adminService';
 
 // Module 15: Help Center & Knowledge Base
 import helpCenterService from './helpCenterService';

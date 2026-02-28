@@ -16,8 +16,9 @@ export default {
       transparent: 'transparent',
       current: 'currentColor',
 
-      // Primary Brand Color - Emerald Green
+      // Primary Brand Color - Logo Teal
       emerald: COLORS.primary,
+      indigo: COLORS.primary,
       
       // Neutral/Gray - Slate
       slate: COLORS.neutral,

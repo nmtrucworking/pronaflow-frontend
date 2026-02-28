@@ -1,5 +1,6 @@
 export const ROUTES = {
   root: '/',
+  pricing: '/pricing',
   notFound: '*',
 
   auth: {
@@ -16,8 +17,7 @@ export const ROUTES = {
     tasks: '/tasks',
     inbox: '/inbox',
     settings: '/settings',
-    accountSettings: '/account-settings',
-    accountBilling: '/account-settings/billing',
+    accountBilling: '/settings/billing',
     trash: '/trash',
     calendar: '/calendar',
     gantt: '/gantt',

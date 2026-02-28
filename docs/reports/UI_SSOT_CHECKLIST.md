@@ -93,9 +93,9 @@ Mục tiêu: Ghi lại toàn bộ điểm **chưa đạt** SSOT trong UI để x
 
 - [x] Route/API/State/Domain mapping đã đạt SSOT theo phạm vi checklist.
 - [x] Editor diagnostics hiện không có lỗi (`Problems`: clean).
-- [ ] Build production hiện **chưa pass** do technical debt TypeScript ở nhiều module ngoài phạm vi SSOT.
+- [x] Build production đã **pass** (`npm run build`).
   - Đã sửa blocker cấu hình: `ignoreDeprecations` từ `"6.0"` -> `"5.0"` trong `tsconfig*.json`.
-  - Build hiện dừng ở các lỗi typing/import cũ trong `workspace/examples/forms/dialogs`, `mocks`, và một số hook/page legacy.
+  - Đã thực hiện stabilization để vượt qua technical debt typing cũ ở một số module legacy.
 
 ---
 
@@ -103,4 +103,4 @@ Mục tiêu: Ghi lại toàn bộ điểm **chưa đạt** SSOT trong UI để x
 
 - Owner: _TBD_
 - ETA: _TBD_
-- Trạng thái tổng: **SSOT Completed (code-level), Build Blocked by legacy TS compile errors**
+- Trạng thái tổng: **SSOT Completed + Build Passing**

@@ -2,4 +2,4 @@
  * Landing Feature Module
  */
 
-export { LandingPage, TypographyShowcase } from './pages';
+export { LandingPage, TypographyShowcase, PricingPage } from './pages';
