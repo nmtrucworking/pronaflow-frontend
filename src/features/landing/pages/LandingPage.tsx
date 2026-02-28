@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ROUTES } from '@/routes/paths';
 import { 
   Menu, 
   X, 
@@ -90,12 +91,12 @@ const Navbar = () => {
 
   const handleLoginSuccess = () => {
     setIsLoginModalOpen(false);
-    navigate('/dashboard');
+    navigate(ROUTES.app.dashboard);
   };
 
   const handleRegisterSuccess = () => {
     setIsRegisterModalOpen(false);
-    navigate('/dashboard');
+    navigate(ROUTES.app.dashboard);
   };
 
   const switchToRegister = () => {
@@ -119,7 +120,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* btn return Home-Page (Landing Page) */}
         <div className="flex items-center gap-2 group cursor-pointer shrink-0">
-          <button onClick={() => navigate('/') } className="flex items-center gap-2">
+          <button onClick={() => navigate(ROUTES.root)} className="flex items-center gap-2">
             <img
               className="h-8 w-8 transition-transform duration-300 group-hover:rotate-[360deg]" 
               src="/public/branding/logo-dark.svg" 
@@ -275,12 +276,12 @@ const Hero = () => {
 
   const handleLoginSuccess = () => {
     setIsLoginModalOpen(false);
-    navigate('/dashboard');
+    navigate(ROUTES.app.dashboard);
   };
 
   const handleRegisterSuccess = () => {
     setIsRegisterModalOpen(false);
-    navigate('/dashboard');
+    navigate(ROUTES.app.dashboard);
   };
 
   const switchToRegister = () => {
@@ -685,7 +686,7 @@ const FinalCTA = () => {
 
   const handleRegisterSuccess = () => {
     setIsRegisterModalOpen(false);
-    navigate('/dashboard');
+    navigate(ROUTES.app.dashboard);
   };
 
   const handleDownload = (platform: 'windows' | 'macos' | 'linux') => {

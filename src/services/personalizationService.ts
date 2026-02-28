@@ -3,7 +3,8 @@
  * Handles API calls for Module 9: User Settings & Preferences
  */
 
-import axios, { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
+import { createApiClient } from '@/lib/axiosClient';
 import type {
   UserSettings,
   UpdateUserSettingsDTO,
@@ -14,27 +15,11 @@ import type {
   KeyboardShortcut,
 } from '@/types/personalization';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000/api/v1';
-
 class PersonalizationService {
   private api: AxiosInstance;
 
   constructor() {
-    this.api = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Add auth token interceptor
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
+    this.api = createApiClient();
   }
 
   // ==================== User Preferences ====================

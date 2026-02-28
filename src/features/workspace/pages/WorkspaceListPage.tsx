@@ -9,6 +9,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWorkspaces, useCreateWorkspace, useDeleteWorkspace, useLogAccess } from '@/hooks/useWorkspace';
 import { useWorkspaceStore } from '@/store/features/workspaceStore';
+import { ROUTES } from '@/routes/paths';
 import { WorkspaceCard } from '../components/WorkspaceCard';
 import { CreateWorkspaceForm } from '../forms/WorkspaceForms';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -26,12 +27,12 @@ export const WorkspaceListPage: React.FC = () => {
   const logAccessMutation = useLogAccess('');
 
   // Store
-  const { setCurrentWorkspace, setCurrentWorkspaceId } = useWorkspaceStore();
+  const setCurrentWorkspace = useWorkspaceStore((state) => state.setCurrentWorkspace);
 
   const handleSelectWorkspace = async (workspace: Workspace) => {
     setCurrentWorkspace(workspace, 'member'); // TODO: Get actual role from API
     await logAccessMutation.mutateAsync();
-    navigate(`/workspaces/${workspace.id}`);
+    navigate(ROUTES.workspace.detail(workspace.id));
   };
 
   const handleCreateWorkspace = async (data: CreateWorkspaceDTO) => {
@@ -102,8 +103,8 @@ export const WorkspaceListPage: React.FC = () => {
                   role="member"
                   onSelect={handleSelectWorkspace}
                   onDelete={handleDeleteWorkspace}
-                  onManageMembers={(id) => navigate(`/workspaces/${id}/members`)}
-                  onManageSettings={(id) => navigate(`/workspaces/${id}/settings`)}
+                  onManageMembers={(id) => navigate(ROUTES.workspace.members(id))}
+                  onManageSettings={(id) => navigate(ROUTES.workspace.settings(id))}
                 />
               ))}
             </div>

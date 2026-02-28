@@ -3,7 +3,8 @@
  * Handles API calls for Module 12: Integrations
  */
 
-import axios, { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
+import { createApiClient } from '@/lib/axiosClient';
 import type {
   ApiToken,
   CreateApiTokenDTO,
@@ -22,27 +23,11 @@ import type {
   PluginMarketplaceResponse,
 } from '@/types/integration';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
-
 class IntegrationService {
   private api: AxiosInstance;
 
   constructor() {
-    this.api = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Add auth token interceptor
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
+    this.api = createApiClient();
   }
 
   // ==================== API Tokens ====================

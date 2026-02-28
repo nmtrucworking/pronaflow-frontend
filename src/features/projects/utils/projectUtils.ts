@@ -11,6 +11,7 @@ import {
   HealthStatus,
   ProjectMetrics,
 } from '@/types/project';
+import { PROJECT_PRIORITY_BADGE_CLASS, PROJECT_STATUS_BADGE_CLASS } from '@/config/domainMappings';
 
 /**
  * Generate project key based on name
@@ -46,12 +47,12 @@ export const getStatusLabel = (status: ProjectStatus): string => {
  * Get status badge color
  */
 export const statusColors: Record<ProjectStatus, string> = {
-  'NOT_STARTED': 'bg-gray-100 text-gray-700',
-  'IN_PROGRESS': 'bg-blue-100 text-blue-700',
-  'IN_REVIEW': 'bg-yellow-100 text-yellow-700',
-  'DONE': 'bg-green-100 text-green-700',
-  'ON_HOLD': 'bg-orange-100 text-orange-700',
-  'ARCHIVED': 'bg-gray-200 text-gray-600',
+  NOT_STARTED: PROJECT_STATUS_BADGE_CLASS.NOT_STARTED,
+  IN_PROGRESS: PROJECT_STATUS_BADGE_CLASS.IN_PROGRESS,
+  IN_REVIEW: PROJECT_STATUS_BADGE_CLASS.IN_REVIEW,
+  DONE: PROJECT_STATUS_BADGE_CLASS.DONE,
+  ON_HOLD: PROJECT_STATUS_BADGE_CLASS.ON_HOLD,
+  ARCHIVED: PROJECT_STATUS_BADGE_CLASS.ARCHIVED,
 };
 
 export const getStatusColor = (status: ProjectStatus): string => {
@@ -76,10 +77,10 @@ export const getPriorityLabel = (priority: ProjectPriority): string => {
  * Get priority badge color
  */
 export const priorityColors: Record<ProjectPriority, string> = {
-  LOW: 'bg-blue-100 text-blue-700',
-  MEDIUM: 'bg-yellow-100 text-yellow-700',
-  HIGH: 'bg-orange-100 text-orange-700',
-  URGENT: 'bg-red-100 text-red-700',
+  LOW: PROJECT_PRIORITY_BADGE_CLASS.LOW,
+  MEDIUM: PROJECT_PRIORITY_BADGE_CLASS.MEDIUM,
+  HIGH: PROJECT_PRIORITY_BADGE_CLASS.HIGH,
+  URGENT: PROJECT_PRIORITY_BADGE_CLASS.URGENT,
 };
 
 export const getPriorityColor = (priority: ProjectPriority): string => {

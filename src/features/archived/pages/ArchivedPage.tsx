@@ -136,8 +136,8 @@ const ArchivedStorePage: React.FC = () => {
       <style>{`
         .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #334155; }
+        .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border-radius: 10px; }
+        .dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-neutral-700); }
         
         .custom-checkbox {
           appearance: none;
@@ -147,7 +147,7 @@ const ArchivedStorePage: React.FC = () => {
           color: currentColor;
           width: 14px;
           height: 14px;
-          border: 1.5px solid #cbd5e1;
+          border: 1.5px solid var(--color-neutral-300);
           border-radius: 4px;
           display: grid;
           place-content: center;
@@ -159,17 +159,17 @@ const ArchivedStorePage: React.FC = () => {
           height: 8px;
           transform: scale(0);
           transition: 120ms transform ease-in-out;
-          box-shadow: inset 1em 1em #3b82f6;
+          box-shadow: inset 1em 1em var(--color-primary-600);
           border-radius: 2px;
         }
         .custom-checkbox:checked::before {
           transform: scale(1);
         }
         .custom-checkbox:checked {
-          border-color: #3b82f6;
+          border-color: var(--color-primary-600);
         }
-        .dark .custom-checkbox { border-color: #475569; }
-        .dark .custom-checkbox:checked { border-color: #3b82f6; }
+        .dark .custom-checkbox { border-color: var(--color-neutral-600); }
+        .dark .custom-checkbox:checked { border-color: var(--color-primary-600); }
       `}</style>
     </div>
   );

@@ -1,5 +1,7 @@
 import React from 'react';
 import { RefreshCw, Home, ShieldAlert, Server } from 'lucide-react';
+import COLORS from '@/config/colors';
+import { ROUTES } from '@/routes/paths';
 
 /**
  * ServerErrorPage Component
@@ -7,6 +9,22 @@ import { RefreshCw, Home, ShieldAlert, Server } from 'lucide-react';
  * Sử dụng kiến trúc Functional Component với TypeScript
  */
 const App: React.FC = () => {
+  const uiColors = {
+    gradA: COLORS.semantic.success[50],
+    gradB: COLORS.semantic.success[100],
+    gradC: COLORS.semantic.success[100],
+    gradD: COLORS.semantic.success[50],
+    serverGradStart: COLORS.ui.background.tertiary,
+    serverGradEnd: COLORS.ui.border.medium,
+    border: COLORS.ui.border.strong,
+    panelBg: COLORS.ui.background.primary,
+    lineBg: COLORS.ui.background.tertiary,
+    statusOk: COLORS.status.success,
+    issueBg: COLORS.semantic.error[50],
+    issueBorder: COLORS.semantic.error[100],
+    issueDot: COLORS.semantic.error[600],
+    issueLine: COLORS.semantic.error[100],
+  } as const;
   
   // Định nghĩa các hiệu ứng chuyển động thông qua CSS Injection
   const styles = `
@@ -28,7 +46,7 @@ const App: React.FC = () => {
       40%, 60% { transform: translate3d(4px, 0, 0); }
     }
     .bg-flow-animation {
-      background: linear-gradient(-45deg, #f0fdf4, #dcfce7, #d1fae5, #ecfdf5);
+      background: linear-gradient(-45deg, var(--pf-error500-grad-a), var(--pf-error500-grad-b), var(--pf-error500-grad-c), var(--pf-error500-grad-d));
       background-size: 400% 400%;
       animation: gradient 15s ease infinite;
     }
@@ -48,11 +66,19 @@ const App: React.FC = () => {
   };
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = ROUTES.root;
   };
 
   return (
-    <div className="bg-flow-animation min-h-screen w-full flex flex-col justify-center items-center overflow-hidden relative text-slate-800 font-sans">
+    <div
+      className="bg-flow-animation min-h-screen w-full flex flex-col justify-center items-center overflow-hidden relative text-slate-800 font-sans"
+      style={{
+        ['--pf-error500-grad-a' as any]: uiColors.gradA,
+        ['--pf-error500-grad-b' as any]: uiColors.gradB,
+        ['--pf-error500-grad-c' as any]: uiColors.gradC,
+        ['--pf-error500-grad-d' as any]: uiColors.gradD,
+      }}
+    >
       <style>{styles}</style>
 
       {/* Cấu trúc đồ họa nền hỗ trợ thị giác */}
@@ -110,32 +136,32 @@ const App: React.FC = () => {
             <svg viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-xl">
               <defs>
                 <linearGradient id="serverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" style={{ stopColor: '#f1f5f9', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#e2e8f0', stopOpacity: 1 }} />
+                  <stop offset="0%" style={{ stopColor: uiColors.serverGradStart, stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: uiColors.serverGradEnd, stopOpacity: 1 }} />
                 </linearGradient>
               </defs>
 
               {/* Thân máy chủ */}
-              <rect x="50" y="50" width="300" height="250" rx="15" fill="url(#serverGrad)" stroke="#cbd5e1" strokeWidth="2" />
+              <rect x="50" y="50" width="300" height="250" rx="15" fill="url(#serverGrad)" stroke={uiColors.border} strokeWidth="2" />
 
               {/* Phân vùng tài nguyên 1 */}
-              <rect x="70" y="80" width="260" height="40" rx="5" fill="#ffffff" stroke="#e2e8f0" />
-              <circle cx="90" cy="100" r="4" fill="#10b981" className="animate-ping" />
-              <rect x="110" y="96" width="200" height="8" rx="2" fill="#f1f5f9" />
+              <rect x="70" y="80" width="260" height="40" rx="5" fill={uiColors.panelBg} stroke={uiColors.serverGradEnd} />
+              <circle cx="90" cy="100" r="4" fill={uiColors.statusOk} className="animate-ping" />
+              <rect x="110" y="96" width="200" height="8" rx="2" fill={uiColors.lineBg} />
 
               {/* Phân vùng tài nguyên 2 */}
-              <rect x="70" y="140" width="260" height="40" rx="5" fill="#ffffff" stroke="#e2e8f0" />
-              <circle cx="90" cy="160" r="4" fill="#10b981" />
-              <rect x="110" y="156" width="200" height="8" rx="2" fill="#f1f5f9" />
+              <rect x="70" y="140" width="260" height="40" rx="5" fill={uiColors.panelBg} stroke={uiColors.serverGradEnd} />
+              <circle cx="90" cy="160" r="4" fill={uiColors.statusOk} />
+              <rect x="110" y="156" width="200" height="8" rx="2" fill={uiColors.lineBg} />
 
               {/* Phân vùng gặp sự cố */}
-              <rect x="70" y="200" width="260" height="40" rx="5" fill="#fff1f2" stroke="#fecdd3" />
-              <circle cx="90" cy="220" r="4" fill="#f43f5e" className="animate-pulse" />
-              <rect x="110" y="216" width="100" height="8" rx="2" fill="#ffe4e6" />
+              <rect x="70" y="200" width="260" height="40" rx="5" fill={uiColors.issueBg} stroke={uiColors.issueBorder} />
+              <circle cx="90" cy="220" r="4" fill={uiColors.issueDot} className="animate-pulse" />
+              <rect x="110" y="216" width="100" height="8" rx="2" fill={uiColors.issueLine} />
 
               {/* Chỉ báo trạng thái cảnh báo */}
               <g transform="translate(240, 230)">
-                <circle cx="40" cy="40" r="35" fill="#ffffff" stroke="#e2e8f0" strokeWidth="4" />
+                <circle cx="40" cy="40" r="35" fill={uiColors.panelBg} stroke={uiColors.serverGradEnd} strokeWidth="4" />
                 <ShieldAlert className="w-10 h-10 text-amber-500 ml-4 mt-4" />
               </g>
             </svg>

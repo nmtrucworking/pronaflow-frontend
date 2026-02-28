@@ -17,25 +17,13 @@ import {
   Paperclip,
   UserPlus
 } from 'lucide-react';
+import COLORS from '@/config/colors';
+import { PROJECT_PRIORITY_COLORS } from '@/config/domainMappings';
 
 /**
  * Interface dựa trên Entity Task và Project
  * Bám sát project-statuses.json và task-priorities.json
  */
-const STATUS_COLORS = {
-  'To Do': '#64748b',
-  'In Progress': '#3b82f6',
-  'Review': '#f59e0b',
-  'Done': '#10B981', // Theo project-statuses.json
-};
-
-const PRIORITY_COLORS = {
-  'Urgent': '#FF0000', // Theo task-priorities.json
-  'High': '#ef4444',
-  'Medium': '#f97316',
-  'Low': '#8b5cf6',
-};
-
 // Component: Thẻ Task tối giản cho Simple Mode
 const SimpleTaskCard = ({ task }: { task: any }) => (
   <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group mb-4">
@@ -43,7 +31,7 @@ const SimpleTaskCard = ({ task }: { task: any }) => (
       <div className="flex items-center gap-2">
         <div 
           className="w-3 h-3 rounded-full" 
-          style={{ backgroundColor: PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS] || '#cbd5e1' }}
+          style={{ backgroundColor: PROJECT_PRIORITY_COLORS[task.priority as keyof typeof PROJECT_PRIORITY_COLORS] || COLORS.neutral[300] }}
         />
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
           {task.task_id}
@@ -91,7 +79,7 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('board');
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-indigo-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100">
       {/* Simple Header: Chỉ giữ lại các thông tin cực kỳ quan trọng */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">

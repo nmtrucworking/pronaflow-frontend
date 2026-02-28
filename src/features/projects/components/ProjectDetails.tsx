@@ -66,6 +66,7 @@ import {
     Mail,
     Cpu
 } from 'lucide-react';
+import COLORS from '@/config/colors';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -354,7 +355,7 @@ function GanttChart({ tasks }: { tasks: Task[] }) {
 
     const renderDependencies = () => (
         <svg className="absolute inset-0 pointer-events-none z-10 w-full h-full">
-            <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#cbd5e1" /></marker></defs>
+            <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill={COLORS.neutral[300]} /></marker></defs>
             {tasks.map((task, taskIdx) => (task.dependencies || []).map(depId => {
                 const prereqIdx = tasks.findIndex(t => t.id === depId);
                 if (prereqIdx === -1) return null;
@@ -365,7 +366,7 @@ function GanttChart({ tasks }: { tasks: Task[] }) {
                 const endX = toStyle.left;
                 const endY = (taskIdx * ROW_HEIGHT) + (ROW_HEIGHT / 2);
                 const midX = startX + (endX - startX) / 2;
-                return <path key={`${task.id}-${depId}`} d={`M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`} stroke="#cbd5e1" strokeWidth="1.5" fill="none" markerEnd="url(#arrowhead)" />;
+                return <path key={`${task.id}-${depId}`} d={`M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`} stroke={COLORS.neutral[300]} strokeWidth="1.5" fill="none" markerEnd="url(#arrowhead)" />;
             }))}
         </svg>
     );
@@ -696,7 +697,7 @@ export default function ProjectDetails({
 
     return (
         <div className="h-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
-            <style>{`.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }`}</style>
+            <style>{`.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border-radius: 10px; }`}</style>
 
             {!hideHeader && (
                 <header className="bg-white border-b border-slate-200 z-30 flex-shrink-0">

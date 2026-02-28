@@ -3,7 +3,8 @@
  * Handles all API calls to workspace backend endpoints
  */
 
-import axios, { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
+import { createApiClient, API_ROOT_URL } from '@/lib/axiosClient';
 import {
   Workspace,
   WorkspaceDetail,
@@ -20,39 +21,11 @@ import {
   WorkspaceListResponse,
 } from '@/types/workspace';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-
 class WorkspaceService {
   private api: AxiosInstance;
 
   constructor() {
-    this.api = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Add request interceptor for auth token
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    // Add response interceptor for error handling
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
-        }
-        throw error;
-      }
-    );
+    this.api = createApiClient(API_ROOT_URL);
   }
 
   // ========================================================================

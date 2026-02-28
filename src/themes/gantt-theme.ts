@@ -221,11 +221,13 @@ export const darkTheme: GanttTheme = {
   },
 };
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type ResolvedThemeMode = 'light' | 'dark';
 
 export interface ThemeContextType {
   theme: GanttTheme;
-  mode: ThemeMode;
+  mode: ResolvedThemeMode;
+  preference: ThemeMode;
   toggleTheme: () => void;
   setTheme: (mode: ThemeMode) => void;
 }

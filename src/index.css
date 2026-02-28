@@ -10,62 +10,62 @@
 :root {
   /* ==================== PRIMARY BRAND COLOR ==================== */
   /* All shades of Emerald Green - Main brand identity */
-  --color-primary-50: #f0fdf4;
-  --color-primary-100: #dcfce7;
-  --color-primary-200: #bbf7d0;
-  --color-primary-300: #86efac;
-  --color-primary-400: #4ade80;
-  --color-primary-500: rgb(5 150 105 / 1);  /* Main brand color */
-  --color-primary-600: #059669;
-  --color-primary-700: #047857;
-  --color-primary-800: #065f46;
-  --color-primary-900: #064e3b;
+  --color-primary-50: theme('colors.emerald.50');
+  --color-primary-100: theme('colors.emerald.100');
+  --color-primary-200: theme('colors.emerald.200');
+  --color-primary-300: theme('colors.emerald.300');
+  --color-primary-400: theme('colors.emerald.400');
+  --color-primary-500: theme('colors.emerald.500');  /* Main brand color */
+  --color-primary-600: theme('colors.emerald.600');
+  --color-primary-700: theme('colors.emerald.700');
+  --color-primary-800: theme('colors.emerald.800');
+  --color-primary-900: theme('colors.emerald.900');
 
   /* ==================== SEMANTIC COLORS ==================== */
   /* Status and state indicators */
-  --color-success: rgb(5 150 105 / 1);
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: rgb(5 150 105 / 1);
+  --color-success: theme('colors.success.500');
+  --color-warning: theme('colors.warning.500');
+  --color-error: theme('colors.error.500');
+  --color-info: theme('colors.info.500');
 
   /* ==================== PRIORITY COLORS ==================== */
   /* Task priority levels */
-  --color-priority-urgent: #ef4444;
-  --color-priority-high: #f97316;
-  --color-priority-normal: rgb(5 150 105 / 1);
-  --color-priority-low: #94a3b8;
+  --color-priority-urgent: theme('colors.priority.urgent');
+  --color-priority-high: theme('colors.priority.high');
+  --color-priority-normal: theme('colors.priority.medium');
+  --color-priority-low: theme('colors.priority.low');
 
   /* ==================== NEUTRAL/GRAYSCALE COLORS ==================== */
   /* For backgrounds, borders, and neutral text */
-  --color-neutral-50: #f8fafc;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-300: #cbd5e1;
-  --color-neutral-400: #94a3b8;
-  --color-neutral-500: #64748b;
-  --color-neutral-600: #475569;
-  --color-neutral-700: #334155;
-  --color-neutral-800: #1e293b;
-  --color-neutral-900: #0f172a;
+  --color-neutral-50: theme('colors.slate.50');
+  --color-neutral-100: theme('colors.slate.100');
+  --color-neutral-200: theme('colors.slate.200');
+  --color-neutral-300: theme('colors.slate.300');
+  --color-neutral-400: theme('colors.slate.400');
+  --color-neutral-500: theme('colors.slate.500');
+  --color-neutral-600: theme('colors.slate.600');
+  --color-neutral-700: theme('colors.slate.700');
+  --color-neutral-800: theme('colors.slate.800');
+  --color-neutral-900: theme('colors.slate.900');
 
   /* ==================== LIGHT MODE COLORS ==================== */
   /* Text and background colors for light theme */
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #334155;
-  --color-text-muted: #64748b;
-  --color-text-inverse: #ffffff;
+  --color-text-primary: theme('colors.slate.900');
+  --color-text-secondary: theme('colors.slate.700');
+  --color-text-muted: theme('colors.slate.500');
+  --color-text-inverse: theme('colors.white');
 
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-tertiary: #f1f5f9;
+  --color-bg-primary: theme('colors.white');
+  --color-bg-secondary: theme('colors.slate.50');
+  --color-bg-tertiary: theme('colors.slate.100');
   --color-bg-modal: rgba(255, 255, 255, 0.95);
   --color-bg-overlay: rgba(15, 23, 42, 0.6);
 
   /* ==================== BORDER COLORS ==================== */
-  --color-border-light: #f1f5f9;
-  --color-border-medium: #e2e8f0;
-  --color-border-strong: #cbd5e1;
-  --color-border-focus: rgb(5 150 105 / 1);
+  --color-border-light: theme('colors.slate.100');
+  --color-border-medium: theme('colors.slate.200');
+  --color-border-strong: theme('colors.slate.300');
+  --color-border-focus: theme('colors.emerald.500');
 
   /* ==================== SHADOW COLORS ==================== */
   --color-shadow-sm: rgba(0, 0, 0, 0.05);
@@ -98,23 +98,23 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* ==================== DARK MODE TEXT ==================== */
-    --color-text-primary: #f8fafc;
-    --color-text-secondary: #e2e8f0;
-    --color-text-muted: #94a3b8;
-    --color-text-inverse: #0f172a;
+    --color-text-primary: theme('colors.slate.50');
+    --color-text-secondary: theme('colors.slate.200');
+    --color-text-muted: theme('colors.slate.400');
+    --color-text-inverse: theme('colors.slate.900');
 
     /* ==================== DARK MODE BACKGROUNDS ==================== */
-    --color-bg-primary: #0f172a;
-    --color-bg-secondary: #1e293b;
-    --color-bg-tertiary: #334155;
+    --color-bg-primary: theme('colors.slate.900');
+    --color-bg-secondary: theme('colors.slate.800');
+    --color-bg-tertiary: theme('colors.slate.700');
     --color-bg-modal: rgba(15, 23, 42, 0.95);
     --color-bg-overlay: rgba(0, 0, 0, 0.8);
 
     /* ==================== DARK MODE BORDERS ==================== */
-    --color-border-light: #334155;
-    --color-border-medium: #475569;
-    --color-border-strong: #64748b;
-    --color-border-focus: rgb(5 150 105 / 1);
+    --color-border-light: theme('colors.slate.700');
+    --color-border-medium: theme('colors.slate.600');
+    --color-border-strong: theme('colors.slate.500');
+    --color-border-focus: theme('colors.emerald.500');
   }
 }
 

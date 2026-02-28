@@ -12,8 +12,8 @@
   --gantt-row-hover: theme('colors.slate.50');
   --gantt-text-primary: theme('colors.slate.900');
   --gantt-text-secondary: theme('colors.slate.600');
-  --gantt-task-bg: rgb(5 150 105 / 1);
-  --gantt-task-progress: #059669;
+  --gantt-task-bg: var(--color-primary-500);
+  --gantt-task-progress: var(--color-primary-600);
   --gantt-task-border: theme('colors.white');
 }
 
@@ -46,7 +46,7 @@
 .gantt-container ._2W_9v {
   background-color: var(--gantt-header-bg) !important;
   border-right: 1px solid var(--gantt-border-color) !important;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 20px var(--color-shadow-sm);
 }
 
 /* Row styles */
@@ -76,13 +76,13 @@
 .gantt-container ._1n_7C {
   border-radius: 12px !important;
   border: 2px solid var(--gantt-task-border) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 8px var(--color-shadow-md) !important;
   transition: all 0.3s ease !important;
 }
 
 .gantt-container ._1n_7C:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 4px 12px var(--color-shadow-lg) !important;
 }
 
 /* Progress bars */
@@ -172,7 +172,7 @@
 .gantt-container ._1n_7C._3lp_O {
   outline: 2px solid var(--color-border-focus) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary-500) 10%, transparent) !important;
 }
 
 /* Milestone styles - Uses warning color from palette */
@@ -185,7 +185,7 @@
 /* Critical path highlighting - Uses error color */
 .gantt-container ._1n_7C[data-critical="true"] {
   background: linear-gradient(45deg, var(--color-error), var(--color-priority-high)) !important;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3) !important;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-error) 30%, transparent) !important;
 }
 
 /* Responsive adjustments */

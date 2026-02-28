@@ -3,13 +3,14 @@
  * Display workspace with tabs for members, invitations, and settings
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, Settings, Users, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useWorkspace, useWorkspaceMembers, useInvitations } from '@/hooks/useWorkspace';
 import { useWorkspaceStore } from '@/store/features/workspaceStore';
+import { ROUTES } from '@/routes/paths';
 import { MemberCard } from '../components/MemberCard';
 import { InvitationCard } from '../components/InvitationCard';
 import { WorkspaceSettingsForm } from '../forms/WorkspaceForms';
@@ -33,6 +34,12 @@ export const WorkspaceDetailPage: React.FC = () => {
   const { data: invitationsData } = useInvitations(id, 0, 50);
   const { setCurrentWorkspace } = useWorkspaceStore();
 
+  useEffect(() => {
+    if (workspace) {
+      setCurrentWorkspace(workspace, 'member');
+    }
+  }, [workspace, setCurrentWorkspace]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -45,7 +52,7 @@ export const WorkspaceDetailPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-gray-500">Workspace not found</p>
-        <Button onClick={() => navigate('/workspaces')}>Back to Workspaces</Button>
+        <Button onClick={() => navigate(ROUTES.workspace.list)}>Back to Workspaces</Button>
       </div>
     );
   }
@@ -59,7 +66,7 @@ export const WorkspaceDetailPage: React.FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/workspaces')}
+              onClick={() => navigate(ROUTES.workspace.list)}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>

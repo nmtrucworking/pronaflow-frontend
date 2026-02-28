@@ -21,6 +21,8 @@ import { Button, Input } from '@/components/ui';
 import { CreateTaskModal } from '@/components/ui/CreateTaskModal';
 import { useResponsiveGanttConfig } from '@/hooks/useResponsive';
 import { useTheme } from '@/themes/ThemeProvider';
+import COLORS from '@/config/colors';
+import { GANTT_STATUS_COLORS, GANTT_TASK_PROGRESS_STYLE } from '@/config/domainMappings';
 
 // --- TYPES ---
 
@@ -32,6 +34,8 @@ interface PronaFlowGanttTask extends GanttTask {
 }
 
 // --- MOCK DATA (Thay thế bằng API call thực tế) ---
+const TASK_PROGRESS_STYLE = GANTT_TASK_PROGRESS_STYLE;
+
 const MOCK_TASKS: PronaFlowGanttTask[] = [
   {
     start: new Date(2024, 0, 1),
@@ -41,7 +45,7 @@ const MOCK_TASKS: PronaFlowGanttTask[] = [
     type: 'project',
     progress: 45,
     isDisabled: false,
-    styles: { progressColor: '#10b981', progressSelectedColor: '#059669' },
+    styles: TASK_PROGRESS_STYLE.done,
     priority: 'high',
     status: 'in-progress',
     assignees: [],
@@ -56,7 +60,7 @@ const MOCK_TASKS: PronaFlowGanttTask[] = [
     project: 't1',
     progress: 100,
     isDisabled: false,
-    styles: { progressColor: '#3b82f6', progressSelectedColor: '#2563eb' },
+    styles: TASK_PROGRESS_STYLE.inProgress,
     priority: 'urgent',
     status: 'done',
     assignees: [{ id: 'u1', name: 'Nguyễn Văn A', avatar: '/defaults/avatars/avatar-1.png' }]
@@ -70,7 +74,7 @@ const MOCK_TASKS: PronaFlowGanttTask[] = [
     project: 't1',
     progress: 20,
     isDisabled: false,
-    styles: { progressColor: '#f59e0b', progressSelectedColor: '#d97706' },
+    styles: TASK_PROGRESS_STYLE.review,
     priority: 'medium',
     status: 'review',
     assignees: [{ id: 'u2', name: 'Trần Thị B', avatar: '/defaults/avatars/avatar-2.png' }]
@@ -84,7 +88,7 @@ const MOCK_TASKS: PronaFlowGanttTask[] = [
     project: 't1',
     progress: 0,
     isDisabled: false,
-    styles: { progressColor: '#64748b', progressSelectedColor: '#475569' },
+    styles: TASK_PROGRESS_STYLE.todo,
     priority: 'low',
     status: 'todo',
     assignees: []
@@ -95,15 +99,15 @@ const MOCK_TASKS: PronaFlowGanttTask[] = [
 
 const StatusIndicator = ({ status }: { status: string }) => {
   const map = {
-    'todo': { color: 'bg-slate-400', icon: <Clock className="w-3 h-3" /> },
-    'in-progress': { color: 'bg-blue-500', icon: <div className="w-2 h-2 rounded-full bg-white animate-pulse" /> },
-    'review': { color: 'bg-yellow-500', icon: <AlertCircle className="w-3 h-3" /> },
-    'done': { color: 'bg-emerald-500', icon: <CheckCircle2 className="w-3 h-3" /> },
+    'todo': { color: GANTT_STATUS_COLORS.todo, icon: <Clock className="w-3 h-3" /> },
+    'in-progress': { color: GANTT_STATUS_COLORS['in-progress'], icon: <div className="w-2 h-2 rounded-full bg-white animate-pulse" /> },
+    'review': { color: GANTT_STATUS_COLORS.review, icon: <AlertCircle className="w-3 h-3" /> },
+    'done': { color: GANTT_STATUS_COLORS.done, icon: <CheckCircle2 className="w-3 h-3" /> },
   };
   const config = map[status as keyof typeof map] || map.todo;
 
   return (
-    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${config.color} text-white shadow-sm`}>
+    <div className="w-5 h-5 rounded-full flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: config.color }}>
       {config.icon}
     </div>
   );
@@ -128,12 +132,12 @@ const GanttChartEnhanced: React.FC = () => {
   // Colors for Canvas Drawing (Must match Tailwind theme)
   // Vì thư viện vẽ bằng Canvas API nên cần mã HEX cứng, không dùng class Tailwind được
   const themeColors = useMemo(() => ({
-    barBackground: isDark ? '#1e293b' : '#f1f5f9', // slate-800 : slate-100
-    barProgress: '#10b981', // emerald-500
-    text: isDark ? '#e2e8f0' : '#334155', // slate-200 : slate-700
-    gridColor: isDark ? '#334155' : '#e2e8f0', // slate-700 : slate-200
-    arrowColor: isDark ? '#94a3b8' : '#64748b',
-    todayColor: isDark ? 'rgba(234, 179, 8, 0.1)' : 'rgba(252, 211, 77, 0.1)', // yellow with opacity
+    barBackground: isDark ? COLORS.dark.background.secondary : COLORS.ui.background.tertiary,
+    barProgress: COLORS.primary[500],
+    text: isDark ? COLORS.dark.text.secondary : COLORS.ui.text.secondary,
+    gridColor: isDark ? COLORS.dark.border.light : COLORS.ui.border.medium,
+    arrowColor: isDark ? COLORS.dark.text.muted : COLORS.ui.text.muted,
+    todayColor: isDark ? COLORS.semantic.warning[900] : COLORS.semantic.warning[100],
   }), [isDark]);
 
   // Handlers
@@ -160,7 +164,7 @@ const GanttChartEnhanced: React.FC = () => {
       priority: newTask.priority,
       status: 'todo',
       assignees: [], // Mock assignee
-      styles: { progressColor: '#64748b', progressSelectedColor: '#475569' }
+      styles: TASK_PROGRESS_STYLE.todo
     };
     setTasks([ganttTask, ...tasks]);
     setIsCreateModalOpen(false);

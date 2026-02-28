@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { useLogin, useMFA } from '@/hooks/useAuth';
 import authService from '@/services/authService';
 import { LogIn, Loader2, Github, Eye, EyeOff, ShieldCheck } from 'lucide-react';
@@ -89,7 +90,7 @@ const Login = () => {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('rememberedEmail', loginState.email);
       }
-      navigate('/dashboard');
+      navigate(ROUTES.app.dashboard);
     } else if (result.mfaRequired) {
       setShowMFAModal(true);
       authService.setTokens('', '');
@@ -110,7 +111,7 @@ const Login = () => {
     });
 
     if (result.success) {
-      navigate('/dashboard');
+      navigate(ROUTES.app.dashboard);
     } else {
       setMfaState((prev) => ({ ...prev, error: result.error || 'MFA verification failed' }));
     }
@@ -128,7 +129,7 @@ const Login = () => {
           <h2 className="text-center text-3xl font-extrabold token-text-primary">Sign in to PronaFlow</h2>
           <p className="mt-2 text-center text-sm token-text-secondary">
             Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-emerald-600 hover:text-emerald-500">
+            <Link to={ROUTES.auth.register} className="font-medium text-emerald-600 hover:text-emerald-500">
               Create one
             </Link>
           </p>
@@ -205,7 +206,7 @@ const Login = () => {
                 />
                 <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-700 dark:text-slate-300">Remember me</label>
               </div>
-              <Link to="/forgot-password" className="text-sm font-medium text-emerald-600 hover:text-emerald-500">
+              <Link to={ROUTES.auth.forgotPassword} className="text-sm font-medium text-emerald-600 hover:text-emerald-500">
                 Forgot password?
               </Link>
             </div>

@@ -41,7 +41,7 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
     <div className="fixed inset-0 z-[100]">
       <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-[-4px_0_20px_-6px_rgba(0,0,0,0.15)] z-[101] flex flex-col rounded-l-lg">
+      <div className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-2xl z-[101] flex flex-col rounded-l-lg">
         {/* HEADER TOOLBAR */}
         <div className="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-white flex-shrink-0">
           <div className="flex items-center gap-2 text-xs text-slate-500">

@@ -5,6 +5,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
+import { INTEGRATION_CATEGORIES, INTEGRATION_QUICK_ACTIONS } from '../config';
 import { 
   Key, 
   Webhook, 
@@ -26,65 +28,31 @@ const IntegrationsPage: React.FC = () => {
   
   const { data: overview, isLoading } = useIntegrationsOverview(userId, workspaceId);
 
-  const integrationCategories = [
-    {
-      id: 'api-tokens',
-      title: 'API Access Tokens',
-      description: 'Quản lý Personal Access Tokens cho việc tích hợp tự động',
-      icon: <Key className="w-6 h-6" />,
-      color: 'bg-indigo-500',
-      count: overview?.api_tokens?.length || 0,
-      route: '/integrations/api-tokens',
-    },
-    {
-      id: 'webhooks',
-      title: 'Webhooks',
-      description: 'Cấu hình thông báo sự kiện theo thời gian thực',
-      icon: <Webhook className="w-6 h-6" />,
-      color: 'bg-orange-500',
-      count: overview?.webhooks?.length || 0,
-      route: '/integrations/webhooks',
-    },
-    {
-      id: 'connected-apps',
-      title: 'Connected Apps',
-      description: 'Kết nối với Google Calendar, GitHub, Slack và các dịch vụ khác',
-      icon: <LinkIcon className="w-6 h-6" />,
-      color: 'bg-emerald-500',
-      count: overview?.oauth_connections?.length || 0,
-      route: '/integrations/connected-apps',
-    },
-    {
-      id: 'plugins',
-      title: 'Plugin Marketplace',
-      description: 'Khám phá và cài đặt các tiện ích mở rộng',
-      icon: <Puzzle className="w-6 h-6" />,
-      color: 'bg-purple-500',
-      count: overview?.plugins?.length || 0,
-      route: '/integrations/plugins',
-    },
-  ];
+  const categoryIcons = {
+    'api-tokens': <Key className="w-6 h-6" />,
+    webhooks: <Webhook className="w-6 h-6" />,
+    'connected-apps': <LinkIcon className="w-6 h-6" />,
+    plugins: <Puzzle className="w-6 h-6" />,
+  } as const;
 
-  const quickActions = [
-    {
-      title: 'Tạo API Token mới',
-      description: 'Khởi tạo token để tích hợp với hệ thống bên ngoài',
-      icon: <Plus className="w-5 h-5" />,
-      action: () => navigate('/integrations/api-tokens?action=create'),
-    },
-    {
-      title: 'Thêm Webhook',
-      description: 'Đăng ký nhận thông báo sự kiện',
-      icon: <Webhook className="w-5 h-5" />,
-      action: () => navigate('/integrations/webhooks?action=create'),
-    },
-    {
-      title: 'Kết nối ứng dụng',
-      description: 'Liên kết với Google, GitHub, Slack...',
-      icon: <LinkIcon className="w-5 h-5" />,
-      action: () => navigate('/integrations/connected-apps'),
-    },
-  ];
+  const categoryCounts = {
+    'api-tokens': overview?.api_tokens?.length || 0,
+    webhooks: overview?.webhooks?.length || 0,
+    'connected-apps': overview?.oauth_connections?.length || 0,
+    plugins: overview?.plugins?.length || 0,
+  } as const;
+
+  const quickActionIcons = {
+    'create-token': <Plus className="w-5 h-5" />,
+    'create-webhook': <Webhook className="w-5 h-5" />,
+    'connect-app': <LinkIcon className="w-5 h-5" />,
+  } as const;
+
+  const quickActionHandlers = {
+    'create-token': () => navigate(`${ROUTES.integrations.apiTokens}?action=create`),
+    'create-webhook': () => navigate(`${ROUTES.integrations.webhooks}?action=create`),
+    'connect-app': () => navigate(ROUTES.integrations.connectedApps),
+  } as const;
 
   const features = [
     {
@@ -144,7 +112,7 @@ const IntegrationsPage: React.FC = () => {
 
       {/* Integration Categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {integrationCategories.map((category) => (
+        {INTEGRATION_CATEGORIES.map((category) => (
           <div
             key={category.id}
             onClick={() => navigate(category.route)}
@@ -152,10 +120,10 @@ const IntegrationsPage: React.FC = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className={`${category.color} p-3 rounded-lg text-white`}>
-                {category.icon}
+                {categoryIcons[category.id]}
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <span className="font-semibold">{category.count}</span>
+                <span className="font-semibold">{categoryCounts[category.id]}</span>
                 <span>active</span>
               </div>
             </div>
@@ -180,14 +148,14 @@ const IntegrationsPage: React.FC = () => {
           Thao tác nhanh
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {quickActions.map((action, idx) => (
+          {INTEGRATION_QUICK_ACTIONS.map((action, idx) => (
             <button
               key={idx}
-              onClick={action.action}
+              onClick={quickActionHandlers[action.id]}
               className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
             >
               <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
-                {action.icon}
+                {quickActionIcons[action.id]}
               </div>
               <div>
                 <h4 className="font-medium text-slate-900 dark:text-white mb-1">
@@ -217,7 +185,7 @@ const IntegrationsPage: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate('/help/api')}
+            onClick={() => navigate(ROUTES.help.api)}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
           >
             Xem tài liệu

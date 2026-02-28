@@ -450,7 +450,7 @@ const ProfileSettings = () => {
         </div>
 
         {/* Floating Action Bar */}
-        <div className="sticky bottom-0 -mx-6 -mb-10 px-6 py-4 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-between z-20 mt-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="sticky bottom-0 -mx-6 -mb-10 px-6 py-4 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-between z-20 mt-8 shadow-sm">
           <p className="text-xs text-slate-500 italic hidden sm:block">Lần cập nhật cuối: 2 giờ trước</p>
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
             <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors bg-transparent border border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg active:scale-95">
@@ -1151,7 +1151,7 @@ const NotificationSettings = () => {
         <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#4A154B] flex items-center justify-center shrink-0 text-white">
+              <div className="w-10 h-10 rounded-lg bg-violet-900 flex items-center justify-center shrink-0 text-white">
                 <Slack className="w-5 h-5" />
               </div>
               <div>
@@ -1199,19 +1199,19 @@ export default function GeneralSettingsPage() {
             background: transparent;
           }
           ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; /* slate-300 */
+            background: var(--color-neutral-300);
             border-radius: 3px;
           }
           ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; /* slate-400 */
+            background: var(--color-neutral-400);
           }
           
           /* Dark mode specific */
           .dark ::-webkit-scrollbar-thumb {
-            background: #334155; /* slate-700 */
+            background: var(--color-neutral-700);
           }
           .dark ::-webkit-scrollbar-thumb:hover {
-            background: #475569; /* slate-600 */
+            background: var(--color-neutral-600);
           }
 
           /* Hide scrollbar for tab navigation on mobile but keep functionality */

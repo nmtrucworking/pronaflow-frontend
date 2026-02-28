@@ -1,5 +1,7 @@
 import React from 'react';
 import { Home, ArrowLeft, Zap } from 'lucide-react';
+import COLORS from '@/config/colors';
+import { ROUTES } from '@/routes/paths';
 
 /**
  * Interface định nghĩa các thuộc tính cho trang lỗi (nếu cần mở rộng)
@@ -15,6 +17,23 @@ const App: React.FC<ErrorPageProps> = ({
   title = "Tài nguyên không tồn tại",
   message = "Hệ thống không thể xác định được yêu cầu tại địa chỉ này. Vui lòng kiểm tra lại đường dẫn hoặc quay trở lại giao diện chính của hệ thống."
 }) => {
+  const uiColors = {
+    gradA: COLORS.neutral[100],
+    gradB: COLORS.neutral[200],
+    gradC: COLORS.semantic.success[100],
+    gradD: COLORS.semantic.success[50],
+    border: COLORS.ui.border.medium,
+    panelBg: COLORS.ui.background.primary,
+    panelHeader: COLORS.ui.background.tertiary,
+    accentStart: COLORS.status.success,
+    accentEnd: COLORS.semantic.info[600],
+    errorDot: COLORS.status.error,
+    warnDot: COLORS.status.warning,
+    successDot: COLORS.status.success,
+    dash: COLORS.ui.border.strong,
+    decorA: COLORS.semantic.success[200],
+    decorB: COLORS.semantic.info[100],
+  } as const;
   
   // Inline styles cho các hiệu ứng chuyển động gradient và blob
   const styles = `
@@ -30,7 +49,7 @@ const App: React.FC<ErrorPageProps> = ({
       100% { transform: translate(0px, 0px) scale(1); }
     }
     .bg-flow-animation {
-      background: linear-gradient(-45deg, #f3f4f6, #e5e7eb, #d1fae5, #ecfdf5);
+      background: linear-gradient(-45deg, var(--pf-error404-grad-a), var(--pf-error404-grad-b), var(--pf-error404-grad-c), var(--pf-error404-grad-d));
       background-size: 400% 400%;
       animation: gradient 15s ease infinite;
     }
@@ -46,7 +65,15 @@ const App: React.FC<ErrorPageProps> = ({
   `;
 
   return (
-    <div className="bg-flow-animation min-h-screen w-full flex flex-col justify-center items-center overflow-hidden relative text-slate-800 font-sans">
+    <div
+      className="bg-flow-animation min-h-screen w-full flex flex-col justify-center items-center overflow-hidden relative text-slate-800 font-sans"
+      style={{
+        ['--pf-error404-grad-a' as any]: uiColors.gradA,
+        ['--pf-error404-grad-b' as any]: uiColors.gradB,
+        ['--pf-error404-grad-c' as any]: uiColors.gradC,
+        ['--pf-error404-grad-d' as any]: uiColors.gradD,
+      }}
+    >
       <style>{styles}</style>
 
       {/* Các thành phần đồ họa nền (Background Elements) */}
@@ -77,7 +104,7 @@ const App: React.FC<ErrorPageProps> = ({
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <button 
-              onClick={() => window.location.href = '/'}
+              onClick={() => window.location.href = ROUTES.root}
               className="group px-8 py-3.5 bg-emerald-600 text-white font-semibold rounded-lg shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
               <Home className="w-5 h-5" />
@@ -100,29 +127,29 @@ const App: React.FC<ErrorPageProps> = ({
             <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-2xl">
               <defs>
                 <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#0d9488', stopOpacity: 1 }} />
+                  <stop offset="0%" style={{ stopColor: uiColors.accentStart, stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: uiColors.accentEnd, stopOpacity: 1 }} />
                 </linearGradient>
               </defs>
 
               {/* Mô phỏng giao diện hệ thống */}
-              <rect x="50" y="50" width="400" height="250" rx="20" fill="#ffffff" stroke="#e2e8f0" strokeWidth="2" />
-              <rect x="50" y="50" width="400" height="30" rx="20" fill="#f1f5f9" />
-              <circle cx="75" cy="65" r="5" fill="#ef4444" />
-              <circle cx="95" cy="65" r="5" fill="#eab308" />
-              <circle cx="115" cy="65" r="5" fill="#22c55e" />
+              <rect x="50" y="50" width="400" height="250" rx="20" fill={uiColors.panelBg} stroke={uiColors.border} strokeWidth="2" />
+              <rect x="50" y="50" width="400" height="30" rx="20" fill={uiColors.panelHeader} />
+              <circle cx="75" cy="65" r="5" fill={uiColors.errorDot} />
+              <circle cx="95" cy="65" r="5" fill={uiColors.warnDot} />
+              <circle cx="115" cy="65" r="5" fill={uiColors.successDot} />
 
               {/* Ký hiệu ngắt kết nối dữ liệu */}
-              <path d="M180 150 L320 250" stroke="#cbd5e1" strokeWidth="4" strokeDasharray="10,10" />
-              <path d="M320 150 L180 250" stroke="#cbd5e1" strokeWidth="4" strokeDasharray="10,10" />
+              <path d="M180 150 L320 250" stroke={uiColors.dash} strokeWidth="4" strokeDasharray="10,10" />
+              <path d="M320 150 L180 250" stroke={uiColors.dash} strokeWidth="4" strokeDasharray="10,10" />
 
               {/* Biểu tượng cảnh báo trung tâm */}
               <circle cx="250" cy="200" r="50" fill="url(#grad1)" className="animate-pulse" />
               <text x="250" y="220" fontFamily="sans-serif" fontSize="var(--font-size-6xl)" textAnchor="middle" fill="white" fontWeight="bold">!</text>
 
               {/* Các khối trang trí hỗ trợ */}
-              <rect x="380" y="240" width="80" height="80" rx="10" fill="#a7f3d0" opacity="0.5" className="animate-bounce" style={{ animationDuration: '3s' }} />
-              <rect x="40" y="260" width="60" height="60" rx="30" fill="#99f6e4" opacity="0.5" className="animate-bounce" style={{ animationDuration: '4s' }} />
+              <rect x="380" y="240" width="80" height="80" rx="10" fill={uiColors.decorA} opacity="0.5" className="animate-bounce" style={{ animationDuration: '3s' }} />
+              <rect x="40" y="260" width="60" height="60" rx="30" fill={uiColors.decorB} opacity="0.5" className="animate-bounce" style={{ animationDuration: '4s' }} />
             </svg>
           </div>
         </div>

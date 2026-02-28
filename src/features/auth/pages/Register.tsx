@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import * as Label from '@radix-ui/react-label';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import { 
@@ -74,7 +75,7 @@ const App = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent" />
           </div>
 
-          <Link to="/" className="relative z-10 flex items-center gap-3">
+          <Link to={ROUTES.root} className="relative z-10 flex items-center gap-3">
              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
               <ShieldCheck className="text-white w-6 h-6" />
             </div>
@@ -297,7 +298,7 @@ const App = () => {
                 </div>
                 <button 
                   className="token-action-primary w-full h-11 rounded-lg font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate(ROUTES.app.dashboard)}
                 >
                   Truy cập Dashboard
                 </button>
@@ -308,15 +309,15 @@ const App = () => {
             {step < 4 && (
               <p className="text-center text-sm text-slate-500">
                 Đã có tài khoản?{' '}
-                <Link to="/login" className="font-bold text-emerald-600 hover:underline">Đăng nhập</Link>
+                <Link to={ROUTES.auth.login} className="font-bold text-emerald-600 hover:underline">Đăng nhập</Link>
               </p>
             )}
             {step < 4 && (
               <p className="text-center text-[10px] text-slate-400 mt-3">
                 Bằng cách đăng ký, bạn đồng ý với{' '}
-                <Link to="/help/terms" className="text-slate-500 hover:text-slate-700 underline">Điều khoản dịch vụ</Link>{' '}
+                <Link to={ROUTES.help.terms} className="text-slate-500 hover:text-slate-700 underline">Điều khoản dịch vụ</Link>{' '}
                 và{' '}
-                <Link to="/help/privacy" className="text-slate-500 hover:text-slate-700 underline">Chính sách quyền riêng tư</Link>{' '}
+                <Link to={ROUTES.help.privacy} className="text-slate-500 hover:text-slate-700 underline">Chính sách quyền riêng tư</Link>{' '}
                 của chúng tôi.
               </p>
             )}

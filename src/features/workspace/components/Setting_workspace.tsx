@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import COLORS from '@/config/colors';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -74,11 +75,11 @@ const MOCK_INVOICES = [
 ];
 
 const MOCK_TAGS = [
-  { id: 1, name: 'Bug', color: '#EF4444', usage: 12 }, // Red-500
-  { id: 2, name: 'Feature', color: '#3B82F6', usage: 8 }, // Blue-500
-  { id: 3, name: 'Enhancement', color: '#10B981', usage: 5 }, // Emerald-500
-  { id: 4, name: 'Documentation', color: '#F59E0B', usage: 3 }, // Amber-500
-  { id: 5, name: 'Design', color: '#8B5CF6', usage: 7 }, // Violet-500
+  { id: 1, name: 'Bug', color: COLORS.status.error, usage: 12 },
+  { id: 2, name: 'Feature', color: COLORS.semantic.info[500], usage: 8 },
+  { id: 3, name: 'Enhancement', color: COLORS.status.success, usage: 5 },
+  { id: 4, name: 'Documentation', color: COLORS.status.warning, usage: 3 },
+  { id: 5, name: 'Design', color: COLORS.priority.low, usage: 7 },
 ];
 
 const UNSPLASH_IMAGES = [
@@ -156,9 +157,9 @@ const AdvancedColorPicker = ({ color, onChange }: { color: string, onChange: (c:
   
   // Hexagon-like grid of colors
   const PALETTE_COLORS = [
-    '#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#22d3ee', '#60a5fa', '#c084fc', '#f472b6',
-    '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#e879f9',
-    '#b91c1c', '#c2410c', '#b45309', '#4d7c0f', '#15803d', '#0e7490', '#1d4ed8', '#7e22ce', '#be185d',
+    COLORS.semantic.error[100], COLORS.semantic.warning[100], COLORS.semantic.warning[500], COLORS.semantic.success[100], COLORS.semantic.success[500], COLORS.semantic.info[100], COLORS.semantic.info[500], COLORS.priority.low, COLORS.semantic.error[500],
+    COLORS.semantic.error[500], COLORS.priority.high, COLORS.semantic.warning[500], COLORS.semantic.success[600], COLORS.semantic.success[500], COLORS.semantic.info[500], COLORS.semantic.info[500], COLORS.priority.low, COLORS.semantic.error[600],
+    COLORS.semantic.error[700], COLORS.priority.high, COLORS.semantic.warning[700], COLORS.semantic.success[700], COLORS.semantic.success[700], COLORS.semantic.info[700], COLORS.semantic.info[600], COLORS.priority.low, COLORS.semantic.error[700],
   ];
 
   return (
@@ -183,7 +184,18 @@ const AdvancedColorPicker = ({ color, onChange }: { color: string, onChange: (c:
              <div className="p-4">
                <Tabs.Content value="preset" className="outline-none">
                  <div className="grid grid-cols-5 gap-2">
-                   {['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#64748B'].map(c => (
+                   {[
+                    COLORS.status.error,
+                    COLORS.priority.high,
+                    COLORS.status.warning,
+                    COLORS.status.success,
+                    COLORS.semantic.info[500],
+                    COLORS.semantic.info[600],
+                    COLORS.priority.medium,
+                    COLORS.priority.low,
+                    COLORS.semantic.error[600],
+                    COLORS.neutral[500],
+                  ].map(c => (
                      <button 
                        key={c}
                        className={cn("w-8 h-8 rounded-full hover:scale-110 transition-transform focus:outline-none ring-offset-1 focus:ring-2", color === c ? "ring-2 ring-indigo-500 dark:ring-indigo-400" : "ring-transparent")}
@@ -785,7 +797,7 @@ const TagActionPopover = ({ tag, onEdit, onDelete }: { tag: any, onEdit: () => v
 const WorkspaceTags = () => {
   const [tags, setTags] = useState(MOCK_TAGS);
   const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'usage', direction: 'asc' | 'desc' } | null>(null);
-  const [newTagColor, setNewTagColor] = useState('#3B82F6');
+  const [newTagColor, setNewTagColor] = useState(COLORS.semantic.info[500]);
   // State for Edit/Delete actions in real app would go here
 
   // Sorting Logic
@@ -1124,10 +1136,10 @@ export default function WorkspaceSettingsPage() {
         {`
           ::-webkit-scrollbar { width: 6px; height: 6px; }
           ::-webkit-scrollbar-track { background: transparent; }
-          ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-          ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-          .dark ::-webkit-scrollbar-thumb { background: #334155; }
-          .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+          ::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border-radius: 3px; }
+          ::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-400); }
+          .dark ::-webkit-scrollbar-thumb { background: var(--color-neutral-700); }
+          .dark ::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-600); }
           .scrollbar-hide::-webkit-scrollbar { display: none; }
           .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         `}

@@ -26,41 +26,47 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ 
   children, 
-  defaultTheme = 'light', 
+  defaultTheme = 'system', 
   storageKey = 'pronaflow-gantt-theme' 
 }: ThemeProviderProps) {
-  const [mode, setMode] = useState<ThemeMode>(() => {
+  const getSystemMode = (): 'light' | 'dark' => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  };
+
+  const [preference, setPreference] = useState<ThemeMode>(() => {
     // Check localStorage first
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(storageKey);
-      if (stored === 'light' || stored === 'dark') {
+      if (stored === 'light' || stored === 'dark' || stored === 'system') {
         return stored;
-      }
-      
-      // Check system preference
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
       }
     }
     return defaultTheme;
   });
 
+  const mode = preference === 'system' ? getSystemMode() : preference;
   const theme = mode === 'dark' ? darkTheme : lightTheme;
 
   const toggleTheme = () => {
-    setMode(prev => prev === 'light' ? 'dark' : 'light');
+    setPreference(prev => {
+      const currentMode = prev === 'system' ? getSystemMode() : prev;
+      return currentMode === 'light' ? 'dark' : 'light';
+    });
   };
 
   const setTheme = (newMode: ThemeMode) => {
-    setMode(newMode);
+    setPreference(newMode);
   };
 
   // Persist theme to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, mode);
+      localStorage.setItem(storageKey, preference);
     }
-  }, [mode, storageKey]);
+  }, [preference, storageKey]);
 
   // Apply theme class to document
   useEffect(() => {
@@ -71,9 +77,24 @@ export function ThemeProvider({
     }
   }, [mode]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || preference !== 'system') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark');
+      root.classList.add(mediaQuery.matches ? 'dark' : 'light');
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [preference]);
+
   const value: ThemeContextType = {
     theme,
     mode,
+    preference,
     toggleTheme,
     setTheme,
   };

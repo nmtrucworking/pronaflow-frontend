@@ -21,6 +21,7 @@ import {
   Keyboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ROUTES } from '@/routes/paths';
 
 interface CommandItem {
   id: string;
@@ -50,7 +51,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Dashboard',
       icon: LayoutDashboard,
       action: () => {
-        window.location.href = '/dashboard';
+        window.location.href = ROUTES.app.dashboard;
         onClose();
       },
       shortcut: 'D',
@@ -61,7 +62,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Tasks',
       icon: CheckCircle2,
       action: () => {
-        window.location.href = '/tasks';
+        window.location.href = ROUTES.app.tasks;
         onClose();
       },
       shortcut: 'T',
@@ -72,7 +73,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Calendar',
       icon: Calendar,
       action: () => {
-        window.location.href = '/calendar';
+        window.location.href = ROUTES.app.calendar;
         onClose();
       },
       shortcut: 'C',
@@ -83,7 +84,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Inbox',
       icon: Inbox,
       action: () => {
-        window.location.href = '/inbox';
+        window.location.href = ROUTES.app.inbox;
         onClose();
       },
       shortcut: 'I',
@@ -94,7 +95,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Projects',
       icon: Folder,
       action: () => {
-        window.location.href = '/projects';
+        window.location.href = ROUTES.app.projects;
         onClose();
       },
       shortcut: 'P',
@@ -105,7 +106,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Team',
       icon: Users,
       action: () => {
-        window.location.href = '/members';
+        window.location.href = ROUTES.app.members;
         onClose();
       },
       category: 'navigation',
@@ -115,7 +116,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
       title: 'Go to Settings',
       icon: Settings,
       action: () => {
-        window.location.href = '/settings';
+        window.location.href = ROUTES.app.settings;
         onClose();
       },
       shortcut: ',',

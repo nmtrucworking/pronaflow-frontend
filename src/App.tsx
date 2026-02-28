@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { ROUTES, toChildPath } from './routes/paths';
 import { MainLayout } from './components/layout/MainLayout';
 import { HelpLayout } from './components/layout/HelpLayout';
 
@@ -52,65 +53,65 @@ import { Agentation } from 'agentation';
  * The MainLayout component wraps around internal pages to provide consistent layout with Sidebar.
  */
 const router = createBrowserRouter([
-  { path: '/',
+  { path: ROUTES.root,
     element: <LandingPage />,
     errorElement: <Error500Page />,
   },
   {
-    path: '/login',
+    path: ROUTES.auth.login,
     element: <LoginPage />
   },
   {
-    path: '/register',
+    path: ROUTES.auth.register,
     element: <RegisterPage />
   },
   {
     element: <MainLayout />, // Bọc các trang nội bộ trong Layout có Sidebar
     errorElement: <Error500Page />,
     children: [
-      { path: 'dashboard', element: <DashboardPage /> },
-      { path: 'projects', element: <AllProjectsPage /> },
-      { path: 'tasks', element: <TasksPage /> },
-      { path: 'inbox', element: <InboxPage /> },
-      { path: 'settings', element: <SettingsPage /> },
-      { path: 'account-settings', element: <AccountSettingsPage /> },
-      { path: 'account-settings/billing', element: <PrivateBillingPage /> },
-      { path: 'trash', element: <TrashPage /> },
-      { path: 'calendar', element: <CalendarPage /> },
-      { path: 'gantt', element: <GanttChartPage /> },
-      { path: 'workspace-settings', element: <WorkspaceSetting /> },
-      { path: 'members' , element: <WorkspaceMemberPage /> },
-      { path: 'archive', element: <ArchivedPage /> },
+      { path: toChildPath(ROUTES.app.dashboard), element: <DashboardPage /> },
+      { path: toChildPath(ROUTES.app.projects), element: <AllProjectsPage /> },
+      { path: toChildPath(ROUTES.app.tasks), element: <TasksPage /> },
+      { path: toChildPath(ROUTES.app.inbox), element: <InboxPage /> },
+      { path: toChildPath(ROUTES.app.settings), element: <SettingsPage /> },
+      { path: toChildPath(ROUTES.app.accountSettings), element: <AccountSettingsPage /> },
+      { path: toChildPath(ROUTES.app.accountBilling), element: <PrivateBillingPage /> },
+      { path: toChildPath(ROUTES.app.trash), element: <TrashPage /> },
+      { path: toChildPath(ROUTES.app.calendar), element: <CalendarPage /> },
+      { path: toChildPath(ROUTES.app.gantt), element: <GanttChartPage /> },
+      { path: toChildPath(ROUTES.app.workspaceSettings), element: <WorkspaceSetting /> },
+      { path: toChildPath(ROUTES.app.members) , element: <WorkspaceMemberPage /> },
+      { path: toChildPath(ROUTES.app.archive), element: <ArchivedPage /> },
       // Integration routes (Module 12)
-      { path: 'integrations', element: <IntegrationsPage /> },
-      { path: 'integrations/api-tokens', element: <ApiTokensPage /> },
-      { path: 'integrations/webhooks', element: <WebhooksPage /> },
-      { path: 'integrations/connected-apps', element: <ConnectedAppsPage /> },
-      { path: 'integrations/plugins', element: <PluginMarketplacePage /> },
+      { path: toChildPath(ROUTES.integrations.root), element: <IntegrationsPage /> },
+      { path: toChildPath(ROUTES.integrations.apiTokens), element: <ApiTokensPage /> },
+      { path: toChildPath(ROUTES.integrations.webhooks), element: <WebhooksPage /> },
+      { path: toChildPath(ROUTES.integrations.connectedApps), element: <ConnectedAppsPage /> },
+      { path: toChildPath(ROUTES.integrations.plugins), element: <PluginMarketplacePage /> },
       // Public billing and Analytics routes
-      { path: 'billing', element: <PublicBillingPage /> },
-      { path: 'analytics', element: <AnalyticsPage /> },
+      { path: toChildPath(ROUTES.app.billing), element: <PublicBillingPage /> },
+      { path: toChildPath(ROUTES.app.analytics), element: <AnalyticsPage /> },
       // Workspace routes
       ...workspaceRoutes,
       // Điều hướng mặc định nếu vào /
-      { path: 'home', element: <Navigate to="/dashboard" replace /> },
+      { path: toChildPath(ROUTES.app.home), element: <Navigate to={ROUTES.app.dashboard} replace /> },
     ],
   },
   {
     element: <HelpLayout />,
     children: [
-      { path: '/help', element: <HelperCenterPage /> },
-      { path: '/help/api', element: <ApiPage /> },
-      { path: '/help/changelog', element: <ChangelogPage /> },
-      { path: '/help/contact', element: <ContactSupportPage /> },
-      { path: '/help/legal', element: <LegalPage /> },
-      { path: '/help/privacy', element: <PrivacyPage /> },
-      { path: '/help/status', element: <StatusPage /> },
-      { path: '/help/terms', element: <TermsPage /> },
+      { path: ROUTES.help.root, element: <HelperCenterPage /> },
+      { path: ROUTES.help.api, element: <ApiPage /> },
+      { path: ROUTES.help.changelog, element: <ChangelogPage /> },
+      { path: ROUTES.help.contact, element: <ContactSupportPage /> },
+      { path: ROUTES.help.legal, element: <LegalPage /> },
+      { path: ROUTES.help.privacy, element: <PrivacyPage /> },
+      { path: ROUTES.help.status, element: <StatusPage /> },
+      { path: ROUTES.help.terms, element: <TermsPage /> },
     ],
   },
   {
-    path: '*',
+    path: ROUTES.notFound,
     element: <Error404Page />,
   }
 ]);

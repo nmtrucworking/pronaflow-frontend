@@ -16,6 +16,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useTheme } from '@/themes/ThemeProvider';
+import COLORS from '@/config/colors';
+import { TASK_PRIORITY_COLORS, TASK_STATUS_COLORS } from '@/config/domainMappings';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from '../constants';
 import type { TaskStatus, TaskPriority } from '../types';
 
@@ -120,7 +122,7 @@ export function TaskBulkActionBar({
                           >
                             <div
                               className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: STATUS_CONFIG[status]?.bgColor || '#e2e8f0' }}
+                              style={{ backgroundColor: TASK_STATUS_COLORS[status] || COLORS.neutral[200] }}
                             />
                             {STATUS_CONFIG[status]?.label}
                           </button>
@@ -161,7 +163,7 @@ export function TaskBulkActionBar({
                           >
                             <div
                               className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: PRIORITY_CONFIG[priority]?.bgColor || '#e2e8f0' }}
+                              style={{ backgroundColor: TASK_PRIORITY_COLORS[priority] || COLORS.neutral[200] }}
                             />
                             {PRIORITY_CONFIG[priority]?.label}
                           </button>

@@ -251,7 +251,7 @@ const MemberHubPage: React.FC = () => {
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] animate-in fade-in duration-300" />
-              <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-slate-900 rounded-xl p-8 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] z-[101] border border-white/10 animate-in zoom-in-95 duration-400 outline-none">
+              <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-slate-900 rounded-xl p-8 shadow-2xl z-[101] border border-white/10 animate-in zoom-in-95 duration-400 outline-none">
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-2">Thêm đồng đội</h2>
@@ -430,7 +430,7 @@ const MemberHubPage: React.FC = () => {
       <Dialog.Root open={!!selectedMember} onOpenChange={(open) => !open && setSelectedMember(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[100] animate-in fade-in duration-500" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] z-[101] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-300 outline-none">
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl shadow-2xl z-[101] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-300 outline-none">
             {selectedMember && (
               <div className="flex flex-col h-[650px]">
                 {/* Decorative Header */}
@@ -498,9 +498,9 @@ const MemberHubPage: React.FC = () => {
       <style>{`
         .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #334155; }
-        .custom-scrollbar-y::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border-radius: 10px; }
+        .dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-neutral-700); }
+        .custom-scrollbar-y::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-400); }
       `}</style>
     </div>
   );
@@ -527,7 +527,7 @@ const StatTile: React.FC<{ label: string, value: any, icon: any, color: string, 
       </div>
     </Popover.Trigger>
     <Popover.Portal>
-      <Popover.Content sideOffset={12} className="w-80 bg-white dark:bg-slate-900 rounded-xl p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-slate-800 z-50 animate-in fade-in zoom-in-95 duration-300 outline-none">
+      <Popover.Content sideOffset={12} className="w-80 bg-white dark:bg-slate-900 rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 animate-in fade-in zoom-in-95 duration-300 outline-none">
         <div className="flex items-center justify-between mb-4">
            <h5 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{isPending ? 'Phê duyệt gia nhập' : label}</h5>
            <span className="text-[10px] font-bold text-slate-400">Xem tất cả</span>
@@ -556,7 +556,7 @@ const StatTile: React.FC<{ label: string, value: any, icon: any, color: string, 
                     <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{d.full_name}</p>
                     <p className="text-[9px] font-medium text-slate-400 uppercase tracking-tighter">{d.project_role}</p>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-300/60" />
                </div>
              ))
            )}

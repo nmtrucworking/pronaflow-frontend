@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { 
   Search, GitBranch, Activity, Code, MessageCircle, 
   Rocket, Trello, UserCog, Plug, Shield, Smartphone,
@@ -197,7 +198,7 @@ const App: React.FC = () => {
                   searchResults.map(result => (
                     <Link
                       key={result.id}
-                      to={`/help?q=${encodeURIComponent(result.title)}`}
+                      to={`${ROUTES.help.root}?q=${encodeURIComponent(result.title)}`}
                       className="block px-5 py-4 hover:bg-slate-50 border-b border-slate-50 last:border-0 group"
                     >
                       <div className="flex items-center gap-3">
@@ -231,10 +232,10 @@ const App: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Changelog', desc: 'Nhật ký cập nhật', icon: <GitBranch className="text-purple-600" />, bg: 'bg-purple-50', to: '/help/changelog' },
-            { label: 'Hệ thống', desc: 'Trạng thái vận hành', icon: <Activity className="text-emerald-600" />, bg: 'bg-emerald-50', to: '/help/status' },
-            { label: 'Tài liệu API', desc: 'Cổng lập trình viên', icon: <Code className="text-blue-600" />, bg: 'bg-blue-50', to: '/help/api' },
-            { label: 'Liên hệ', desc: 'Yêu cầu hỗ trợ', icon: <MessageCircle className="text-orange-600" />, bg: 'bg-orange-50', to: '/help/contact' }
+            { label: 'Changelog', desc: 'Nhật ký cập nhật', icon: <GitBranch className="text-purple-600" />, bg: 'bg-purple-50', to: ROUTES.help.changelog },
+            { label: 'Hệ thống', desc: 'Trạng thái vận hành', icon: <Activity className="text-emerald-600" />, bg: 'bg-emerald-50', to: ROUTES.help.status },
+            { label: 'Tài liệu API', desc: 'Cổng lập trình viên', icon: <Code className="text-blue-600" />, bg: 'bg-blue-50', to: ROUTES.help.api },
+            { label: 'Liên hệ', desc: 'Yêu cầu hỗ trợ', icon: <MessageCircle className="text-orange-600" />, bg: 'bg-orange-50', to: ROUTES.help.contact }
           ].map((link, idx) => (
             <Link key={idx} to={link.to} className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all group text-left">
               <div className={`w-12 h-12 ${link.bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -264,7 +265,7 @@ const App: React.FC = () => {
                 {cat.articles.map((art) => (
                   <li key={art.id}>
                     <Link
-                      to={`/help?q=${encodeURIComponent(art.title)}`}
+                      to={`${ROUTES.help.root}?q=${encodeURIComponent(art.title)}`}
                       className="text-sm text-slate-600 hover:text-emerald-600 flex items-start gap-2 group/link text-left"
                     >
                       <FileText className="w-4 h-4 mt-0.5 text-slate-300 group-hover/link:text-emerald-500 transition-colors" />
@@ -274,7 +275,7 @@ const App: React.FC = () => {
                 ))}
               </ul>
               <div className="mt-8 pt-6 border-t border-slate-100">
-                <Link to="/help/terms" className="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                <Link to={ROUTES.help.terms} className="text-xs font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
                   Toàn bộ tài liệu <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -323,7 +324,7 @@ const App: React.FC = () => {
               </div>
               <h2 className="text-3xl font-black text-white mb-4 tracking-tight uppercase">Yêu cầu hỗ trợ chuyên sâu?</h2>
               <p className="text-slate-400 mb-10 max-w-lg mx-auto leading-relaxed">Đội ngũ kỹ thuật viên của chúng tôi luôn sẵn sàng tiếp nhận và giải quyết các yêu cầu đặc thù của quý khách.</p>
-              <Link to="/help/contact" className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/20 active:scale-95">
+              <Link to={ROUTES.help.contact} className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/20 active:scale-95">
                 Gửi yêu cầu hỗ trợ
                 <ArrowRight className="w-5 h-5" />
               </Link>

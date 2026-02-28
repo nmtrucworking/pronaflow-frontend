@@ -10,85 +10,18 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useQuery } from '@tanstack/react-query';
+import { ROUTES } from '@/routes/paths';
 import { workspaceService } from '@/services/workspaceService';
 import { projectService } from '@/services/projectService';
 import { authService } from '@/services/authService';
 import { notificationService } from '@/services/notificationService';
+import { useWorkspaceStore } from '@/store/features/workspaceStore';
 import type { Workspace, Project, CurrentUserResponse } from '@/types';
+import { getSidebarNavigationData, type BadgeType, type NavItemData, type SectionData } from './sidebarNavigationConfig';
 
 /** * ĐỊNH NGHĨA TYPES & INTERFACES 
  * Đảm bảo tính minh bạch về kiểu dữ liệu và ngăn chặn lỗi runtime.
  */
-type BadgeType = 'urgent' | 'count' | 'new' | 'info';
-
-interface NavItemData {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  badge?: string | number;
-  badgeType?: BadgeType;
-  path?: string;
-  statusColor?: string;
-}
-
-interface SectionData {
-  id: string;
-  title: string;
-  items: NavItemData[];
-}
-
-/**
- * DỮ LIỆU CẤU CẤU TRÚC
- * Tách biệt logic hiển thị và dữ liệu để tăng khả năng tái sử dụng.
- */
-const getNavigationData = (
-  taskCount: number = 0,
-  inboxCount: number = 0,
-  memberCount: number = 0,
-  projectCount: number = 0
-): SectionData[] => [
-  {
-    id: 'overview',
-    title: 'Tổng quan',
-    items: [
-      { id: 'dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/dashboard' },
-      { id: 'tasks', label: 'Việc của tôi', icon: CheckCircle2, badge: taskCount > 0 ? taskCount : undefined, badgeType: taskCount > 0 ? 'urgent' : undefined, path: '/tasks' },
-      { id: 'calendar', label: 'Lịch biểu', icon: Calendar, path: '/calendar' },
-      { id: 'inbox', label: 'Hộp thư', icon: Inbox, badge: inboxCount > 0 ? inboxCount : undefined, badgeType: 'count', path: '/inbox' },
-    ]
-  },
-  {
-    id: 'workspace',
-    title: 'Không gian làm việc',
-    items: [
-      { id: 'members', label: 'Thành viên', icon: Users, badge: memberCount > 0 ? memberCount : undefined, badgeType: 'count', path: '/members' },
-      { id: 'settings', label: 'Cấu hình', icon: Settings, path: '/workspace-settings' },
-      { id: 'integrations', label: 'Tích hợp', icon: Plug, path: '/integrations', badgeType: 'new' },
-    ]
-  },
-  {
-    id: 'collaboration',
-    title: 'Dự án',
-    items: [
-      { id: 'all-projects', label: 'Danh sách dự án', icon: Folder, badge: projectCount > 0 ? projectCount : undefined, badgeType: 'count', path: '/projects' },
-      { id: 'gantt', label: 'Biểu đồ Gantt', icon: GanttChart, badge: 'New', badgeType: 'new', path: '/gantt' },
-    ]
-  },
-  {
-    id: 'favorites',
-    title: 'Đã ghim',
-    items: []
-  },
-  {
-    id: 'data',
-    title: 'Dữ liệu',
-    items: [
-      { id: 'archive', label: 'Kho lưu trữ', icon: Archive, path: '/archive' },
-      { id: 'trash', label: 'Thùng rác', icon: Trash2, path: '/trash' },
-    ]
-  }
-];
-
 /**
  * COMPONENT CHÍNH: APP (SIDEBAR)
  */
@@ -111,6 +44,8 @@ export default function App({
     favorites: true,
     data: true
   });
+  const selectedWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
+  const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
 
   // Fetch current user
   const { data: currentUser } = useQuery<CurrentUserResponse>({
@@ -135,7 +70,16 @@ export default function App({
   });
 
   // Fetch current workspace details
-  const currentWorkspaceId = currentWorkspace?.workspace_id || workspacesData?.workspaces?.[0]?.workspace_id;
+  const currentWorkspaceId =
+    currentWorkspace?.workspace_id ||
+    selectedWorkspaceId ||
+    workspacesData?.workspaces?.[0]?.workspace_id;
+
+  useEffect(() => {
+    if (currentWorkspaceId && currentWorkspaceId !== selectedWorkspaceId) {
+      setCurrentWorkspaceId(currentWorkspaceId);
+    }
+  }, [currentWorkspaceId, selectedWorkspaceId, setCurrentWorkspaceId]);
   
   const { data: workspaceDetails } = useQuery({
     queryKey: ['workspace', currentWorkspaceId],
@@ -203,7 +147,7 @@ export default function App({
   const taskCount = 0; // Will be implemented with task service
 
   // Generate navigation data with real counts
-  const NAVIGATION_DATA = getNavigationData(taskCount, inboxCount, memberCount, projectCount);
+  const NAVIGATION_DATA = getSidebarNavigationData(taskCount, inboxCount, memberCount, projectCount);
 
   // Add favorite projects to navigation
   if (favoriteProjects && favoriteProjects.length > 0) {
@@ -257,7 +201,7 @@ export default function App({
     try {
       await authService.logout();
       authService.clearTokens();
-      navigate('/login');
+      navigate(ROUTES.auth.login);
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -320,6 +264,7 @@ export default function App({
               <WorkspacePopover 
                 workspaces={workspacesData?.workspaces || []} 
                 currentWorkspaceId={currentWorkspaceId}
+                onSelectWorkspace={setCurrentWorkspaceId}
               />
             </Popover.Root>
           ) : (
@@ -410,7 +355,7 @@ export default function App({
           {/* Thông báo hệ thống */}
           {!isCollapsed ? (
             <NavLink
-              to="/inbox"
+              to={ROUTES.app.inbox}
               className="w-full flex items-center gap-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 hover:bg-green-100 transition-colors group relative overflow-hidden"
             >
               <Megaphone className="w-4 h-4 flex-shrink-0" />
@@ -419,7 +364,7 @@ export default function App({
           ) : (
             <RadixTooltip text="Maintenance: 22:00">
               <NavLink
-                to="/inbox"
+                to={ROUTES.app.inbox}
                 className="w-full flex items-center justify-center p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
               >
                 <Megaphone className="w-4 h-4 flex-shrink-0" />
@@ -430,7 +375,7 @@ export default function App({
           {/* Trợ giúp */}
           {!isCollapsed ? (
             <NavLink
-              to="/help"
+              to={ROUTES.help.root}
               className="w-full flex items-center gap-3 p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all group relative"
             >
               <LifeBuoy className="w-5 h-5 flex-shrink-0" />
@@ -439,7 +384,7 @@ export default function App({
           ) : (
             <RadixTooltip text="Help & Support">
               <NavLink
-                to="/help"
+                to={ROUTES.help.root}
                 className="w-full flex items-center justify-center p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all"
               >
                 <LifeBuoy className="w-5 h-5 flex-shrink-0" />
@@ -504,7 +449,7 @@ export default function App({
           border-radius: 20px; 
         }
         .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-          background-color: #E2E8F0;
+          background-color: var(--color-neutral-200);
         }
       `}</style>
     </div>
@@ -546,7 +491,7 @@ function NavItem({
     <button
       onClick={handleClick}
       className={`group relative flex items-center h-10 px-3 rounded-lg transition-all duration-200 text-sm font-medium w-full ${isActive
-          ? 'bg-blue-50 text-blue-600 shadow-[inset_0_0_0_1px_rgba(37,99,235,0.1)]'
+          ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-100'
           : 'text-slate-500 hover:bg-slate-200/60 hover:text-slate-900'
         } ${isCollapsed ? 'justify-center px-0' : 'justify-between'}`}
     >
@@ -616,10 +561,12 @@ function StatusDot({ color, className }: { color: string; className?: string }) 
  */
 function WorkspacePopover({ 
   workspaces, 
-  currentWorkspaceId 
+  currentWorkspaceId,
+  onSelectWorkspace,
 }: { 
   workspaces: any[]; 
-  currentWorkspaceId?: string 
+  currentWorkspaceId?: string;
+  onSelectWorkspace: (workspaceId: string | null) => void;
 }) {
   return (
     <Popover.Portal>
@@ -627,7 +574,7 @@ function WorkspacePopover({
         side="bottom"
         align="start"
         sideOffset={8}
-        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Switch Workspace</div>
@@ -635,7 +582,8 @@ function WorkspacePopover({
         {workspaces.map((workspace) => (
           <Popover.Close asChild key={workspace.workspace_id}>
             <Link
-              to={`/workspaces/${workspace.workspace_id}`}
+              to={ROUTES.workspace.detail(workspace.workspace_id)}
+              onClick={() => onSelectWorkspace(workspace.workspace_id)}
               className={`w-full flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                 workspace.workspace_id === currentWorkspaceId
                   ? 'bg-blue-50/50 text-blue-700 border border-blue-100/50'
@@ -656,7 +604,7 @@ function WorkspacePopover({
         <div className="h-px bg-slate-100 my-1.5" />
         <Popover.Close asChild>
           <Link
-            to="/workspaces/create"
+            to={ROUTES.workspace.create}
             className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             <PlusCircle className="w-4 h-4 text-slate-400" /> Create Workspace
@@ -664,7 +612,7 @@ function WorkspacePopover({
         </Popover.Close>
         <Popover.Close asChild>
           <Link
-            to="/workspace-settings"
+            to={ROUTES.app.workspaceSettings}
             className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
             <Settings className="w-4 h-4 text-slate-400" /> Workspace Settings
@@ -686,7 +634,7 @@ function UserPopover({ onLogout }: { onLogout: () => void }) {
         side="top"
         align="start"
         sideOffset={8}
-        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-2"
+        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-2"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Account</div>

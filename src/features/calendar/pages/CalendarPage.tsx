@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Settings2
 } from 'lucide-react';
+import COLORS from '@/config/colors';
+import { CALENDAR_PRIORITY_COLORS } from '@/config/domainMappings';
 
 /**
  * PRONAFLOW CALENDAR & GANTT MODULE
@@ -33,13 +35,6 @@ interface TaskEntity {
   priority_id: 'urgent' | 'high' | 'medium' | 'low';
   status_id: 'todo' | 'in_progress' | 'review' | 'done';
 }
-
-const PRIORITY_COLORS = {
-  urgent: '#EF4444', // Red-500
-  high: '#F59E0B',   // Amber-500
-  medium: '#3B82F6', // Blue-500
-  low: '#10B981'    // Emerald-500
-};
 
 const CalendarGanttPage: React.FC = () => {
   const [currentView, setCurrentView] = useState<'calendar' | 'gantt'>('calendar');
@@ -85,7 +80,7 @@ const CalendarGanttPage: React.FC = () => {
     title: t.title,
     start: t.planned_start,
     end: t.planned_end,
-    backgroundColor: PRIORITY_COLORS[t.priority_id],
+    backgroundColor: CALENDAR_PRIORITY_COLORS[t.priority_id],
     borderColor: 'transparent',
     extendedProps: { ...t }
   })), [tasks]);
@@ -100,8 +95,8 @@ const CalendarGanttPage: React.FC = () => {
     progress: t.progress,
     isDisabled: false,
     styles: { 
-      progressColor: PRIORITY_COLORS[t.priority_id], 
-      progressSelectedColor: '#1d4ed8' 
+      progressColor: CALENDAR_PRIORITY_COLORS[t.priority_id], 
+      progressSelectedColor: COLORS.semantic.info[600]
     }
   })), [tasks]);
 
@@ -171,7 +166,7 @@ const CalendarGanttPage: React.FC = () => {
               selectable={true}
               height="100%"
               eventBorderColor="transparent"
-              eventTextColor="#ffffff"
+              eventTextColor={COLORS.ui.text.inverse}
               // Custom Styles Override
               themeSystem="standard"
               eventClick={(info) => console.log('Task Detail:', info.event.id)}
@@ -221,21 +216,20 @@ const CalendarGanttPage: React.FC = () => {
       <style>{`
         /* FullCalendar Tailwind Integration */
         .fc { font-family: inherit; }
-        .fc .fc-toolbar-title { font-size: var(--font-size-xl); font-weight: 800; color: #0f172a; }
-        .dark .fc .fc-toolbar-title { color: #f8fafc; }
-        .fc .fc-button-primary { background: #3b82f6; border: none; font-weight: 600; text-transform: capitalize; border-radius: 8px; }
-        .fc .fc-button-primary:hover { background: #2563eb; }
-        .fc .fc-button-active { background: #1d4ed8 !important; }
-        .fc td, .fc th { border-color: #e2e8f0 !important; }
-        .dark .fc td, .dark .fc th { border-color: #1e293b !important; }
-        .fc-event { padding: 2px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .fc .fc-toolbar-title { font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text-primary); }
+        .dark .fc .fc-toolbar-title { color: var(--color-text-primary); }
+        .fc .fc-button-primary { background: var(--color-primary-600); border: none; font-weight: 600; text-transform: capitalize; border-radius: 8px; }
+        .fc .fc-button-primary:hover { background: var(--color-primary-700); }
+        .fc .fc-button-active { background: var(--color-primary-800) !important; }
+        .fc td, .fc th { border-color: var(--color-border-medium) !important; }
+        .dark .fc td, .dark .fc th { border-color: var(--color-border-light) !important; }
+        .fc-event { padding: 2px 4px; box-shadow: 0 2px 4px var(--color-shadow-md); }
         
         /* Gantt Customization */
-        .gantt-container ._3_yLp { color: #64748b; font-weight: 700; } /* Task name label */
-        .dark .gantt-container { background: #020617; }
-        .dark .gantt-container rect[fill="#ffffff"] { fill: #0f172a; }
-        .dark .gantt-container line { stroke: #1e293b; }
-        .dark .gantt-container text { fill: #94a3b8; }
+        .gantt-container ._3_yLp { color: var(--color-text-muted); font-weight: 700; } /* Task name label */
+        .dark .gantt-container { background: var(--color-bg-primary); }
+        .dark .gantt-container line { stroke: var(--color-border-light); }
+        .dark .gantt-container text { fill: var(--color-text-muted); }
       `}</style>
     </div>
   );

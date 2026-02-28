@@ -10,6 +10,7 @@ import type { Task as GanttTask } from 'gantt-task-react';
 import { Button, Input, Badge } from '../ui';
 import { useTheme } from '../../themes/ThemeProvider';
 import { useFocusTrap } from '../../hooks/useAccessibility.tsx';
+import COLORS from '@/config/colors';
 
 interface Task extends GanttTask {
   project?: string;
@@ -27,10 +28,10 @@ interface CreateTaskModalProps {
 }
 
 const PRIORITY_OPTIONS = [
-  { value: 'URGENT', label: 'Khẩn cấp', color: 'danger', bgColor: '#ef4444' },
-  { value: 'HIGH', label: 'Cao', color: 'warning', bgColor: '#f97316' },
-  { value: 'NORMAL', label: 'Bình thường', color: 'default', bgColor: '#3b82f6' },
-  { value: 'LOW', label: 'Thấp', color: 'default', bgColor: '#64748b' },
+  { value: 'URGENT', label: 'Khẩn cấp', color: 'danger', bgColor: COLORS.priority.urgent },
+  { value: 'HIGH', label: 'Cao', color: 'warning', bgColor: COLORS.priority.high },
+  { value: 'NORMAL', label: 'Bình thường', color: 'default', bgColor: COLORS.semantic.info[500] },
+  { value: 'LOW', label: 'Thấp', color: 'default', bgColor: COLORS.priority.low },
 ] as const;
 
 const STATUS_OPTIONS = [
