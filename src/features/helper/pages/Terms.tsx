@@ -58,6 +58,8 @@ const App: React.FC = () => {
     { id: 'contact', label: '8. Thông tin liên hệ', icon: <Mail className="w-4 h-4" /> },
   ];
 
+  const termsPdfPath = '/downloads/terms/PronaFlow-Terms-of-Service-v2.2.pdf';
+
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
       
@@ -65,11 +67,11 @@ const App: React.FC = () => {
       <div className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-            <span className="hover:text-emerald-600 cursor-pointer">Hỗ trợ</span>
+            <Link to={ROUTES.help.root} className="hover:text-emerald-600 transition-colors">Hỗ trợ</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="hover:text-emerald-600 cursor-pointer">Pháp lý</span>
+            <Link to={ROUTES.help.legal} className="hover:text-emerald-600 transition-colors">Pháp lý</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-slate-900 font-medium">Điều khoản dịch vụ</span>
+            <Link to={ROUTES.help.terms} aria-current="page" className="text-slate-900 font-medium hover:text-emerald-600 transition-colors">Điều khoản dịch vụ</Link>
           </nav>
           
           <div className="flex items-center gap-4 mb-6">
@@ -122,13 +124,23 @@ const App: React.FC = () => {
               </nav>
 
               <div className="mt-8 pt-8 border-t border-slate-200 space-y-4">
-                <button
-                  type="button"
+                <a
+                  href={termsPdfPath}
+                  download
                   className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
                 >
                   <Download className="w-4 h-4" />
                   Tải bản PDF lưu trữ
-                </button>
+                </a>
+                <a
+                  href={termsPdfPath}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  Xem bản PDF
+                </a>
                 <div className="pt-2">
                   <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Tài liệu liên quan</h5>
                   <Link

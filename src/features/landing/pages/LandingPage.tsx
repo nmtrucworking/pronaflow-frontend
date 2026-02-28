@@ -183,7 +183,7 @@ const Navbar = () => {
             </div>
           </NavItem>
 
-          <a href={ROUTES.pricing} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Bảng giá</a>
+          <a href="#pricing" className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Bảng giá</a>
           <a href={ROUTES.help.changelog} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Lộ trình</a>
         </div>
 
@@ -217,7 +217,7 @@ const Navbar = () => {
           <a href={ROUTES.help.root} className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
             Tài liệu
           </a>
-          <a href={ROUTES.pricing} className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+          <a href="#pricing" className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
             Bảng giá
           </a>
           <a href={ROUTES.help.changelog} className="block px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium rounded-lg hover:bg-slate-50 transition-colors">
@@ -478,6 +478,9 @@ const Hero = () => {
             <p className="text-sm text-slate-600 mb-3">
               Hoặc bạn có thể thử ngay bản Web
             </p>
+            <a href={ROUTES.desktopDownload} className="block text-sm font-semibold text-slate-700 hover:text-indigo-600 mb-2">
+              Xem yêu cầu hệ thống & quy trình cài đặt
+            </a>
             <button
               onClick={() => {
                 setShowDownloadModal(false);
@@ -758,7 +761,7 @@ const PricingSection = () => {
 
               <button
                 type="button"
-                onClick={() => navigate(ROUTES.auth.register)}
+                onClick={() => navigate(plan.name === 'Enterprise' ? ROUTES.help.contact : ROUTES.auth.register)}
                 className={cn(
                   "w-full py-2.5 rounded-xl font-bold transition-colors",
                   plan.highlight
@@ -970,7 +973,7 @@ const Footer = () => {
       title: 'Sản phẩm',
       links: [
         { label: 'Tính năng chính', href: '#features' },
-        { label: 'Tải bản Desktop', href: ROUTES.pricing },
+        { label: 'Tải bản Desktop', href: ROUTES.desktopDownload },
         { label: 'Ứng dụng Web', href: ROUTES.auth.login },
         { label: 'Bảng giá Business', href: ROUTES.pricing },
       ],

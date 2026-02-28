@@ -10,9 +10,11 @@ interface TaskRowProps {
   task: TaskEntity;
   density: DensityMode;
   onToggle: (id: string) => void;
+  onViewDetails: (task: TaskEntity) => void;
+  onOpenProject: (projectId: string) => void;
 }
 
-export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle }) => {
+export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle, onViewDetails, onOpenProject }) => {
   const isOverdue =
     new Date(task.planned_end) < new Date() &&
     new Date(task.planned_end).toDateString() !== new Date().toDateString() &&
@@ -23,6 +25,13 @@ export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle }) => 
 
   return (
     <div
+      onDoubleClick={(event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest('button, a, input, textarea, select, [role="menu"]')) {
+          return;
+        }
+        onViewDetails(task);
+      }}
       className={cn(
         'group flex items-center border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all duration-200 px-4 relative overflow-hidden',
         paddingClass
@@ -53,6 +62,7 @@ export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle }) => 
             <TaskPriorityBadge priority={task.priority} />
           </div>
           <p
+            onClick={() => onViewDetails(task)}
             className={cn(
               'font-medium text-slate-900 dark:text-slate-100 truncate mt-1 cursor-pointer group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-200',
               titleSize,
@@ -65,9 +75,13 @@ export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle }) => 
         </div>
 
         <div className="hidden md:block col-span-3">
-          <span className="inline-flex items-center text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-default">
+          <button
+            type="button"
+            onClick={() => onOpenProject(task.project.project_id)}
+            className="inline-flex items-center text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+          >
             {task.project.name}
-          </span>
+          </button>
         </div>
 
         <div className="col-span-12 md:col-span-3 flex items-center justify-between md:justify-end space-x-4">
@@ -110,7 +124,7 @@ export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle }) => 
               ))}
             </div>
 
-            <TaskActionsMenu />
+            <TaskActionsMenu onViewDetails={() => onViewDetails(task)} />
           </div>
         </div>
       </div>

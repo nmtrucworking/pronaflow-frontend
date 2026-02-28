@@ -1,7 +1,7 @@
 import * as Progress from '@radix-ui/react-progress';
 import { Clock, CalendarDays, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { GroupedTasks, DensityMode, DashboardConfig } from '../types/dashboard-types';
+import type { GroupedTasks, DensityMode, DashboardConfig, TaskEntity } from '../types/dashboard-types';
 import { TaskRow } from './TaskRow';
 import { TaskGroup, StatCard, EmptyState } from './DashboardCard';
 import { FilterMenu } from './FilterMenu';
@@ -13,6 +13,8 @@ interface DashboardMainProps {
   config: DashboardConfig;
   onToggleTask: (id: string) => void;
   onNavigate: (type: string) => void;
+  onViewTaskDetails: (task: TaskEntity) => void;
+  onOpenProject: (projectId: string) => void;
 }
 
 export const DashboardMain: React.FC<DashboardMainProps> = ({
@@ -22,6 +24,8 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
   config,
   onToggleTask,
   onNavigate,
+  onViewTaskDetails,
+  onOpenProject,
 }) => {
   return (
     <main className="px-6 pb-12 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -57,6 +61,8 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
               task={task}
               density={density}
               onToggle={onToggleTask}
+              onViewDetails={onViewTaskDetails}
+              onOpenProject={onOpenProject}
             />
           ))}
         </TaskGroup>
@@ -74,6 +80,8 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
                 task={task}
                 density={density}
                 onToggle={onToggleTask}
+                onViewDetails={onViewTaskDetails}
+                onOpenProject={onOpenProject}
               />
             ))
           ) : (
@@ -93,6 +101,8 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
               task={task}
               density={density}
               onToggle={onToggleTask}
+              onViewDetails={onViewTaskDetails}
+              onOpenProject={onOpenProject}
             />
           ))}
         </TaskGroup>
@@ -111,6 +121,8 @@ export const DashboardMain: React.FC<DashboardMainProps> = ({
                 task={task}
                 density={density}
                 onToggle={onToggleTask}
+                onViewDetails={onViewTaskDetails}
+                onOpenProject={onOpenProject}
               />
             ))}
           </div>

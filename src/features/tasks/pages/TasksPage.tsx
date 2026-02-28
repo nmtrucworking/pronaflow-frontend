@@ -11,17 +11,19 @@ import {
   CheckCircle2,
   FilePlus,
   Filter,
-  FolderPlus,
   Kanban as KanbanIcon,
   LayoutList,
   Plus,
   Search,
   Upload
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/routes/paths';
 import { cn } from '../utils';
-import { MOCK_TASKS, STATUS_CONFIG } from '../constants';
-import { SortOption, TaskEntity, TaskStatus, ViewMode } from '../types';
+import { MOCK_TASKS, STATUS_CONFIG, USERS } from '../constants';
+import { ProjectRef, SortOption, TaskEntity, TaskPriority, TaskStatus, ViewMode } from '../types';
 import { CsvImportModal } from '../components/CsvImportModal';
+import { CreateTaskModal } from '../components/CreateTaskModal';
 import { Popover } from '../components/Popover';
 import { TaskDetailPanel } from '../components/TaskDetailPanel';
 import { TaskGroupSection } from '../components/TaskGroupSection';
@@ -32,11 +34,15 @@ import { TaskBulkActionBar } from '../components/TaskBulkActionBar';
 import { taskService } from '../../../services/taskService';
 
 export default function TasksPage() {
+  const navigate = useNavigate();
+
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
+  const [tasks, setTasks] = useState<TaskEntity[]>(MOCK_TASKS);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('DUE_DATE_ASC');
   const [selectedTask, setSelectedTask] = useState<TaskEntity | null>(null);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ OVERDUE: false, TODAY: false, UPCOMING: false, DONE: true });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -57,12 +63,55 @@ export default function TasksPage() {
 
   // Filtering Logic
   const filteredTasks = useMemo(() => {
-    let tasks = MOCK_TASKS.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    if (sortOption === 'DUE_DATE_ASC') tasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-    else if (sortOption === 'PRIORITY_DESC') { const pMap = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 }; tasks.sort((a, b) => pMap[b.priority] - pMap[a.priority]); }
-    else if (sortOption === 'TITLE_ASC') tasks.sort((a, b) => a.title.localeCompare(b.title));
-    return tasks;
-  }, [searchQuery, sortOption]);
+    let tasksToFilter = tasks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (sortOption === 'DUE_DATE_ASC') tasksToFilter.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    else if (sortOption === 'PRIORITY_DESC') { const pMap = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 }; tasksToFilter.sort((a, b) => pMap[b.priority] - pMap[a.priority]); }
+    else if (sortOption === 'TITLE_ASC') tasksToFilter.sort((a, b) => a.title.localeCompare(b.title));
+    return tasksToFilter;
+  }, [tasks, searchQuery, sortOption]);
+
+  const projectOptions = useMemo<ProjectRef[]>(() => {
+    const uniqueProjects = new Map<string, ProjectRef>();
+    tasks.forEach((task) => {
+      if (!uniqueProjects.has(task.project.id)) {
+        uniqueProjects.set(task.project.id, task.project);
+      }
+    });
+    return Array.from(uniqueProjects.values());
+  }, [tasks]);
+
+  const openProject = (project: ProjectRef) => {
+    navigate(`${ROUTES.app.projects}?project=${encodeURIComponent(project.id)}`);
+  };
+
+  const handleCreateTask = (payload: {
+    title: string;
+    projectId: string;
+    priority: TaskPriority;
+    dueDate: string;
+    assigneeId?: string;
+    description?: string;
+  }) => {
+    const project = projectOptions.find((item) => item.id === payload.projectId);
+    if (!project) return;
+
+    const assignee = payload.assigneeId ? USERS[payload.assigneeId as keyof typeof USERS] : undefined;
+    const newTask: TaskEntity = {
+      id: `t-${Date.now()}`,
+      key: `${project.key}-${Math.floor(100 + Math.random() * 900)}`,
+      title: payload.title,
+      project,
+      status: 'NOT_STARTED',
+      priority: payload.priority,
+      dueDate: new Date(payload.dueDate).toISOString(),
+      estimatedHours: 0,
+      assignees: assignee ? [assignee] : [],
+      description: payload.description,
+    };
+
+    setTasks((prev) => [newTask, ...prev]);
+    setSelectedTask(newTask);
+  };
 
   const groupedTasks = useMemo(() => {
     const today = new Date().toDateString();
@@ -122,8 +171,7 @@ export default function TasksPage() {
               content={
                 <div className="w-56 p-1.5">
                   <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Khởi tạo</div>
-                  <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group"><div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-colors"><FilePlus className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">Công việc mới</div><div className="text-[10px] text-slate-500 font-normal">Tạo task và gán người</div></div></button>
-                  <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group mt-1"><div className="p-1.5 bg-emerald-100 text-emerald-600 rounded-md group-hover:bg-emerald-200 transition-colors"><FolderPlus className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">Dự án mới</div><div className="text-[10px] text-slate-500 font-normal">Tạo không gian làm việc</div></div></button>
+                  <button onClick={() => { setIsCreateOpen(false); setIsCreateTaskModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group"><div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-colors"><FilePlus className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">Công việc mới</div><div className="text-[10px] text-slate-500 font-normal">Mở form tạo task đầy đủ</div></div></button>
                   <div className="h-px bg-slate-100 my-1.5"></div>
                   <button onClick={() => { setIsCreateOpen(false); setIsCsvModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-colors group"><Upload className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /><span>Nhập dữ liệu (CSV)</span></button>
                 </div>
@@ -145,15 +193,15 @@ export default function TasksPage() {
               <TaskEmptyState 
                 type={searchQuery ? "no-results" : "no-tasks"}
                 searchQuery={searchQuery}
-                onCreateTask={() => setIsCreateOpen(true)}
+                onCreateTask={() => setIsCreateTaskModalOpen(true)}
                 onClearSearch={() => setSearchQuery('')}
               />
             ) : (
               <>
-                {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Quá hạn" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} />)}</TaskGroupSection>}
-                <TaskGroupSection title="Hôm nay" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)}/>) : <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateOpen(true)} />}</TaskGroupSection>
-                <TaskGroupSection title="Sắp tới" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)}/>)}</TaskGroupSection>
-                <TaskGroupSection title="Đã hoàn thành" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)}/>)}</TaskGroupSection>
+                {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Quá hạn" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>}
+                <TaskGroupSection title="Hôm nay" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />) : <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateTaskModalOpen(true)} />}</TaskGroupSection>
+                <TaskGroupSection title="Sắp tới" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
+                <TaskGroupSection title="Đã hoàn thành" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
               </>
             )}
           </div>
@@ -168,7 +216,7 @@ export default function TasksPage() {
                 return (
                   <div key={key} className="flex-shrink-0 w-80 flex flex-col h-full group/column">
                     <div className={cn("flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl border transition-colors duration-300 flex-shrink-0", config.bg, `border-${config.color.split('-')[1]}-200`)}><div className="flex items-center gap-2 font-bold text-sm text-slate-700"><config.icon className={cn("w-4 h-4", config.color)} />{config.label}</div><span className="bg-white/60 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{tasks.length}</span></div>
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar p-1 pb-4">{tasks.map(task => <TaskKanbanCard key={task.id} task={task} onViewDetails={() => setSelectedTask(task)}/>)}<button className="w-full py-2.5 mt-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 opacity-0 group-hover/column:opacity-100"><Plus className="w-4 h-4" /> Thêm nhanh</button></div>
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar p-1 pb-4">{tasks.map(task => <TaskKanbanCard key={task.id} task={task} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}<button onClick={() => setIsCreateTaskModalOpen(true)} className="w-full py-2.5 mt-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 opacity-0 group-hover/column:opacity-100"><Plus className="w-4 h-4" /> Thêm nhanh</button></div>
                   </div>
                 );
               })}
@@ -179,6 +227,12 @@ export default function TasksPage() {
 
       {/* MODALS */}
       <TaskDetailPanel task={selectedTask} onClose={() => setSelectedTask(null)} />
+      <CreateTaskModal
+        isOpen={isCreateTaskModalOpen}
+        onClose={() => setIsCreateTaskModalOpen(false)}
+        projects={projectOptions}
+        onCreateTask={handleCreateTask}
+      />
       <CsvImportModal isOpen={isCsvModalOpen} onClose={() => setIsCsvModalOpen(false)} onImportSuccess={(count) => { console.log(`Imported ${count}`); setIsCsvModalOpen(false); }} />
 
       {/* BULK ACTION BAR */}

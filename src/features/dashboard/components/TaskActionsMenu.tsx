@@ -1,13 +1,15 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { MoreHorizontal, Edit, CalendarDays, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Eye, Edit, CalendarDays, Trash2 } from 'lucide-react';
 
 interface TaskActionsMenuProps {
+  onViewDetails?: () => void;
   onEdit?: () => void;
   onReschedule?: () => void;
   onDelete?: () => void;
 }
 
 export const TaskActionsMenu: React.FC<TaskActionsMenuProps> = ({
+  onViewDetails,
   onEdit,
   onReschedule,
   onDelete,
@@ -29,6 +31,13 @@ export const TaskActionsMenu: React.FC<TaskActionsMenuProps> = ({
           sideOffset={5}
           align="end"
         >
+          <DropdownMenu.Item
+            className="flex items-center px-2 py-2 text-xs text-slate-700 dark:text-slate-300 outline-none hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
+            onClick={onViewDetails}
+          >
+            <Eye className="w-3.5 h-3.5 mr-2 text-slate-400" />
+            Xem chi tiết
+          </DropdownMenu.Item>
           <DropdownMenu.Item
             className="flex items-center px-2 py-2 text-xs text-slate-700 dark:text-slate-300 outline-none hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
             onClick={onEdit}

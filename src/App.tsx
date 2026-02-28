@@ -8,7 +8,7 @@ import { HelpLayout } from './components/layout/HelpLayout';
 import { LoginPage, RegisterPage } from './features/auth';
 
 // Import pages
-import { LandingPage, PricingPage } from './features/landing';
+import { LandingPage, PricingPage, DesktopDownloadPage } from './features/landing';
 import { DashboardPage } from './features/dashboard';
 import { AllProjectsPage } from './features/projects';
 import { TasksPage } from './features/tasks';
@@ -60,6 +60,10 @@ const router = createBrowserRouter([
   {
     path: ROUTES.pricing,
     element: <PricingPage />,
+  },
+  {
+    path: ROUTES.desktopDownload,
+    element: <DesktopDownloadPage />,
   },
   {
     path: ROUTES.auth.login,

@@ -13,3 +13,4 @@ export { TaskEmptyState } from './TaskEmptyState';
 export { TaskBulkActionBar } from './TaskBulkActionBar';
 export { TaskSkeletonLoader } from './TaskSkeletonLoader';
 export { TaskCommentSection } from './TaskCommentSection';
+export { CreateTaskModal } from './CreateTaskModal';

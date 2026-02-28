@@ -1,6 +1,7 @@
 export const ROUTES = {
   root: '/',
   pricing: '/pricing',
+  desktopDownload: '/desktop-download',
   notFound: '*',
 
   auth: {
