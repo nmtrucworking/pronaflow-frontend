@@ -172,10 +172,10 @@ const MemberHubPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans select-none transition-all duration-300">
+    <div className="token-page-shell flex flex-col h-screen max-h-screen overflow-hidden font-sans select-none transition-all duration-300">
       
       {/* 1. Global Header & Toolbar */}
-      <header className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0 z-40 flex items-center justify-between shadow-sm">
+      <header className="token-page-header px-6 py-4 shrink-0 z-40 flex items-center justify-between">
         <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left duration-700">
           <div className="bg-slate-900 dark:bg-white p-2.5 rounded-xl text-white dark:text-slate-900">
             <Users size={22} strokeWidth={2.5} />
@@ -188,7 +188,7 @@ const MemberHubPage: React.FC = () => {
 
         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right duration-700">
           {/* Combined Search & Filter Group */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+          <div className="token-toolbar-group flex items-center p-1 shadow-inner">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <input 
@@ -196,7 +196,7 @@ const MemberHubPage: React.FC = () => {
                 placeholder="Tìm nhân sự..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-transparent border-none text-sm font-semibold focus:ring-0 w-56 outline-none transition-all"
+                className="token-input-base pl-9 pr-4 py-2 w-56 border-0 bg-transparent shadow-none text-sm font-semibold focus:ring-0"
               />
             </div>
             
@@ -204,7 +204,7 @@ const MemberHubPage: React.FC = () => {
 
             <Popover.Root>
               <Popover.Trigger asChild>
-                <button className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all relative">
+                <button className="token-action-secondary flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-all relative">
                   <Filter size={14} /> 
                   Lọc
                   {(roleFilter !== 'all' || statusFilter !== 'all') && <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-600 rounded-full" />}
@@ -245,7 +245,7 @@ const MemberHubPage: React.FC = () => {
 
           <Dialog.Root open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <Dialog.Trigger asChild>
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+              <button className="token-action-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
                 <UserPlus size={18} strokeWidth={3} /> Mời mới
               </button>
             </Dialog.Trigger>
@@ -265,7 +265,7 @@ const MemberHubPage: React.FC = () => {
                 <div className="space-y-6">
                    <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Địa chỉ Email</label>
-                      <input type="email" placeholder="example@pronaflow.com" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl outline-none font-bold text-sm transition-all" />
+                      <input type="email" placeholder="example@pronaflow.com" className="token-input-base w-full px-4 py-3 rounded-xl font-bold text-sm" />
                    </div>
                    <div className="space-y-3">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gán vai trò dự án</label>
@@ -281,7 +281,7 @@ const MemberHubPage: React.FC = () => {
                 </div>
 
                 <div className="mt-10 flex gap-3">
-                   <button className="flex-1 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-black shadow-xl hover:opacity-90 active:scale-95 transition-all uppercase tracking-widest">Gửi lời mời ngay</button>
+                   <button className="token-action-primary flex-1 py-4 rounded-xl text-xs font-black shadow-xl hover:opacity-90 active:scale-95 transition-all uppercase tracking-widest">Gửi lời mời ngay</button>
                 </div>
               </Dialog.Content>
             </Dialog.Portal>

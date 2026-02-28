@@ -61,7 +61,7 @@ const App = () => {
 
   return (
     <div className={`${isDarkMode ? 'dark' : ''} transition-colors duration-300`}>
-      <div className="min-h-screen grid lg:grid-cols-2 bg-background text-foreground font-sans">
+      <div className="token-page-shell min-h-screen grid lg:grid-cols-2 font-sans">
         
         {/* --- TRÁI: MARKETING & STEPS VISUAL --- */}
         <div className="hidden lg:flex relative flex-col justify-between p-12 bg-slate-900 overflow-hidden">
@@ -139,7 +139,7 @@ const App = () => {
                     <input 
                       type="text" 
                       placeholder="Ví dụ: Nguyễn Văn A"
-                      className="w-full h-11 px-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:ring-2 focus:ring-primary/20 outline-none"
+                      className="token-input-base w-full h-11 px-4"
                       onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                     />
                   </div>
@@ -149,7 +149,7 @@ const App = () => {
                     <input 
                       type="email" 
                       placeholder="email@company.com"
-                      className="w-full h-11 px-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:ring-2 focus:ring-primary/20 outline-none"
+                      className="token-input-base w-full h-11 px-4"
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                     />
                   </div>
@@ -160,7 +160,7 @@ const App = () => {
                       <input 
                         type={showPassword ? "text" : "password"}
                         placeholder="Tối thiểu 8 ký tự"
-                        className="w-full h-11 px-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:ring-2 focus:ring-primary/20 outline-none"
+                        className="token-input-base w-full h-11 px-4"
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
                       />
                       <button 
@@ -183,7 +183,7 @@ const App = () => {
                 <button 
                   onClick={handleNext}
                   disabled={isLoading || !formData.fullName || !formData.email || strength < 25}
-                  className="w-full h-11 bg-primary text-white rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
+                  className="token-action-primary w-full h-11 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Tiếp tục <ArrowRight className="w-4 h-4" /></>}
                 </button>
@@ -211,7 +211,7 @@ const App = () => {
                     <input 
                       type="text" 
                       placeholder="Ví dụ: Prona Team, Marketing Agency..."
-                      className="w-full h-11 px-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent focus:ring-2 focus:ring-primary/20 outline-none"
+                      className="token-input-base w-full h-11 px-4"
                       onChange={(e) => setFormData({...formData, workspaceName: e.target.value, workspaceSlug: e.target.value.toLowerCase().replace(/ /g, '-')})}
                     />
                   </div>
@@ -234,7 +234,7 @@ const App = () => {
                 <button 
                   onClick={handleNext}
                   disabled={isLoading || !formData.workspaceName}
-                  className="w-full h-11 bg-primary text-white rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
+                  className="token-action-primary w-full h-11 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Thiết lập ngay <ArrowRight className="w-4 h-4" /></>}
                 </button>
@@ -262,9 +262,9 @@ const App = () => {
                     <RadioGroup.Item 
                       key={role.id} 
                       value={role.id}
-                      className="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 transition-all outline-none"
+                      className="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500/5 transition-all outline-none"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-900 group-data-[state=checked]:bg-primary group-data-[state=checked]:text-white flex items-center justify-center transition-colors">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-900 group-data-[state=checked]:bg-emerald-600 group-data-[state=checked]:text-white flex items-center justify-center transition-colors">
                         <role.icon className="w-5 h-5" />
                       </div>
                       <div className="text-left">
@@ -278,7 +278,7 @@ const App = () => {
                 <button 
                   onClick={handleNext}
                   disabled={isLoading}
-                  className="w-full h-11 bg-primary text-white rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+                  className="token-action-primary w-full h-11 rounded-lg font-bold flex items-center justify-center gap-2"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Hoàn tất thiết lập"}
                 </button>
@@ -296,7 +296,7 @@ const App = () => {
                   <p className="text-slate-500">Tài khoản của bạn đã sẵn sàng. Hãy khám phá <strong>{formData.workspaceName}</strong> ngay bây giờ.</p>
                 </div>
                 <button 
-                  className="w-full h-11 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-lg font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+                  className="token-action-primary w-full h-11 rounded-lg font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
                   onClick={() => navigate('/dashboard')}
                 >
                   Truy cập Dashboard
@@ -308,7 +308,7 @@ const App = () => {
             {step < 4 && (
               <p className="text-center text-sm text-slate-500">
                 Đã có tài khoản?{' '}
-                <Link to="/login" className="font-bold text-primary hover:underline">Đăng nhập</Link>
+                <Link to="/login" className="font-bold text-emerald-600 hover:underline">Đăng nhập</Link>
               </p>
             )}
             {step < 4 && (
@@ -331,14 +331,6 @@ const App = () => {
         }
         .animate-pulse-slow { animation: pulse-slow 8s ease-in-out infinite; }
         
-        :root {
-          --primary: #3B82F6;
-          --background: #FFFFFF;
-        }
-        .dark {
-          --primary: #60A5FA;
-          --background: #020617;
-        }
       `}} />
     </div>
   );

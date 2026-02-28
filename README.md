@@ -35,8 +35,11 @@ cd frontend
 # Cài đặt dependencies
 npm install
 
-# Chạy development server
-npm run dev
+# Chạy development server (backend thật)
+npm run dev:backend
+
+# Chạy development server (mock API để test UI/UX)
+npm run dev:mock
 
 # Build for production
 npm run build
@@ -47,7 +50,7 @@ npm run preview
 
 ## Project Structure
 
-```
+```text
 frontend/
 ├── docs/                    # Tài liệu dự án
 │   ├── deployment/         # Tài liệu triển khai
@@ -85,7 +88,9 @@ frontend/
 
 ## Available Scripts
 
-- `npm run dev` - Chạy development server
+- `npm run dev` - Alias của backend mode (`vite --mode backend`)
+- `npm run dev:backend` - Chạy với API backend thật
+- `npm run dev:mock` - Chạy giả lập API để kiểm tra UI/UX
 - `npm run build` - Build production
 - `npm run preview` - Preview production build
 - `npm run lint` - Chạy ESLint

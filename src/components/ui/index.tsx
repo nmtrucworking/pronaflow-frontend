@@ -6,13 +6,10 @@
 import React, { forwardRef } from 'react';
 import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../themes/ThemeProvider';
-import { useResponsiveValue } from '../../hooks/useResponsive';
-import { ARIA_LABELS } from '../../hooks/useAccessibility.tsx';
 
 // Button Component
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'default' | 'outline' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   children: ReactNode;
@@ -20,15 +17,16 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', isLoading, children, className = '', ...props }, ref) => {
-    const { theme } = useTheme();
-    
     const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
     
     const variantClasses = {
-      primary: `bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500 shadow-md hover:shadow-lg`,
-      secondary: `bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 focus:ring-slate-500`,
+      primary: 'token-action-primary focus:ring-emerald-500 shadow-sm hover:shadow-md',
+      default: 'token-action-primary focus:ring-emerald-500 shadow-sm hover:shadow-md',
+      secondary: 'token-action-secondary focus:ring-slate-500',
+      outline: 'token-action-secondary-outline focus:ring-slate-500',
       ghost: `text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-500`,
-      danger: `bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-md hover:shadow-lg`,
+      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow-md',
+      destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow-md',
     };
     
     const sizeClasses = {
@@ -70,8 +68,6 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, leftIcon, rightIcon, className = '', ...props }, ref) => {
-    const { theme } = useTheme();
-    
     return (
       <div className="space-y-2">
         {label && (
@@ -88,10 +84,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             className={`
-              block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 
-              rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100
-              placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 
-              focus:border-transparent transition-all duration-200
+              token-input-base block w-full transition-all duration-200
               ${leftIcon ? 'pl-10' : ''}
               ${rightIcon ? 'pr-10' : ''}
               ${error ? 'border-red-500 focus:ring-red-500' : ''}

@@ -14,7 +14,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className = '', children, ...props }, ref) => (
     <div
       ref={ref}
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow ${className}`}
+      className={`token-card-base hover:shadow-md transition-shadow ${className}`}
       {...props}
     >
       {children}
@@ -30,7 +30,7 @@ interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
   ({ className = '', children, ...props }, ref) => (
-    <div ref={ref} className={`px-6 py-4 border-b border-gray-200 ${className}`} {...props}>
+    <div ref={ref} className={`px-6 py-4 border-b border-slate-200 dark:border-slate-700 ${className}`} {...props}>
       {children}
     </div>
   )
@@ -44,7 +44,7 @@ interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
 
 export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className = '', children, ...props }, ref) => (
-    <h3 ref={ref} className={`text-lg font-semibold text-gray-900 ${className}`} {...props}>
+    <h3 ref={ref} className={`text-lg font-semibold text-slate-900 dark:text-slate-100 ${className}`} {...props}>
       {children}
     </h3>
   )
@@ -58,7 +58,7 @@ interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement
 
 export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ({ className = '', children, ...props }, ref) => (
-    <p ref={ref} className={`text-sm text-gray-600 ${className}`} {...props}>
+    <p ref={ref} className={`text-sm text-slate-600 dark:text-slate-400 ${className}`} {...props}>
       {children}
     </p>
   )
@@ -86,7 +86,7 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
   ({ className = '', children, ...props }, ref) => (
-    <div ref={ref} className={`px-6 py-4 border-t border-gray-200 bg-gray-50 ${className}`} {...props}>
+    <div ref={ref} className={`px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 ${className}`} {...props}>
       {children}
     </div>
   )

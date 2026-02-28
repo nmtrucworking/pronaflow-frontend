@@ -122,13 +122,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="token-page-shell min-h-screen flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">Sign in to PronaFlow</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <h2 className="text-center text-3xl font-extrabold token-text-primary">Sign in to PronaFlow</h2>
+          <p className="mt-2 text-center text-sm token-text-secondary">
             Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/register" className="font-medium text-emerald-600 hover:text-emerald-500">
               Create one
             </Link>
           </p>
@@ -158,7 +158,7 @@ const Login = () => {
                 type="email"
                 value={loginState.email}
                 onChange={handleInputChange}
-                className={`mt-1 block w-full px-3 py-2 border rounded-md ${
+                className={`token-input-base mt-1 block w-full rounded-md ${
                   loginState.errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="your@email.com"
@@ -168,7 +168,7 @@ const Login = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
               <div className="relative">
                 <input
                   id="password"
@@ -176,7 +176,7 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={loginState.password}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full px-3 py-2 pr-10 border rounded-md ${
+                  className={`token-input-base mt-1 block w-full pr-10 rounded-md ${
                     loginState.errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="••••••••"
@@ -187,7 +187,7 @@ const Login = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+                  {showPassword ? <EyeOff className="w-5 h-5 text-slate-500" /> : <Eye className="w-5 h-5 text-slate-500" />}
                 </button>
               </div>
               {loginState.errors.password && <p className="mt-1 text-sm text-red-600">{loginState.errors.password}</p>}
@@ -201,11 +201,11 @@ const Login = () => {
                   type="checkbox"
                   checked={loginState.rememberMe}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-indigo-600"
+                  className="h-4 w-4 text-emerald-600"
                 />
-                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">Remember me</label>
+                <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-700 dark:text-slate-300">Remember me</label>
               </div>
-              <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/forgot-password" className="text-sm font-medium text-emerald-600 hover:text-emerald-500">
                 Forgot password?
               </Link>
             </div>
@@ -213,7 +213,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+              className="token-action-primary w-full flex justify-center items-center py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
               {isLoading ? 'Signing in...' : 'Sign in'}
@@ -221,9 +221,9 @@ const Login = () => {
 
             <div className="mt-6">
               <div className="relative">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-300 dark:border-slate-700" /></div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                  <span className="px-2 token-page-shell text-slate-500">Or continue with</span>
                 </div>
               </div>
 
@@ -231,14 +231,14 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('google')}
-                  className="w-full py-2 px-4 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  className="token-action-secondary-outline w-full py-2 px-4 rounded-md bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-300"
                 >
                   Google
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('github')}
-                  className="w-full py-2 px-4 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 flex items-center justify-center"
+                  className="token-action-secondary-outline w-full py-2 px-4 rounded-md bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center justify-center"
                 >
                   <Github className="w-4 h-4" />
                 </button>
@@ -248,10 +248,10 @@ const Login = () => {
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleMFASubmit}>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-6 h-6 text-indigo-600" />
+              <ShieldCheck className="w-6 h-6 text-emerald-600" />
               <div>
-                <h3 className="text-lg font-medium text-gray-900">Enter 2FA Code</h3>
-                <p className="text-sm text-gray-600">Enter the 6-digit code from your authenticator app</p>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">Enter 2FA Code</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Enter the 6-digit code from your authenticator app</p>
               </div>
             </div>
 
@@ -262,7 +262,7 @@ const Login = () => {
             )}
 
             <div>
-              <label htmlFor="totpCode" className="block text-sm font-medium text-gray-700">Code</label>
+              <label htmlFor="totpCode" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Code</label>
               <input
                 id="totpCode"
                 type="text"
@@ -273,7 +273,7 @@ const Login = () => {
                   const value = e.target.value.replace(/\D/g, '');
                   setMfaState((prev) => ({ ...prev, totpCode: value, error: null }));
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-center text-2xl tracking-widest"
+                className="token-input-base mt-1 block w-full border-slate-300 rounded-md text-center text-2xl tracking-widest"
                 placeholder="000000"
                 disabled={isMFALoading}
               />
@@ -282,7 +282,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isMFALoading}
-              className="w-full py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+              className="token-action-primary w-full py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50"
             >
               {isMFALoading ? 'Verifying...' : 'Verify'}
             </button>
@@ -290,7 +290,7 @@ const Login = () => {
             <button
               type="button"
               onClick={() => setShowMFAModal(false)}
-              className="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="token-action-secondary-outline w-full py-2 px-4 rounded-md text-sm font-medium bg-white dark:bg-slate-900"
             >
               Back
             </button>

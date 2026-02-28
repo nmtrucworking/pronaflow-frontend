@@ -5,7 +5,7 @@ const MOCK_WORKSPACE = { workspace_id: 'ws-1', name: 'PronaFlow Team' };
 
 export const MainLayout = () => {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="token-page-shell flex h-screen overflow-hidden">
       {/* Sidebar - Điều hướng chính */}
       <Sidebar 
         currentWorkspace={MOCK_WORKSPACE} 

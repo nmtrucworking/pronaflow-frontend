@@ -9,15 +9,15 @@ import { Gantt, ViewMode } from 'gantt-task-react';
 import type { Task as GanttTask } from 'gantt-task-react';
 import "gantt-task-react/dist/index.css"; // Import base styles
 import { 
-  Plus, Search, Filter, Settings, Calendar as CalendarIcon, 
-  Maximize2, Minimize2, ChevronRight, ChevronDown, MoreHorizontal,
+  Plus, Search,
+  Maximize2, Minimize2, ChevronRight, ChevronDown,
   Clock, AlertCircle, CheckCircle2, User as UserIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 // import { vi } from 'date-fns/locale';
 
 // Components
-import { Button, Input, Badge, Avatar } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { CreateTaskModal } from '@/components/ui/CreateTaskModal';
 import { useResponsiveGanttConfig } from '@/hooks/useResponsive';
 import { useTheme } from '@/themes/ThemeProvider';
@@ -113,7 +113,7 @@ const StatusIndicator = ({ status }: { status: string }) => {
 
 const GanttChartEnhanced: React.FC = () => {
   // Global & Theme
-  const { theme, mode } = useTheme();
+  const { mode } = useTheme();
   const isDark = mode === 'dark';
   const responsiveConfig = useResponsiveGanttConfig();
 
@@ -279,10 +279,10 @@ const GanttChartEnhanced: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 w-full overflow-hidden">
+    <div className="token-page-shell flex flex-col h-full w-full overflow-hidden">
       
       {/* 1. Top Toolbar - "The Control Center" */}
-      <header className="flex flex-col gap-4 px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 shrink-0">
+      <header className="token-page-header flex flex-col gap-4 px-6 py-4 z-10 shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Timeline</h1>
@@ -290,31 +290,31 @@ const GanttChartEnhanced: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
              {/* Create Task Button */}
-             <button
+             <Button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium text-sm transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+               className="flex items-center gap-2"
              >
                 <Plus size={18} />
                 <span className="hidden sm:inline">Thêm Task</span>
-             </button>
+             </Button>
           </div>
         </div>
 
         {/* Filter & View Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Search */}
-            <div className="relative group w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={16} />
-                <input 
-                    type="text" 
-                    placeholder="Tìm kiếm công việc..." 
-                    className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-md text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-950 transition-all placeholder:text-slate-400 text-slate-900 dark:text-slate-100"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+            <div className="w-full sm:w-64">
+              <Input
+                type="text"
+                placeholder="Tìm kiếm công việc..."
+                leftIcon={<Search size={16} />}
+                className="bg-slate-100 dark:bg-slate-800 border-0"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
+            <div className="token-toolbar-group flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar p-1">
                 {/* View Mode Toggle */}
                 <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                     {[ViewMode.Day, ViewMode.Week, ViewMode.Month].map((mode) => (
