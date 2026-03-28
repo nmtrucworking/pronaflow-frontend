@@ -6,10 +6,11 @@
  */
 
 import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
 import { useAuth } from '@/hooks/useAuth';
 import authService from '@/services/authService';
+import { useRBAC } from '@/hooks/useRBAC';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,14 +18,23 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
+  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
+  const { hasAnyRole } = useRBAC();
 
   if (!isAuthenticated || !authService.isAuthenticated()) {
     return <Navigate to={ROUTES.auth.login} replace />;
   }
 
-  if (requiredRoles && user) {
-    const hasRequiredRole = requiredRoles.some((role) => user.roles?.includes(role));
+  const normalizedStatus = user?.status?.toString().toLowerCase();
+  const isPendingVerification = normalizedStatus === 'pending_verification' || !user?.email_verified_at;
+  if (isPendingVerification && location.pathname !== ROUTES.auth.verifyEmail) {
+    const email = user?.email ? `?email=${encodeURIComponent(user.email)}` : '';
+    return <Navigate to={`${ROUTES.auth.verifyEmail}${email}`} replace />;
+  }
+
+  if (requiredRoles && requiredRoles.length > 0) {
+    const hasRequiredRole = hasAnyRole(requiredRoles);
     if (!hasRequiredRole) {
       return <Navigate to={ROUTES.auth.unauthorized} replace />;
     }

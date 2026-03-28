@@ -23,6 +23,7 @@ import { useResponsiveGanttConfig } from '@/hooks/useResponsive';
 import { useTheme } from '@/themes/ThemeProvider';
 import COLORS from '@/config/colors';
 import { GANTT_STATUS_COLORS, GANTT_TASK_PROGRESS_STYLE } from '@/config/domainMappings';
+import { MOCK_TASKS as CENTRAL_TASKS } from '@/mocks';
 
 // --- TYPES ---
 
@@ -36,64 +37,50 @@ interface PronaFlowGanttTask extends GanttTask {
 // --- MOCK DATA (Thay thế bằng API call thực tế) ---
 const TASK_PROGRESS_STYLE = GANTT_TASK_PROGRESS_STYLE;
 
-const MOCK_TASKS: PronaFlowGanttTask[] = [
-  {
-    start: new Date(2024, 0, 1),
-    end: new Date(2024, 0, 15),
-    name: 'Phát triển Backend Core',
-    id: 't1',
-    type: 'project',
-    progress: 45,
-    isDisabled: false,
-    styles: TASK_PROGRESS_STYLE.done,
-    priority: 'high',
-    status: 'in-progress',
-    assignees: [],
-    hideChildren: false
-  },
-  {
-    start: new Date(2024, 0, 2),
-    end: new Date(2024, 0, 5),
-    name: 'Thiết kế Database Schema',
-    id: 't2',
+const toGanttPriority = (priority: string): PronaFlowGanttTask['priority'] => {
+  if (priority === 'URGENT') return 'urgent';
+  if (priority === 'HIGH') return 'high';
+  if (priority === 'MEDIUM') return 'medium';
+  return 'low';
+};
+
+const toGanttStatus = (status: string): PronaFlowGanttTask['status'] => {
+  if (status === 'DONE') return 'done';
+  if (status === 'IN_PROGRESS') return 'in-progress';
+  return 'todo';
+};
+
+const styleByStatus = (status: PronaFlowGanttTask['status']) => {
+  if (status === 'done') return TASK_PROGRESS_STYLE.done;
+  if (status === 'in-progress') return TASK_PROGRESS_STYLE.inProgress;
+  if (status === 'review') return TASK_PROGRESS_STYLE.review;
+  return TASK_PROGRESS_STYLE.todo;
+};
+
+const MOCK_TASKS: PronaFlowGanttTask[] = CENTRAL_TASKS.slice(0, 8).map((task, index) => {
+  const end = new Date(task.planned_end);
+  const start = new Date(end);
+  start.setDate(end.getDate() - (index % 4) - 2);
+  const mappedStatus = toGanttStatus(task.status);
+
+  return {
+    start,
+    end,
+    name: task.title,
+    id: task.task_id,
     type: 'task',
-    project: 't1',
-    progress: 100,
+    progress: mappedStatus === 'done' ? 100 : mappedStatus === 'in-progress' ? 60 : 0,
     isDisabled: false,
-    styles: TASK_PROGRESS_STYLE.inProgress,
-    priority: 'urgent',
-    status: 'done',
-    assignees: [{ id: 'u1', name: 'Nguyễn Văn A', avatar: '/defaults/avatars/avatar-1.png' }]
-  },
-  {
-    start: new Date(2024, 0, 6),
-    end: new Date(2024, 0, 10),
-    name: 'API Authentication',
-    id: 't3',
-    type: 'task',
-    project: 't1',
-    progress: 20,
-    isDisabled: false,
-    styles: TASK_PROGRESS_STYLE.review,
-    priority: 'medium',
-    status: 'review',
-    assignees: [{ id: 'u2', name: 'Trần Thị B', avatar: '/defaults/avatars/avatar-2.png' }]
-  },
-    {
-    start: new Date(2024, 0, 8),
-    end: new Date(2024, 0, 12),
-    name: 'Integration Testing',
-    id: 't4',
-    type: 'task',
-    project: 't1',
-    progress: 0,
-    isDisabled: false,
-    styles: TASK_PROGRESS_STYLE.todo,
-    priority: 'low',
-    status: 'todo',
-    assignees: []
-  },
-];
+    styles: styleByStatus(mappedStatus),
+    priority: toGanttPriority(task.priority),
+    status: mappedStatus,
+    assignees: task.assignees.map((assignee) => ({
+      id: assignee.user_id,
+      name: assignee.username,
+      avatar: assignee.avatar_url,
+    })),
+  };
+});
 
 // --- HELPER COMPONENTS ---
 

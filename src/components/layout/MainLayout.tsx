@@ -1,7 +1,11 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import { MOCK_WORKSPACES } from '@/mocks';
 
-const MOCK_WORKSPACE = { workspace_id: 'ws-1', name: 'PronaFlow Team' };
+const MOCK_WORKSPACE = {
+  workspace_id: MOCK_WORKSPACES[0]?.id ?? 'ws-1',
+  name: MOCK_WORKSPACES[0]?.name ?? 'PronaFlow Team',
+};
 
 export const MainLayout = () => {
   return (

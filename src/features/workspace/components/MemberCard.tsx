@@ -89,7 +89,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
                 </>
               )}
               <DropdownMenuItem
-                onClick={() => onRemove?.(member.id)}
+                onClick={() => onRemove?.(member.user_id)}
                 className="text-red-600"
               >
                 <Trash2 className="w-4 h-4 mr-2" />

@@ -5,7 +5,7 @@
  */
 
 import type { AxiosInstance } from 'axios';
-import { createApiClient, API_ROOT_URL } from '@/lib/axiosClient';
+import { createApiClient } from '@/lib/axiosClient';
 import {
   Project,
   ProjectMember,
@@ -65,7 +65,7 @@ class ProjectService {
   private api: AxiosInstance;
 
   constructor() {
-    this.api = createApiClient(API_ROOT_URL);
+    this.api = createApiClient();
   }
 
   // ========================================================================
@@ -74,16 +74,16 @@ class ProjectService {
 
   /**
    * Create a new project
-   * POST /v1/projects
+   * POST /projects
    */
   async createProject(data: CreateProjectDTO): Promise<Project> {
-    const response = await this.api.post<Project>('/v1/projects', data);
+    const response = await this.api.post<Project>('/projects', data);
     return response.data;
   }
 
   /**
    * Get list of projects with filters
-   * GET /v1/projects
+    * GET /projects
    */
   async listProjects(
     workspaceId?: string,
@@ -92,7 +92,7 @@ class ProjectService {
     pageSize: number = 20,
     sortBy: string = 'created_at'
   ): Promise<ProjectListResponse> {
-    const response = await this.api.get<ProjectListResponse>('/v1/projects', {
+    const response = await this.api.get<ProjectListResponse>('/projects', {
       params: {
         workspace_id: workspaceId,
         status,
@@ -106,25 +106,25 @@ class ProjectService {
 
   /**
    * Get project details
-   * GET /v1/projects/:id
+   * GET /projects/:id
    */
   async getProject(projectId: string): Promise<Project> {
-    const response = await this.api.get<Project>(`/v1/projects/${projectId}`);
+    const response = await this.api.get<Project>(`/projects/${projectId}`);
     return response.data;
   }
 
   /**
    * Update project information
-   * PATCH /v1/projects/:id
+   * PATCH /projects/:id
    */
   async updateProject(projectId: string, data: UpdateProjectDTO): Promise<Project> {
-    const response = await this.api.patch<Project>(`/v1/projects/${projectId}`, data);
+    const response = await this.api.patch<Project>(`/projects/${projectId}`, data);
     return response.data;
   }
 
   /**
    * Update project status
-   * PATCH /v1/projects/:id/status
+    * PATCH /projects/:id/status
    */
   async updateProjectStatus(
     projectId: string,
@@ -132,7 +132,7 @@ class ProjectService {
     completionDate?: string
   ): Promise<{ status: string; completion_date?: string }> {
     const response = await this.api.patch<{ status: string; completion_date?: string }>(
-      `/v1/projects/${projectId}/status`,
+      `/projects/${projectId}/status`,
       {
         status,
         completion_date: completionDate,
@@ -143,15 +143,15 @@ class ProjectService {
 
   /**
    * Delete project (soft delete)
-   * DELETE /v1/projects/:id
+   * DELETE /projects/:id
    */
   async deleteProject(projectId: string): Promise<void> {
-    await this.api.delete(`/v1/projects/${projectId}`);
+    await this.api.delete(`/projects/${projectId}`);
   }
 
   /**
    * Clone project
-   * POST /v1/projects/:id/clone
+    * POST /projects/:id/clone
    */
   async cloneProject(
     projectId: string,
@@ -159,7 +159,7 @@ class ProjectService {
     copyTasks: boolean = true,
     copyMembers: boolean = false
   ): Promise<Project> {
-    const response = await this.api.post<Project>(`/v1/projects/${projectId}/clone`, {
+    const response = await this.api.post<Project>(`/projects/${projectId}/clone`, {
       new_name: newName,
       copy_tasks: copyTasks,
       copy_members: copyMembers,
@@ -173,10 +173,10 @@ class ProjectService {
 
   /**
    * List project members
-   * GET /v1/projects/:id/members
+   * GET /projects/:id/members
    */
   async listProjectMembers(projectId: string, page: number = 1, pageSize: number = 50): Promise<ProjectMember[]> {
-    const response = await this.api.get<ProjectMember[]>(`/v1/projects/${projectId}/members`, {
+    const response = await this.api.get<ProjectMember[]>(`/projects/${projectId}/members`, {
       params: { page, page_size: pageSize },
     });
     return response.data;
@@ -184,14 +184,14 @@ class ProjectService {
 
   /**
    * Add member to project
-   * POST /v1/projects/:id/members
+    * POST /projects/:id/members
    */
   async addProjectMember(
     projectId: string,
     userId: string,
     role: string = 'member'
   ): Promise<ProjectMember> {
-    const response = await this.api.post<ProjectMember>(`/v1/projects/${projectId}/members`, {
+    const response = await this.api.post<ProjectMember>(`/projects/${projectId}/members`, {
       user_id: userId,
       role,
     });
@@ -200,7 +200,7 @@ class ProjectService {
 
   /**
    * Update project member role
-   * PATCH /v1/projects/:id/members/:userId
+    * PATCH /projects/:id/members/:userId
    */
   async updateProjectMemberRole(
     projectId: string,
@@ -208,7 +208,7 @@ class ProjectService {
     role: string
   ): Promise<ProjectMember> {
     const response = await this.api.patch<ProjectMember>(
-      `/v1/projects/${projectId}/members/${userId}`,
+      `/projects/${projectId}/members/${userId}`,
       { role }
     );
     return response.data;
@@ -216,10 +216,10 @@ class ProjectService {
 
   /**
    * Remove member from project
-   * DELETE /v1/projects/:id/members/:userId
+   * DELETE /projects/:id/members/:userId
    */
   async removeProjectMember(projectId: string, userId: string): Promise<void> {
-    await this.api.delete(`/v1/projects/${projectId}/members/${userId}`);
+    await this.api.delete(`/projects/${projectId}/members/${userId}`);
   }
 
   // ========================================================================
@@ -228,14 +228,14 @@ class ProjectService {
 
   /**
    * Create project template
-   * POST /v1/projects/templates
+    * POST /projects/templates
    */
   async createTemplate(
     name: string,
     description?: string,
     structure?: Record<string, any>
   ): Promise<ProjectTemplate> {
-    const response = await this.api.post<ProjectTemplate>('/v1/projects/templates', {
+    const response = await this.api.post<ProjectTemplate>('/projects/templates', {
       name,
       description,
       structure,
@@ -245,10 +245,10 @@ class ProjectService {
 
   /**
    * List project templates
-   * GET /v1/projects/templates
+   * GET /projects/templates
    */
   async listTemplates(page: number = 1, pageSize: number = 20): Promise<ProjectTemplate[]> {
-    const response = await this.api.get<ProjectTemplate[]>('/v1/projects/templates', {
+    const response = await this.api.get<ProjectTemplate[]>('/projects/templates', {
       params: { page, page_size: pageSize },
     });
     return response.data;
@@ -256,7 +256,7 @@ class ProjectService {
 
   /**
    * Create project from template
-   * POST /v1/projects/from-template
+    * POST /projects/from-template
    */
   async createProjectFromTemplate(
     templateId: string,
@@ -264,7 +264,7 @@ class ProjectService {
     projectName: string,
     startDate: string
   ): Promise<Project> {
-    const response = await this.api.post<Project>('/v1/projects/from-template', {
+    const response = await this.api.post<Project>('/projects/from-template', {
       template_id: templateId,
       workspace_id: workspaceId,
       project_name: projectName,
@@ -279,7 +279,7 @@ class ProjectService {
 
   /**
    * Create change request
-   * POST /v1/projects/:id/change-requests
+    * POST /projects/:id/change-requests
    */
   async createChangeRequest(
     projectId: string,
@@ -289,7 +289,7 @@ class ProjectService {
     impactAnalysis: string,
     requestedChanges: Record<string, any>
   ): Promise<ChangeRequest> {
-    const response = await this.api.post<ChangeRequest>(`/v1/projects/${projectId}/change-requests`, {
+    const response = await this.api.post<ChangeRequest>(`/projects/${projectId}/change-requests`, {
       title,
       description,
       scope,
@@ -301,7 +301,7 @@ class ProjectService {
 
   /**
    * List change requests
-   * GET /v1/projects/:id/change-requests
+    * GET /projects/:id/change-requests
    */
   async listChangeRequests(
     projectId: string,
@@ -309,7 +309,7 @@ class ProjectService {
     page: number = 1,
     pageSize: number = 20
   ): Promise<ChangeRequest[]> {
-    const response = await this.api.get<ChangeRequest[]>(`/v1/projects/${projectId}/change-requests`, {
+    const response = await this.api.get<ChangeRequest[]>(`/projects/${projectId}/change-requests`, {
       params: { status, page, page_size: pageSize },
     });
     return response.data;
@@ -317,7 +317,7 @@ class ProjectService {
 
   /**
    * Approve/Reject change request
-   * PATCH /v1/projects/:id/change-requests/:crId/approve
+    * PATCH /projects/:id/change-requests/:crId/approve
    */
   async approveChangeRequest(
     projectId: string,
@@ -326,7 +326,7 @@ class ProjectService {
     reviewerNotes?: string
   ): Promise<ChangeRequest> {
     const response = await this.api.patch<ChangeRequest>(
-      `/v1/projects/${projectId}/change-requests/${changeRequestId}/approve`,
+      `/projects/${projectId}/change-requests/${changeRequestId}/approve`,
       {
         approved,
         reviewer_notes: reviewerNotes,
@@ -341,20 +341,20 @@ class ProjectService {
 
   /**
    * Get project metrics
-   * GET /v1/projects/:id/metrics
+   * GET /projects/:id/metrics
    */
   async getProjectMetrics(projectId: string): Promise<ProjectMetrics> {
-    const response = await this.api.get<ProjectMetrics>(`/v1/projects/${projectId}/metrics`);
+    const response = await this.api.get<ProjectMetrics>(`/projects/${projectId}/metrics`);
     return response.data;
   }
 
   /**
    * Update project settings
-   * PUT /v1/projects/:id/settings
+   * PUT /projects/:id/settings
    */
   async updateProjectSettings(projectId: string, settings: Partial<ProjectSettings>): Promise<ProjectSettings> {
     const response = await this.api.put<ProjectSettings>(
-      `/v1/projects/${projectId}/settings`,
+      `/projects/${projectId}/settings`,
       settings
     );
     return response.data;
@@ -362,10 +362,10 @@ class ProjectService {
 
   /**
    * Get project settings
-   * GET /v1/projects/:id/settings
+   * GET /projects/:id/settings
    */
   async getProjectSettings(projectId: string): Promise<ProjectSettings> {
-    const response = await this.api.get<ProjectSettings>(`/v1/projects/${projectId}/settings`);
+    const response = await this.api.get<ProjectSettings>(`/projects/${projectId}/settings`);
     return response.data;
   }
 

@@ -1,4 +1,5 @@
 import type { Workspace, WorkspaceInvitation, WorkspaceMember, WorkspaceSetting } from '@/types/workspace';
+import { MOCK_USERS_BY_ID } from '@/mocks/users';
 
 const NOW = new Date('2026-03-01T09:00:00.000Z').toISOString();
 
@@ -6,12 +7,22 @@ export const MOCK_WORKSPACES: Workspace[] = [
 	{
 		id: 'ws-1',
 		name: 'PronaFlow Product HQ',
-		description: 'Workspace giả lập cho kiểm thử quản trị và phân quyền.',
+		description: 'Workspace chinh danh cho mock governance, project va collaboration.',
 		owner_id: 'u-1',
 		status: 'ACTIVE',
 		is_deleted: false,
 		created_at: NOW,
 		updated_at: NOW,
+	},
+	{
+		id: 'ws-2',
+		name: 'PronaFlow Sandbox Lab',
+		description: 'Workspace thu nghiem cho edge-case, archive va migration rehearsal.',
+		owner_id: 'u-2',
+		status: 'ACTIVE',
+		is_deleted: false,
+		created_at: '2026-01-10T09:00:00.000Z',
+		updated_at: '2026-03-28T09:00:00.000Z',
 	},
 ];
 
@@ -25,9 +36,9 @@ export const MOCK_WORKSPACE_MEMBERS: WorkspaceMember[] = [
 		joined_at: '2025-11-15T08:00:00.000Z',
 		user: {
 			id: 'u-1',
-			email: 'owner@pronaflow.local',
-			username: 'linh.owner',
-			avatar: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=128&h=128&fit=crop',
+			email: MOCK_USERS_BY_ID['u-1'].email ?? 'owner@pronaflow.local',
+			username: MOCK_USERS_BY_ID['u-1'].username,
+			avatar: MOCK_USERS_BY_ID['u-1'].avatar_url,
 		},
 	},
 	{
@@ -39,9 +50,9 @@ export const MOCK_WORKSPACE_MEMBERS: WorkspaceMember[] = [
 		joined_at: '2025-12-02T09:00:00.000Z',
 		user: {
 			id: 'u-2',
-			email: 'admin@pronaflow.local',
-			username: 'huy.admin',
-			avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=128&h=128&fit=crop',
+			email: MOCK_USERS_BY_ID['u-2'].email ?? 'admin@pronaflow.local',
+			username: MOCK_USERS_BY_ID['u-2'].username,
+			avatar: MOCK_USERS_BY_ID['u-2'].avatar_url,
 		},
 	},
 	{
@@ -53,9 +64,9 @@ export const MOCK_WORKSPACE_MEMBERS: WorkspaceMember[] = [
 		joined_at: '2026-01-04T09:00:00.000Z',
 		user: {
 			id: 'u-3',
-			email: 'member@pronaflow.local',
-			username: 'minh.member',
-			avatar: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=128&h=128&fit=crop',
+			email: MOCK_USERS_BY_ID['u-3'].email ?? 'member@pronaflow.local',
+			username: MOCK_USERS_BY_ID['u-3'].username,
+			avatar: MOCK_USERS_BY_ID['u-3'].avatar_url,
 		},
 	},
 	{
@@ -67,9 +78,9 @@ export const MOCK_WORKSPACE_MEMBERS: WorkspaceMember[] = [
 		joined_at: '2026-01-25T09:00:00.000Z',
 		user: {
 			id: 'u-4',
-			email: 'viewer@pronaflow.local',
-			username: 'thao.viewer',
-			avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop',
+			email: MOCK_USERS_BY_ID['u-4'].email ?? 'viewer@pronaflow.local',
+			username: MOCK_USERS_BY_ID['u-4'].username,
+			avatar: MOCK_USERS_BY_ID['u-4'].avatar_url,
 		},
 	},
 	{
@@ -81,9 +92,38 @@ export const MOCK_WORKSPACE_MEMBERS: WorkspaceMember[] = [
 		joined_at: '2026-02-15T09:00:00.000Z',
 		user: {
 			id: 'u-5',
-			email: 'guest@partner.local',
-			username: 'quoc.guest',
-			avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop',
+			email: MOCK_USERS_BY_ID['u-5'].email ?? 'guest@partner.local',
+			username: MOCK_USERS_BY_ID['u-5'].username,
+			avatar: MOCK_USERS_BY_ID['u-5'].avatar_url,
+		},
+	},
+	{
+		id: 'wm-6',
+		workspace_id: 'ws-2',
+		user_id: 'u-7',
+		role: 'admin',
+		is_active: true,
+		joined_at: '2026-02-18T09:00:00.000Z',
+		user: {
+			id: 'u-7',
+			email: MOCK_USERS_BY_ID['u-7'].email ?? 'analyst@pronaflow.local',
+			username: MOCK_USERS_BY_ID['u-7'].username,
+			avatar: MOCK_USERS_BY_ID['u-7'].avatar_url,
+		},
+	},
+	{
+		id: 'wm-7',
+		workspace_id: 'ws-2',
+		user_id: 'u-10',
+		role: 'member',
+		is_active: false,
+		joined_at: '2026-02-01T09:00:00.000Z',
+		left_at: '2026-03-01T09:00:00.000Z',
+		user: {
+			id: 'u-10',
+			email: MOCK_USERS_BY_ID['u-10'].email ?? 'retired.user@pronaflow.local',
+			username: MOCK_USERS_BY_ID['u-10'].username,
+			avatar: MOCK_USERS_BY_ID['u-10'].avatar_url,
 		},
 	},
 ];
@@ -96,6 +136,7 @@ export const MOCK_WORKSPACE_INVITATIONS: WorkspaceInvitation[] = [
 		invited_role: 'admin',
 		token_hash: 'mock-token-1',
 		expires_at: '2026-03-05T09:00:00.000Z',
+		accepted_at: null,
 		created_at: '2026-02-28T09:00:00.000Z',
 		invited_by: 'u-1',
 	},
@@ -111,11 +152,12 @@ export const MOCK_WORKSPACE_INVITATIONS: WorkspaceInvitation[] = [
 	},
 	{
 		id: 'wi-3',
-		workspace_id: 'ws-1',
+		workspace_id: 'ws-2',
 		email: 'contractor@vendor.local',
 		invited_role: 'guest',
 		token_hash: 'mock-token-3',
 		expires_at: '2026-03-04T09:00:00.000Z',
+		accepted_at: null,
 		created_at: '2026-02-26T09:00:00.000Z',
 		invited_by: 'u-2',
 	},
@@ -128,4 +170,19 @@ export const MOCK_WORKSPACE_SETTINGS: WorkspaceSetting = {
 	work_hours: '08:30-17:30',
 	logo_url: '',
 	updated_at: NOW,
+};
+
+export const MOCK_WORKSPACE_DATASET = {
+	default: {
+		workspaces: MOCK_WORKSPACES,
+		members: MOCK_WORKSPACE_MEMBERS,
+		invitations: MOCK_WORKSPACE_INVITATIONS,
+		settings: MOCK_WORKSPACE_SETTINGS,
+	},
+	empty: {
+		workspaces: [] as Workspace[],
+		members: [] as WorkspaceMember[],
+		invitations: [] as WorkspaceInvitation[],
+		settings: null,
+	},
 };

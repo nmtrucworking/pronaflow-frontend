@@ -14,6 +14,59 @@ export const API_BASE_URL =
   'http://localhost:8000/api/v1';
 
 export const API_ROOT_URL = API_BASE_URL.replace(/\/v1\/?$/, '');
+export const API_MODE = (import.meta.env.VITE_API_MODE ?? 'backend').toLowerCase();
+export const isMockApiMode = API_MODE === 'mock';
+
+type RetryRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+let refreshTokenPromise: Promise<string | null> | null = null;
+
+const redirectToLogin = () => {
+  if (window.location.pathname !== ROUTES.auth.login) {
+    window.location.href = ROUTES.auth.login;
+  }
+};
+
+const clearAuthTokens = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+};
+
+const isRefreshRequest = (config?: InternalAxiosRequestConfig): boolean => {
+  const requestUrl = config?.url ?? '';
+  return /\/auth\/refresh$/i.test(requestUrl);
+};
+
+const getOrCreateRefreshTokenPromise = async (): Promise<string | null> => {
+  if (!refreshTokenPromise) {
+    refreshTokenPromise = axios
+      .post<{ access_token: string; refresh_token?: string }>(`${API_BASE_URL}/auth/refresh`, {
+        refresh_token: localStorage.getItem('refresh_token'),
+      })
+      .then((response) => {
+        const nextAccessToken = response.data.access_token;
+        const nextRefreshToken = response.data.refresh_token;
+
+        if (!nextAccessToken) {
+          return null;
+        }
+
+        localStorage.setItem('access_token', nextAccessToken);
+        if (nextRefreshToken) {
+          localStorage.setItem('refresh_token', nextRefreshToken);
+        }
+        return nextAccessToken;
+      })
+      .catch(() => null)
+      .finally(() => {
+        refreshTokenPromise = null;
+      });
+  }
+
+  return refreshTokenPromise;
+};
 
 const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
   instance.interceptors.request.use(
@@ -37,40 +90,30 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
     },
     async (error: AxiosError) => {
       const { response } = error;
+      const originalRequest = error.config as RetryRequestConfig | undefined;
 
       if (response) {
-        switch (response.status) {
-          case 401:
-            console.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
-            localStorage.removeItem('access_token');
-            if (window.location.pathname !== ROUTES.auth.login) {
-              window.location.href = ROUTES.auth.login;
-            }
-            break;
+        if (
+          response.status === 401 &&
+          originalRequest &&
+          !originalRequest._retry &&
+          !isRefreshRequest(originalRequest) &&
+          localStorage.getItem('refresh_token')
+        ) {
+          originalRequest._retry = true;
 
-          case 403:
-            console.error('Bạn không có quyền thực hiện hành động này.');
-            break;
-
-          case 404:
-            console.error('Tài nguyên không tìm thấy.');
-            break;
-
-          case 422:
-            console.error('Dữ liệu không hợp lệ:', response.data);
-            break;
-
-          case 500:
-            console.error('Lỗi hệ thống. Vui lòng thử lại sau.');
-            break;
-
-          default:
-            console.error(`Lỗi API (${response.status}):`, response.data);
+          const nextAccessToken = await getOrCreateRefreshTokenPromise();
+          if (nextAccessToken) {
+            originalRequest.headers = originalRequest.headers ?? {};
+            originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
+            return instance(originalRequest);
+          }
         }
-      } else if (error.request) {
-        console.error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
-      } else {
-        console.error('Lỗi cấu hình request:', error.message);
+
+        if (response.status === 401) {
+          clearAuthTokens();
+          redirectToLogin();
+        }
       }
 
       return Promise.reject(error);
@@ -92,5 +135,7 @@ export const createApiClient = (baseURL: string = API_BASE_URL): AxiosInstance =
   );
 
 const axiosClient: AxiosInstance = createApiClient();
+
+export const apiClient = axiosClient;
 
 export default axiosClient;

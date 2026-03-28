@@ -3,7 +3,6 @@
  * Display all user's workspaces with management options
  */
 
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Loader2 } from 'lucide-react';
@@ -32,7 +31,7 @@ export const WorkspaceListPage: React.FC = () => {
 
   const handleSelectWorkspace = async (workspace: Workspace) => {
     setCurrentWorkspace(workspace, 'member'); // TODO: Get actual role from API
-    await logAccessMutation.mutateAsync();
+    await logAccessMutation.mutateAsync(workspace.id);
     navigate(ROUTES.workspace.detail(workspace.id));
   };
 
@@ -43,7 +42,7 @@ export const WorkspaceListPage: React.FC = () => {
 
   const handleDeleteWorkspace = async (workspaceId: string) => {
     if (window.confirm('Are you sure you want to delete this workspace?')) {
-      await deleteWorkspaceMutation.mutateAsync();
+      await deleteWorkspaceMutation.mutateAsync(workspaceId);
     }
   };
 

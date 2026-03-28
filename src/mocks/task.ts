@@ -1,71 +1,175 @@
 // @ts-nocheck
-import type { Task } from '../types/task';
 import type { TaskEntity } from '../features/dashboard/types/dashboard-types';
-import { MOCK_MEMBERS } from './projects';
+import { MOCK_PROJECTS } from '@/mocks/projects';
+import { MOCK_USERS_BY_ID, MOCK_CURRENT_USER } from '@/mocks/users';
 
 export const CURRENT_USER = {
-  username: MOCK_MEMBERS[0]?.name ?? 'User',
+  username: MOCK_CURRENT_USER?.name ?? 'User',
+  user_id: MOCK_CURRENT_USER?.id ?? 'u-3',
+};
+
+const projectById = (projectId: string) =>
+  MOCK_PROJECTS.find((project) => project.project_id === projectId || project.id === projectId) ?? MOCK_PROJECTS[0];
+
+const dashboardAssignee = (userId: string) => {
+  const user = MOCK_USERS_BY_ID[userId];
+  return {
+    user_id: user.id,
+    username: user.name,
+    avatar_url: user.avatar_url,
+  };
 };
 
 export const MOCK_TASKS: TaskEntity[] = [
   {
-    task_id: 't1',
-    task_number: 1,
-    title: 'Thiết kế Wireframe Trang chủ',
-    project: { project_id: 'p1', name: 'Marketing Website', key: 'MKT' },
-    status: 'DONE',
-    priority: 'HIGH',
-    planned_end: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    assignees: [{ user_id: MOCK_MEMBERS[1].id, username: MOCK_MEMBERS[1].name, avatar_url: MOCK_MEMBERS[1].avatar_url }],
+    task_id: 'task-101',
+    task_number: 101,
+    title: 'Finalize dashboard IA and section hierarchy',
+    project: {
+      project_id: projectById('prj-101').project_id,
+      name: projectById('prj-101').name,
+      key: projectById('prj-101').key,
+    },
+    status: 'IN_PROGRESS',
+    priority: 'URGENT',
+    planned_end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-6'), dashboardAssignee('u-4')],
   },
   {
-    task_id: 't2',
-    task_number: 2,
-    title: 'Viết nội dung giới thiệu sản phẩm',
-    project: { project_id: 'p1', name: 'Marketing Website', key: 'MKT' },
+    task_id: 'task-102',
+    task_number: 102,
+    title: 'Migrate legacy auth guards to workspace-aware middleware',
+    project: {
+      project_id: projectById('prj-103').project_id,
+      name: projectById('prj-103').name,
+      key: projectById('prj-103').key,
+    },
+    status: 'DONE',
+    priority: 'HIGH',
+    planned_end: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-4')],
+  },
+  {
+    task_id: 'task-103',
+    task_number: 103,
+    title: 'Design help center taxonomy for module 15',
+    project: {
+      project_id: projectById('prj-102').project_id,
+      name: projectById('prj-102').name,
+      key: projectById('prj-102').key,
+    },
+    status: 'NOT_STARTED',
+    priority: 'MEDIUM',
+    planned_end: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-6')],
+  },
+  {
+    task_id: 'task-104',
+    task_number: 104,
+    title: 'Validate retention policy migration job output',
+    project: {
+      project_id: projectById('prj-103').project_id,
+      name: projectById('prj-103').name,
+      key: projectById('prj-103').key,
+    },
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+    planned_end: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-5')],
+  },
+  {
+    task_id: 'task-105',
+    task_number: 105,
+    title: 'Set up bi-directional Slack integration proof-of-concept',
+    project: {
+      project_id: projectById('prj-101').project_id,
+      name: projectById('prj-101').name,
+      key: projectById('prj-101').key,
+    },
     status: 'IN_PROGRESS',
     priority: 'MEDIUM',
     planned_end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    assignees: [{ user_id: MOCK_MEMBERS[2].id, username: MOCK_MEMBERS[2].name, avatar_url: MOCK_MEMBERS[2].avatar_url }],
+    assignees: [dashboardAssignee('u-4'), dashboardAssignee('u-7')],
   },
   {
-    task_id: 't3',
-    task_number: 3,
-    title: 'Tích hợp cổng thanh toán VNPay',
-    project: { project_id: 'p1', name: 'Marketing Website', key: 'MKT' },
+    task_id: 'task-106',
+    task_number: 106,
+    title: 'Draft onboarding checklist for first-week activation',
+    project: {
+      project_id: projectById('prj-101').project_id,
+      name: projectById('prj-101').name,
+      key: projectById('prj-101').key,
+    },
+    status: 'NOT_STARTED',
+    priority: 'LOW',
+    planned_end: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-3')],
+  },
+  {
+    task_id: 'task-107',
+    task_number: 107,
+    title: 'Investigate webhook retries exceeding threshold',
+    project: {
+      project_id: projectById('prj-103').project_id,
+      name: projectById('prj-103').name,
+      key: projectById('prj-103').key,
+    },
     status: 'NOT_STARTED',
     priority: 'HIGH',
-    planned_end: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    assignees: [{ user_id: MOCK_MEMBERS[1].id, username: MOCK_MEMBERS[1].name, avatar_url: MOCK_MEMBERS[1].avatar_url }],
+    planned_end: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [],
   },
   {
-    task_id: 't4',
-    task_number: 4,
-    title: 'Lỗi hiển thị banner trên Safari mobile',
-    project: { project_id: 'p1', name: 'Marketing Website', key: 'MKT' },
-    status: 'IN_PROGRESS',
-    priority: 'HIGH',
-    planned_end: new Date().toISOString().split('T')[0],
-    assignees: [{ user_id: MOCK_MEMBERS[1].id, username: MOCK_MEMBERS[1].name, avatar_url: MOCK_MEMBERS[1].avatar_url }],
-  },
-  {
-    task_id: 't5',
-    task_number: 5,
-    title: 'Setup CI/CD Pipeline',
-    project: { project_id: 'p2', name: 'Backend API', key: 'API' },
-    status: 'NOT_STARTED',
-    priority: 'MEDIUM',
-    planned_end: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    assignees: [{ user_id: MOCK_MEMBERS[0].id, username: MOCK_MEMBERS[0].name, avatar_url: MOCK_MEMBERS[0].avatar_url }],
-  },
-  {
-    task_id: 't6',
-    task_number: 6,
-    title: 'Database Migration',
-    project: { project_id: 'p2', name: 'Backend API', key: 'API' },
+    task_id: 'task-108',
+    task_number: 108,
+    title: 'Close sprint retrospective action items',
+    project: {
+      project_id: projectById('prj-102').project_id,
+      name: projectById('prj-102').name,
+      key: projectById('prj-102').key,
+    },
     status: 'DONE',
-    priority: 'MEDIUM',
-    planned_end: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    assignees: [{ user_id: MOCK_MEMBERS[3].id, username: MOCK_MEMBERS[3].name, avatar_url: MOCK_MEMBERS[3].avatar_url }],
+    priority: 'LOW',
+    planned_end: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-3'), dashboardAssignee('u-5')],
   },
 ];
+
+export const MOCK_TASKS_EMPTY: TaskEntity[] = [];
+
+export const MOCK_TASKS_EDGE: TaskEntity[] = [
+  {
+    task_id: 'task-edge-1',
+    task_number: 999,
+    title: 'Emergency rollback and compliance freeze',
+    project: {
+      project_id: projectById('prj-103').project_id,
+      name: projectById('prj-103').name,
+      key: projectById('prj-103').key,
+    },
+    status: 'IN_PROGRESS',
+    priority: 'URGENT',
+    planned_end: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [dashboardAssignee('u-2')],
+  },
+  {
+    task_id: 'task-edge-2',
+    task_number: 1000,
+    title: 'Unassigned backlog triage for stale dependencies',
+    project: {
+      project_id: projectById('prj-105').project_id,
+      name: projectById('prj-105').name,
+      key: projectById('prj-105').key,
+    },
+    status: 'NOT_STARTED',
+    priority: 'MEDIUM',
+    planned_end: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    assignees: [],
+  },
+];
+
+export const MOCK_TASK_DATASET = {
+  default: MOCK_TASKS,
+  empty: MOCK_TASKS_EMPTY,
+  edge: MOCK_TASKS_EDGE,
+};

@@ -3,18 +3,33 @@
  * Display workspace with tabs for members, invitations, and settings
  */
 
-// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, Settings, Users, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as Tabs from '@radix-ui/react-tabs';
-import { useWorkspace, useWorkspaceMembers, useInvitations } from '@/hooks/useWorkspace';
+import {
+  useWorkspace,
+  useWorkspaceMembers,
+  useInvitations,
+  useUpdateMember,
+  useRemoveMember,
+  useCancelInvitation,
+  useResendInvitation,
+  useUpdateSettings,
+  useWorkspaceSettings,
+} from '@/hooks/useWorkspace';
 import { useWorkspaceStore } from '@/store/features/workspaceStore';
 import { ROUTES } from '@/routes/paths';
 import { MemberCard } from '../components/MemberCard';
 import { InvitationCard } from '../components/InvitationCard';
 import { WorkspaceSettingsForm } from '../forms/WorkspaceForms';
+import type {
+  WorkspaceMember,
+  WorkspaceInvitation,
+  WorkspaceRole,
+  UpdateSettingsDTO,
+} from '@/types/workspace';
 
 export const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +48,47 @@ export const WorkspaceDetailPage: React.FC = () => {
   const { data: workspace, isLoading } = useWorkspace(id);
   const { data: membersData } = useWorkspaceMembers(id, 0, 50);
   const { data: invitationsData } = useInvitations(id, 0, 50);
-  const { setCurrentWorkspace } = useWorkspaceStore();
+  const { data: settings } = useWorkspaceSettings(id);
+  const updateMemberMutation = useUpdateMember(id, '');
+  const removeMemberMutation = useRemoveMember(id, '');
+  const cancelInvitationMutation = useCancelInvitation(id);
+  const resendInvitationMutation = useResendInvitation(id);
+  const updateSettingsMutation = useUpdateSettings(id);
+  const { setCurrentWorkspace, currentUserRole } = useWorkspaceStore();
+
+  const members: WorkspaceMember[] = membersData || [];
+  const invitations: WorkspaceInvitation[] = invitationsData || [];
+
+  const handleChangeRole = async (member: WorkspaceMember, role: WorkspaceRole) => {
+    await updateMemberMutation.mutateAsync({
+      userId: member.user_id,
+      data: { role },
+    });
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    await removeMemberMutation.mutateAsync(memberId);
+  };
+
+  const handleCancelInvitation = async (invitationId: string) => {
+    await cancelInvitationMutation.mutateAsync(invitationId);
+  };
+
+  const handleResendInvitation = async (invitationId: string) => {
+    const invitation = invitations.find((item) => item.id === invitationId);
+    if (!invitation) {
+      return;
+    }
+
+    await resendInvitationMutation.mutateAsync({
+      email: invitation.email,
+      invited_role: invitation.invited_role,
+    });
+  };
+
+  const handleUpdateSettings = async (data: UpdateSettingsDTO) => {
+    await updateSettingsMutation.mutateAsync(data);
+  };
 
   useEffect(() => {
     if (workspace) {
@@ -66,7 +121,7 @@ export const WorkspaceDetailPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => navigate(ROUTES.workspace.list)}
             >
               <ArrowLeft className="w-5 h-5" />
@@ -79,7 +134,7 @@ export const WorkspaceDetailPage: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>{membersData?.items?.length || 0} members</span>
+            <span>{members.length} members</span>
             <span>•</span>
             <span className="capitalize">{workspace.status}</span>
           </div>
@@ -95,7 +150,7 @@ export const WorkspaceDetailPage: React.FC = () => {
               className="px-4 py-2 flex items-center gap-2 border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-blue-600"
             >
               <Users className="w-4 h-4" />
-              Members ({membersData?.items?.length || 0})
+              Members ({members.length})
             </Tabs.Trigger>
 
             <Tabs.Trigger
@@ -103,7 +158,7 @@ export const WorkspaceDetailPage: React.FC = () => {
               className="px-4 py-2 flex items-center gap-2 border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-blue-600"
             >
               <Mail className="w-4 h-4" />
-              Invitations ({invitationsData?.items?.length || 0})
+              Invitations ({invitations.length})
             </Tabs.Trigger>
 
             <Tabs.Trigger
@@ -118,19 +173,15 @@ export const WorkspaceDetailPage: React.FC = () => {
           {/* Members Tab */}
           <Tabs.Content value="members" className="py-6 px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {membersData?.items?.map((member) => (
+              {members.length > 0 ? members.map((member) => (
                 <MemberCard
                   key={member.id}
                   member={member}
-                  currentUserRole="owner"
-                  onChangeRole={(role) => {
-                    console.log('Change role to:', role);
-                  }}
-                  onRemove={() => {
-                    console.log('Remove member:', member.id);
-                  }}
+                  currentUserRole={currentUserRole || 'member'}
+                  onChangeRole={handleChangeRole}
+                  onRemove={handleRemoveMember}
                 />
-              )) || (
+              )) : (
                 <p className="text-gray-500 col-span-full">No members yet</p>
               )}
             </div>
@@ -139,18 +190,14 @@ export const WorkspaceDetailPage: React.FC = () => {
           {/* Invitations Tab */}
           <Tabs.Content value="invitations" className="py-6 px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {invitationsData?.items?.map((invitation) => (
+              {invitations.length > 0 ? invitations.map((invitation) => (
                 <InvitationCard
                   key={invitation.id}
                   invitation={invitation}
-                  onCancel={() => {
-                    console.log('Cancel invitation:', invitation.id);
-                  }}
-                  onResend={() => {
-                    console.log('Resend invitation:', invitation.id);
-                  }}
+                  onCancel={handleCancelInvitation}
+                  onResend={handleResendInvitation}
                 />
-              )) || (
+              )) : (
                 <p className="text-gray-500 col-span-full">No pending invitations</p>
               )}
             </div>
@@ -160,11 +207,9 @@ export const WorkspaceDetailPage: React.FC = () => {
           <Tabs.Content value="settings" className="py-6 px-4">
             <div className="max-w-2xl">
               <WorkspaceSettingsForm
-                workspace={workspace}
-                onSubmit={(data) => {
-                  console.log('Update settings:', data);
-                }}
-                isLoading={false}
+                defaultValues={settings || undefined}
+                onSubmit={handleUpdateSettings}
+                isLoading={updateSettingsMutation.isPending}
               />
             </div>
           </Tabs.Content>

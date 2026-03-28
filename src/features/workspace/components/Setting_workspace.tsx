@@ -49,30 +49,40 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import COLORS from '@/config/colors';
+import {
+  MOCK_WORKSPACES as CENTRAL_WORKSPACES,
+  MOCK_WORKSPACE_MEMBERS as CENTRAL_WORKSPACE_MEMBERS,
+  MOCK_INVOICES as CENTRAL_INVOICES,
+} from '@/mocks';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 // --- MOCK DATA ---
-const MOCK_WORKSPACES = [
-  { id: 'ws1', name: 'PronaFlow HQ', role: 'Owner', avatar: null },
-  { id: 'ws2', name: 'Personal Projects', role: 'Admin', avatar: null },
-  { id: 'ws3', name: 'Freelance Team', role: 'Member', avatar: null },
-];
+const MOCK_WORKSPACES = CENTRAL_WORKSPACES.map((ws) => ({
+  id: ws.id,
+  name: ws.name,
+  role: ws.owner_id === 'u-1' ? 'Owner' : 'Admin',
+  avatar: null,
+}));
 
-const MOCK_MEMBERS = [
-  { id: 1, name: 'Truc Nguyen', email: 'truc.nguyen@pronaflow.com', role: 'Owner', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', status: 'Active', joined: 'Jan 2023' },
-  { id: 2, name: 'Sarah Wilson', email: 'sarah.w@pronaflow.com', role: 'Admin', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', status: 'Active', joined: 'Feb 2023' },
-  { id: 3, name: 'Michael Chen', email: 'm.chen@pronaflow.com', role: 'Member', avatar: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', status: 'Active', joined: 'Mar 2023' },
-  { id: 4, name: 'Emily Davis', email: 'emily.d@pronaflow.com', role: 'Guest', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', status: 'Invited', joined: '-' },
-];
+const MOCK_MEMBERS = CENTRAL_WORKSPACE_MEMBERS.map((member) => ({
+  id: member.id,
+  name: member.user?.username ?? member.user_id,
+  email: member.user?.email ?? `${member.user_id}@pronaflow.local`,
+  role: member.role.charAt(0).toUpperCase() + member.role.slice(1),
+  avatar: member.user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(member.user?.username ?? member.user_id)}&background=334155&color=fff`,
+  status: member.is_active ? 'Active' : 'Invited',
+  joined: member.joined_at.slice(0, 10),
+}));
 
-const MOCK_INVOICES = [
-  { id: 'INV-001', date: '01/12/2023', amount: '$29.00', status: 'Paid' },
-  { id: 'INV-002', date: '01/11/2023', amount: '$29.00', status: 'Paid' },
-  { id: 'INV-003', date: '01/10/2023', amount: '$29.00', status: 'Paid' },
-];
+const MOCK_INVOICES = CENTRAL_INVOICES.map((invoice) => ({
+  id: invoice.invoice_id,
+  date: invoice.created_at,
+  amount: `${invoice.amount.toLocaleString('vi-VN')} ${invoice.currency}`,
+  status: invoice.status.toUpperCase(),
+}));
 
 const MOCK_TAGS = [
   { id: 1, name: 'Bug', color: COLORS.status.error, usage: 12 },

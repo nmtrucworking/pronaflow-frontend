@@ -7,6 +7,7 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { UserStatus } from '@/types';
+import authService from '@/services/authService';
 
 export interface User {
   user_id: string;
@@ -32,7 +33,7 @@ export interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  isAuthenticated: false,
+  isAuthenticated: authService.isAuthenticated(),
   isLoading: false,
   error: null,
   mfaRequired: false,

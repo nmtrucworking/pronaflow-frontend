@@ -15,6 +15,10 @@ const WorkspaceDetailPage = lazy(() =>
   import('./pages/WorkspaceDetailPage').then(m => ({ default: m.WorkspaceDetailPage }))
 );
 
+const WorkspaceSettingsPage = lazy(() =>
+  import('./components/Setting_workspace').then(m => ({ default: m.default }))
+);
+
 // Loading fallback
 const LoadingFallback = () => (
   <div className="flex justify-center items-center min-h-screen">
@@ -52,7 +56,7 @@ export const workspaceRoutes = [
     path: '/workspaces/:id/settings',
     element: (
       <Suspense fallback={<LoadingFallback />}>
-        <WorkspaceDetailPage />
+        <WorkspaceSettingsPage />
       </Suspense>
     ),
   },

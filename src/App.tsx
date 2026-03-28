@@ -3,9 +3,20 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { ROUTES, toChildPath } from './routes/paths';
 import { MainLayout } from './components/layout/MainLayout';
 import { HelpLayout } from './components/layout/HelpLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { useAuthBootstrap } from './hooks/useAuth';
+import { useCurrentWorkspaceId } from './store/features/workspaceStore';
+import { useLastAccessedWorkspace } from './hooks/useWorkspace';
 
 // Import Auth Pages
-import { LoginPage, RegisterPage } from './features/auth';
+import {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordConfirmPage,
+  VerifyEmailPage,
+  UnauthorizedPage,
+} from './features/auth';
 
 // Import pages
 import { LandingPage, PricingPage, DesktopDownloadPage } from './features/landing';
@@ -16,9 +27,7 @@ import { InboxPage } from './features/inbox';
 import { SettingsPage } from './features/settings';
 import { HelperCenterPage, ApiPage, ChangelogPage, ContactSupportPage, LegalPage, PrivacyPage, StatusPage, TermsPage } from './features/helper';
 import { CalendarPage } from './features/calendar';
-import { GanttChartPage, WorkspaceMemberPage } from './features/workspace/pages';
-
-import WorkspaceSetting from './features/workspace/components/Setting_workspace';
+import { GanttChartPage } from './features/workspace/pages';
 
 // Import Workspace Feature Routes
 import { workspaceRoutes } from './features/workspace';
@@ -57,6 +66,28 @@ import { Error404Page, Error500Page } from './features/error';
 // Import Agentation
 import { Agentation } from 'agentation';
 
+const LegacyWorkspaceSettingsRedirect = () => {
+  const currentWorkspaceId = useCurrentWorkspaceId();
+  const {
+    data: lastAccessedWorkspace,
+    isLoading: isLoadingLastWorkspace,
+  } = useLastAccessedWorkspace();
+
+  if (!currentWorkspaceId) {
+    if (isLoadingLastWorkspace) {
+      return null;
+    }
+
+    if (lastAccessedWorkspace?.workspace_id) {
+      return <Navigate to={ROUTES.workspace.settings(lastAccessedWorkspace.workspace_id)} replace />;
+    }
+
+    return <Navigate to={ROUTES.workspace.list} replace />;
+  }
+
+  return <Navigate to={ROUTES.workspace.settings(currentWorkspaceId)} replace />;
+};
+
 /*
  * Configure routing for the application using React Router v6.
  * The MainLayout component wraps around internal pages to provide consistent layout with Sidebar.
@@ -83,7 +114,27 @@ const router = createBrowserRouter([
     element: <RegisterPage />
   },
   {
-    element: <MainLayout />, // Bọc các trang nội bộ trong Layout có Sidebar
+    path: ROUTES.auth.forgotPassword,
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: ROUTES.auth.resetConfirm,
+    element: <ResetPasswordConfirmPage />,
+  },
+  {
+    path: ROUTES.auth.verifyEmail,
+    element: <VerifyEmailPage />,
+  },
+  {
+    path: ROUTES.auth.unauthorized,
+    element: <UnauthorizedPage />,
+  },
+  {
+    element: (
+      <ProtectedRoute>
+        <MainLayout />
+      </ProtectedRoute>
+    ), // Bọc các trang nội bộ trong Layout có Sidebar
     errorElement: <Error500Page />,
     children: [
       { path: toChildPath(ROUTES.app.dashboard), element: <DashboardPage /> },
@@ -95,8 +146,8 @@ const router = createBrowserRouter([
       { path: toChildPath(ROUTES.app.trash), element: <TrashPage /> },
       { path: toChildPath(ROUTES.app.calendar), element: <CalendarPage /> },
       { path: toChildPath(ROUTES.app.gantt), element: <GanttChartPage /> },
-      { path: toChildPath(ROUTES.app.workspaceSettings), element: <WorkspaceSetting /> },
-      { path: toChildPath(ROUTES.app.members) , element: <WorkspaceMemberPage /> },
+      { path: toChildPath(ROUTES.app.workspaceSettings), element: <LegacyWorkspaceSettingsRedirect /> },
+      { path: toChildPath(ROUTES.app.members) , element: <Navigate to={ROUTES.workspace.list} replace /> },
       { path: toChildPath(ROUTES.app.archive), element: <ArchivedPage /> },
       // Integration routes (Module 12)
       { path: toChildPath(ROUTES.integrations.root), element: <IntegrationsPage /> },
@@ -146,6 +197,7 @@ const router = createBrowserRouter([
 });
 
 function App() {
+  useAuthBootstrap();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
 

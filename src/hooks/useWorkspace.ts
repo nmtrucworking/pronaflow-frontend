@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
+import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import workspaceService from '@/services/workspaceService';
 import {
@@ -22,6 +23,17 @@ import {
   UpdateSettingsDTO,
 } from '@/types/workspace';
 
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError(error) && error.response?.data) {
+    const detail = (error.response.data as { detail?: string }).detail;
+    if (typeof detail === 'string' && detail.trim().length > 0) {
+      return detail;
+    }
+  }
+
+  return fallback;
+};
+
 // ============================================================================
 // Workspace Hooks
 // ============================================================================
@@ -38,9 +50,8 @@ export const useCreateWorkspace = () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success(`Workspace "${workspace.name}" created successfully!`);
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to create workspace';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to create workspace'));
     },
   });
 };
@@ -82,9 +93,8 @@ export const useUpdateWorkspace = (workspaceId: string) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success('Workspace updated successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to update workspace';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to update workspace'));
     },
   });
 };
@@ -96,14 +106,13 @@ export const useDeleteWorkspace = (workspaceId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => workspaceService.deleteWorkspace(workspaceId),
+    mutationFn: (id?: string) => workspaceService.deleteWorkspace(id || workspaceId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success('Workspace deleted successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to delete workspace';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to delete workspace'));
     },
   });
 };
@@ -136,9 +145,8 @@ export const useAddMember = (workspaceId: string) => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
       toast.success('Member added successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to add member';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to add member'));
     },
   });
 };
@@ -150,15 +158,14 @@ export const useUpdateMember = (workspaceId: string, userId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateMemberDTO) =>
-      workspaceService.updateMember(workspaceId, userId, data),
+    mutationFn: (params: { userId?: string; data: UpdateMemberDTO }) =>
+      workspaceService.updateMember(workspaceId, params.userId || userId, params.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
       toast.success('Member updated successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to update member';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to update member'));
     },
   });
 };
@@ -170,14 +177,13 @@ export const useRemoveMember = (workspaceId: string, userId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => workspaceService.removeMember(workspaceId, userId),
+    mutationFn: (id?: string) => workspaceService.removeMember(workspaceId, id || userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
       toast.success('Member removed successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to remove member';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to remove member'));
     },
   });
 };
@@ -211,9 +217,8 @@ export const useSendInvitation = (workspaceId: string) => {
       queryClient.invalidateQueries({ queryKey: ['invitations', workspaceId] });
       toast.success(`Invitation sent to ${data.email}!`);
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to send invitation';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to send invitation'));
     },
   });
 };
@@ -231,10 +236,20 @@ export const useCancelInvitation = (workspaceId: string) => {
       queryClient.invalidateQueries({ queryKey: ['invitations', workspaceId] });
       toast.success('Invitation cancelled!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to cancel invitation';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to cancel invitation'));
     },
+  });
+};
+
+/**
+ * Hook to resend invitation
+ */
+export const useResendInvitation = (workspaceId: string) => {
+  const sendInvitation = useSendInvitation(workspaceId);
+
+  return useMutation({
+    mutationFn: (data: CreateInvitationDTO) => sendInvitation.mutateAsync(data),
   });
 };
 
@@ -250,9 +265,8 @@ export const useAcceptInvitation = () => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       toast.success(`Successfully joined workspace: ${data.workspace_name}`);
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to accept invitation';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to accept invitation'));
     },
   });
 };
@@ -297,9 +311,8 @@ export const useUpdateSettings = (workspaceId: string) => {
       queryClient.invalidateQueries({ queryKey: ['workspace-settings', workspaceId] });
       toast.success('Settings updated successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to update settings';
-      toast.error(message);
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to update settings'));
     },
   });
 };
@@ -332,7 +345,7 @@ export const useLogAccess = (workspaceId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => workspaceService.logAccess(workspaceId),
+    mutationFn: (id?: string) => workspaceService.logAccess(id || workspaceId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['access-logs', workspaceId] });
     },

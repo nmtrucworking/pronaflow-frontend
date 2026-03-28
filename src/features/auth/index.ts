@@ -4,9 +4,16 @@
  */
 
 // Pages
-export { LoginPage, RegisterPage } from './pages';
+export {
+	LoginPage,
+	RegisterPage,
+	ForgotPasswordPage,
+	ResetPasswordConfirmPage,
+	VerifyEmailPage,
+	UnauthorizedPage,
+} from './pages';
 
 /**
  * Usage:
- * import { LoginPage, RegisterPage } from '@/features/auth';
+ * import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/features/auth';
  */

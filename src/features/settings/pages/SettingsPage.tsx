@@ -53,6 +53,7 @@ import { twMerge } from 'tailwind-merge';
 import AccessibilityPanel from '@/features/personalization/components/AccessibilityPanel';
 import DashboardCustomizer from '@/features/personalization/components/DashboardCustomizer';
 import { useTheme } from '@/themes/ThemeProvider';
+import { MOCK_CURRENT_USER } from '@/mocks';
 
 const SETTINGS_TAB_IDS = ['profile', 'security', 'preferences', 'notifications', 'accessibility', 'dashboard', 'shortcuts'] as const;
 type SettingsTabId = (typeof SETTINGS_TAB_IDS)[number];
@@ -92,9 +93,9 @@ interface UserProfile {
 }
 
 const MOCK_USER: UserProfile = {
-  username: 'trucnguyen',
-  fullname: 'Truc Nguyen',
-  email: 'truc.nguyen@pronaflow.com',
+  username: MOCK_CURRENT_USER?.username ?? 'trucnguyen',
+  fullname: MOCK_CURRENT_USER?.full_name ?? MOCK_CURRENT_USER?.name ?? 'Truc Nguyen',
+  email: MOCK_CURRENT_USER?.email ?? 'truc.nguyen@pronaflow.com',
   phone: '+84 909 123 456',
   jobTitle: 'Lead Product Designer',
   department: 'Product', 

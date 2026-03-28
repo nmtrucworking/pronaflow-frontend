@@ -3,36 +3,21 @@
  * Reusable form components for workspace operations
  */
 
-// @ts-nocheck
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/Form';
+import { FormDescription, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { CreateWorkspaceDTO, UpdateWorkspaceDTO, CreateInvitationDTO, UpdateSettingsDTO } from '@/types/workspace';
-import { FieldValues, UseFormRegister } from 'react-hook-form';
-
-// ============================================================================
-// Validation Schemas
-// ============================================================================
+  CreateWorkspaceDTO,
+  UpdateWorkspaceDTO,
+  CreateInvitationDTO,
+  UpdateSettingsDTO,
+  WorkspaceRole,
+} from '@/types/workspace';
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
@@ -40,7 +25,7 @@ const createWorkspaceSchema = z.object({
 });
 
 const updateWorkspaceSchema = z.object({
-  name: z.string().min(1).max(50).optional(),
+  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters').optional(),
   description: z.string().optional(),
 });
 
@@ -56,10 +41,6 @@ const settingsSchema = z.object({
   logo_url: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
 
-// ============================================================================
-// Create Workspace Form
-// ============================================================================
-
 interface CreateWorkspaceFormProps {
   onSubmit: (data: CreateWorkspaceDTO) => void;
   isLoading?: boolean;
@@ -69,7 +50,11 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
   onSubmit,
   isLoading = false,
 }) => {
-  const form = useForm<CreateWorkspaceDTO>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateWorkspaceDTO>({
     resolver: zodResolver(createWorkspaceSchema),
     defaultValues: {
       name: '',
@@ -78,54 +63,35 @@ export const CreateWorkspaceForm: React.FC<CreateWorkspaceFormProps> = ({
   });
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          name="name"
-          render={({ field }: { field: UseFormRegister<CreateWorkspaceDTO> }) => (
-            <FormItem>
-              <FormLabel>Workspace Name *</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g., Engineering Team"
-                  {...field}
-                  disabled={isLoading}
-                />
-              </FormControl>
-              <FormDescription>The name of your workspace (max 50 characters)</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <FormItem>
+        <FormLabel>Workspace Name *</FormLabel>
+        <Input
+          placeholder="e.g., Engineering Team"
+          {...register('name')}
+          disabled={isLoading}
         />
-        <FormField
-          name="description"
-          render={({ field }: { field: UseFormRegister<CreateWorkspaceDTO> }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Describe your workspace..."
-                  {...field}
-                  disabled={isLoading}
-                  className="resize-none"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <FormDescription>The name of your workspace (max 50 characters)</FormDescription>
+        <FormMessage>{errors.name?.message}</FormMessage>
+      </FormItem>
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Creating...' : 'Create Workspace'}
-        </Button>
-      </form>
-    </Form>
+      <FormItem>
+        <FormLabel>Description</FormLabel>
+        <Textarea
+          placeholder="Describe your workspace..."
+          {...register('description')}
+          disabled={isLoading}
+          className="resize-none"
+        />
+        <FormMessage>{errors.description?.message}</FormMessage>
+      </FormItem>
+
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? 'Creating...' : 'Create Workspace'}
+      </Button>
+    </form>
   );
 };
-
-// ============================================================================
-// Update Workspace Form
-// ============================================================================
 
 interface UpdateWorkspaceFormProps {
   defaultValues?: UpdateWorkspaceDTO;
@@ -134,66 +100,61 @@ interface UpdateWorkspaceFormProps {
 }
 
 export const UpdateWorkspaceForm: React.FC<UpdateWorkspaceFormProps> = ({
-  defaultValues = {},
+  defaultValues,
   onSubmit,
   isLoading = false,
 }) => {
-  const form = useForm<UpdateWorkspaceDTO>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<UpdateWorkspaceDTO>({
     resolver: zodResolver(updateWorkspaceSchema),
-    defaultValues,
+    defaultValues: defaultValues || {},
   });
 
+  useEffect(() => {
+    reset(defaultValues || {});
+  }, [defaultValues, reset]);
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          name="name"
-          render={({ field }: { field: UseFormRegister<UpdateWorkspaceDTO> }) => (
-            <FormItem>
-              <FormLabel>Workspace Name</FormLabel>
-              <FormControl>
-                <Input {...field} disabled={isLoading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <FormItem>
+        <FormLabel>Workspace Name</FormLabel>
+        <Input {...register('name')} disabled={isLoading} />
+        <FormMessage>{errors.name?.message}</FormMessage>
+      </FormItem>
 
-        <FormField
-          name="description"
-          render={({ field }: { field: UseFormRegister<UpdateWorkspaceDTO> }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea {...field} disabled={isLoading} className="resize-none" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <FormItem>
+        <FormLabel>Description</FormLabel>
+        <Textarea {...register('description')} disabled={isLoading} className="resize-none" />
+        <FormMessage>{errors.description?.message}</FormMessage>
+      </FormItem>
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Updating...' : 'Update Workspace'}
-        </Button>
-      </form>
-    </Form>
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? 'Updating...' : 'Update Workspace'}
+      </Button>
+    </form>
   );
 };
-
-// ============================================================================
-// Invite User Form
-// ============================================================================
 
 interface InviteUserFormProps {
   onSubmit: (data: CreateInvitationDTO) => void;
   isLoading?: boolean;
 }
 
+const roleOptions: WorkspaceRole[] = ['owner', 'admin', 'member', 'viewer', 'guest'];
+
 export const InviteUserForm: React.FC<InviteUserFormProps> = ({
   onSubmit,
   isLoading = false,
 }) => {
-  const form = useForm<CreateInvitationDTO>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateInvitationDTO>({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: '',
@@ -202,61 +163,41 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
   });
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          name="email"
-          render={({ field }: { field: UseFormRegister<CreateInvitationDTO> }) => (
-            <FormItem>
-              <FormLabel>Email Address *</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="user@example.com"
-                  {...field}
-                  disabled={isLoading}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <FormItem>
+        <FormLabel>Email Address *</FormLabel>
+        <Input
+          type="email"
+          placeholder="user@example.com"
+          {...register('email')}
+          disabled={isLoading}
         />
+        <FormMessage>{errors.email?.message}</FormMessage>
+      </FormItem>
 
-        <FormField
-          name="invited_role"
-          render={({ field }: { field: UseFormRegister<CreateInvitationDTO> }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger disabled={isLoading}>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
-                  <SelectItem value="guest">Guest</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>The role this user will have in the workspace</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <FormItem>
+        <FormLabel>Role</FormLabel>
+        <select
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          {...register('invited_role')}
+          disabled={isLoading}
+        >
+          {roleOptions.map((role) => (
+            <option key={role} value={role}>
+              {role.charAt(0).toUpperCase() + role.slice(1)}
+            </option>
+          ))}
+        </select>
+        <FormDescription>The role this user will have in the workspace</FormDescription>
+        <FormMessage>{errors.invited_role?.message}</FormMessage>
+      </FormItem>
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Sending...' : 'Send Invitation'}
-        </Button>
-      </form>
-    </Form>
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? 'Sending...' : 'Send Invitation'}
+      </Button>
+    </form>
   );
 };
-
-// ============================================================================
-// Workspace Settings Form
-// ============================================================================
 
 interface WorkspaceSettingsFormProps {
   defaultValues?: UpdateSettingsDTO;
@@ -265,107 +206,72 @@ interface WorkspaceSettingsFormProps {
 }
 
 export const WorkspaceSettingsForm: React.FC<WorkspaceSettingsFormProps> = ({
-  defaultValues = {},
+  defaultValues,
   onSubmit,
   isLoading = false,
 }) => {
-  const form = useForm<UpdateSettingsDTO>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<UpdateSettingsDTO>({
     resolver: zodResolver(settingsSchema),
-    defaultValues,
+    defaultValues: defaultValues || {},
   });
 
+  useEffect(() => {
+    reset(defaultValues || {});
+  }, [defaultValues, reset]);
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          name="timezone"
-          render={({ field }: { field: UseFormRegister<UpdateSettingsDTO> }) => (
-            <FormItem>
-              <FormLabel>Timezone</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || ''}>
-                <FormControl>
-                  <SelectTrigger disabled={isLoading}>
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="UTC">UTC</SelectItem>
-                  <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                  <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                  <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                  <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                  <SelectItem value="Europe/London">London</SelectItem>
-                  <SelectItem value="Europe/Paris">Paris</SelectItem>
-                  <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                  <SelectItem value="Asia/Ho_Chi_Minh">Ho Chi Minh City</SelectItem>
-                  <SelectItem value="Asia/Singapore">Singapore</SelectItem>
-                  <SelectItem value="Australia/Sydney">Sydney</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <FormItem>
+        <FormLabel>Timezone</FormLabel>
+        <Input
+          placeholder="e.g., Asia/Ho_Chi_Minh"
+          {...register('timezone')}
+          disabled={isLoading}
         />
+        <FormMessage>{errors.timezone?.message}</FormMessage>
+      </FormItem>
 
-        <FormField
-          name="work_days"
-          render={({ field }: { field: UseFormRegister<UpdateSettingsDTO> }) => (
-            <FormItem>
-              <FormLabel>Working Days</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g., Mon,Tue,Wed,Thu,Fri"
-                  {...field}
-                  disabled={isLoading}
-                />
-              </FormControl>
-              <FormDescription>Comma-separated list of working days</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+      <FormItem>
+        <FormLabel>Working Days</FormLabel>
+        <Input
+          placeholder="e.g., Mon,Tue,Wed,Thu,Fri"
+          {...register('work_days')}
+          disabled={isLoading}
         />
+        <FormDescription>Comma-separated list of working days</FormDescription>
+        <FormMessage>{errors.work_days?.message}</FormMessage>
+      </FormItem>
 
-        <FormField
-          name="work_hours"
-          render={({ field }: { field: UseFormRegister<UpdateSettingsDTO> }) => (
-            <FormItem>
-              <FormLabel>Working Hours</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder='e.g., {"start": "09:00", "end": "18:00"}'
-                  {...field}
-                  disabled={isLoading}
-                />
-              </FormControl>
-              <FormDescription>Working hours in JSON format</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+      <FormItem>
+        <FormLabel>Working Hours</FormLabel>
+        <Input
+          placeholder='e.g., {"start": "09:00", "end": "18:00"}'
+          {...register('work_hours')}
+          disabled={isLoading}
         />
+        <FormDescription>Working hours in JSON format</FormDescription>
+        <FormMessage>{errors.work_hours?.message}</FormMessage>
+      </FormItem>
 
-        <FormField
-          // control={form.control} // Add this line to pass the control prop
-          name="logo_url"
-          render={({ field }: { field: UseFormRegister<UpdateSettingsDTO> }) => (
-            <FormItem>
-              <FormLabel>Logo URL</FormLabel>
-              <FormControl>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/logo.png"
-                  {...field}
-                  disabled={isLoading}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      <FormItem>
+        <FormLabel>Logo URL</FormLabel>
+        <Input
+          type="url"
+          placeholder="https://example.com/logo.png"
+          {...register('logo_url')}
+          disabled={isLoading}
         />
+        <FormMessage>{errors.logo_url?.message}</FormMessage>
+      </FormItem>
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Saving...' : 'Save Settings'}
-        </Button>
-      </form>
-    </Form>
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? 'Saving...' : 'Save Settings'}
+      </Button>
+    </form>
   );
 };

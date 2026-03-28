@@ -288,8 +288,13 @@ class AuthService {
    * Store tokens in localStorage
    */
   setTokens(accessToken: string, refreshToken: string): void {
-    localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
+    if (accessToken) {
+      localStorage.setItem('access_token', accessToken);
+    }
+
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken);
+    }
   }
 
   /**

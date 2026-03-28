@@ -26,6 +26,22 @@ export enum ProjectRole {
   VIEWER = 'project_viewer',
 }
 
+const ROLE_ALIASES: Record<string, string> = {
+  owner: WorkspaceRole.OWNER,
+  admin: WorkspaceRole.ADMIN,
+  member: WorkspaceRole.MEMBER,
+  guest: WorkspaceRole.GUEST,
+};
+
+const normalizeRole = (role: string): string => {
+  const normalized = role?.toLowerCase()?.trim();
+  return ROLE_ALIASES[normalized] || normalized;
+};
+
+const normalizeRoles = (roles: string[] | undefined): string[] => {
+  return (roles ?? []).map(normalizeRole);
+};
+
 // ============================================================================
 // Permission Map
 // ============================================================================
@@ -70,28 +86,31 @@ export const rolePermissions: Record<string, string[]> = {
 
 export const useRBAC = () => {
   const { user } = useAuth();
+  const normalizedUserRoles = normalizeRoles(user?.roles);
 
   const hasRole = (role: string): boolean => {
-    return user?.roles?.includes(role) ?? false;
+    return normalizedUserRoles.includes(normalizeRole(role));
   };
 
   const hasPermission = (permission: string): boolean => {
-    if (!user?.roles) return false;
+    if (normalizedUserRoles.length === 0) return false;
 
-    return user.roles.some((role) => {
+    return normalizedUserRoles.some((role) => {
       const permissions = rolePermissions[role] || [];
       return permissions.includes(permission);
     });
   };
 
   const hasAnyRole = (roles: string[]): boolean => {
-    if (!user?.roles) return false;
-    return roles.some((role) => user.roles?.includes(role));
+    if (normalizedUserRoles.length === 0) return false;
+    const expected = roles.map(normalizeRole);
+    return expected.some((role) => normalizedUserRoles.includes(role));
   };
 
   const hasAllRoles = (roles: string[]): boolean => {
-    if (!user?.roles) return false;
-    return roles.every((role) => user.roles?.includes(role));
+    if (normalizedUserRoles.length === 0) return false;
+    const expected = roles.map(normalizeRole);
+    return expected.every((role) => normalizedUserRoles.includes(role));
   };
 
   const hasAnyPermission = (permissions: string[]): boolean => {
@@ -129,9 +148,10 @@ export const canPerformAction = (
   userRoles: string[] | undefined,
   permission: string
 ): boolean => {
-  if (!userRoles) return false;
+  const normalizedUserRoles = normalizeRoles(userRoles);
+  if (normalizedUserRoles.length === 0) return false;
 
-  return userRoles.some((role) => {
+  return normalizedUserRoles.some((role) => {
     const permissions = rolePermissions[role] || [];
     return permissions.includes(permission);
   });

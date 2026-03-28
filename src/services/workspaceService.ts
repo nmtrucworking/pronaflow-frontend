@@ -4,7 +4,7 @@
  */
 
 import type { AxiosInstance } from 'axios';
-import { createApiClient, API_ROOT_URL } from '@/lib/axiosClient';
+import { createApiClient } from '@/lib/axiosClient';
 import {
   Workspace,
   WorkspaceDetail,
@@ -19,13 +19,14 @@ import {
   CreateInvitationDTO,
   UpdateSettingsDTO,
   WorkspaceListResponse,
+  WorkspaceRole,
 } from '@/types/workspace';
 
 class WorkspaceService {
   private api: AxiosInstance;
 
   constructor() {
-    this.api = createApiClient(API_ROOT_URL);
+    this.api = createApiClient();
   }
 
   // ========================================================================
@@ -34,19 +35,19 @@ class WorkspaceService {
 
   /**
    * Create a new workspace
-   * POST /v1/workspaces
+   * POST /workspaces
    */
   async createWorkspace(data: CreateWorkspaceDTO): Promise<Workspace> {
-    const response = await this.api.post<Workspace>('/v1/workspaces', data);
+    const response = await this.api.post<Workspace>('/workspaces', data);
     return response.data;
   }
 
   /**
    * Get list of user's workspaces
-   * GET /v1/workspaces
+   * GET /workspaces
    */
   async listWorkspaces(skip: number = 0, limit: number = 10): Promise<WorkspaceListResponse> {
-    const response = await this.api.get<WorkspaceListResponse>('/v1/workspaces', {
+    const response = await this.api.get<WorkspaceListResponse>('/workspaces', {
       params: { skip, limit },
     });
     return response.data;
@@ -54,23 +55,23 @@ class WorkspaceService {
 
   /**
    * Get workspace details with members and settings
-   * GET /v1/workspaces/:id
+   * GET /workspaces/:id
    */
   async getWorkspace(workspaceId: string): Promise<WorkspaceDetail> {
-    const response = await this.api.get<WorkspaceDetail>(`/v1/workspaces/${workspaceId}`);
+    const response = await this.api.get<WorkspaceDetail>(`/workspaces/${workspaceId}`);
     return response.data;
   }
 
   /**
    * Update workspace information
-   * PUT /v1/workspaces/:id
+   * PUT /workspaces/:id
    */
   async updateWorkspace(
     workspaceId: string,
     data: UpdateWorkspaceDTO
   ): Promise<Workspace> {
     const response = await this.api.put<Workspace>(
-      `/v1/workspaces/${workspaceId}`,
+      `/workspaces/${workspaceId}`,
       data
     );
     return response.data;
@@ -78,10 +79,10 @@ class WorkspaceService {
 
   /**
    * Delete workspace (soft delete)
-   * DELETE /v1/workspaces/:id
+   * DELETE /workspaces/:id
    */
   async deleteWorkspace(workspaceId: string): Promise<void> {
-    await this.api.delete(`/v1/workspaces/${workspaceId}`);
+    await this.api.delete(`/workspaces/${workspaceId}`);
   }
 
   // ========================================================================
@@ -90,14 +91,14 @@ class WorkspaceService {
 
   /**
    * Add member to workspace
-   * POST /v1/workspaces/:id/members
+   * POST /workspaces/:id/members
    */
   async addMember(
     workspaceId: string,
     data: AddMemberDTO
   ): Promise<WorkspaceMember> {
     const response = await this.api.post<WorkspaceMember>(
-      `/v1/workspaces/${workspaceId}/members`,
+      `/workspaces/${workspaceId}/members`,
       data
     );
     return response.data;
@@ -105,7 +106,7 @@ class WorkspaceService {
 
   /**
    * Get list of workspace members
-   * GET /v1/workspaces/:id/members
+    * GET /workspaces/:id/members
    */
   async listMembers(
     workspaceId: string,
@@ -113,7 +114,7 @@ class WorkspaceService {
     limit: number = 50
   ): Promise<WorkspaceMember[]> {
     const response = await this.api.get<WorkspaceMember[]>(
-      `/v1/workspaces/${workspaceId}/members`,
+      `/workspaces/${workspaceId}/members`,
       {
         params: { skip, limit },
       }
@@ -123,7 +124,7 @@ class WorkspaceService {
 
   /**
    * Update member role
-   * PUT /v1/workspaces/:id/members/:userId
+    * PUT /workspaces/:id/members/:userId
    */
   async updateMember(
     workspaceId: string,
@@ -131,7 +132,7 @@ class WorkspaceService {
     data: UpdateMemberDTO
   ): Promise<WorkspaceMember> {
     const response = await this.api.put<WorkspaceMember>(
-      `/v1/workspaces/${workspaceId}/members/${userId}`,
+      `/workspaces/${workspaceId}/members/${userId}`,
       data
     );
     return response.data;
@@ -139,10 +140,10 @@ class WorkspaceService {
 
   /**
    * Remove member from workspace
-   * DELETE /v1/workspaces/:id/members/:userId
+   * DELETE /workspaces/:id/members/:userId
    */
   async removeMember(workspaceId: string, userId: string): Promise<void> {
-    await this.api.delete(`/v1/workspaces/${workspaceId}/members/${userId}`);
+    await this.api.delete(`/workspaces/${workspaceId}/members/${userId}`);
   }
 
   // ========================================================================
@@ -151,14 +152,14 @@ class WorkspaceService {
 
   /**
    * Send workspace invitation
-   * POST /v1/workspaces/:id/invitations
+    * POST /workspaces/:id/invitations
    */
   async sendInvitation(
     workspaceId: string,
     data: CreateInvitationDTO
   ): Promise<WorkspaceInvitation> {
     const response = await this.api.post<WorkspaceInvitation>(
-      `/v1/workspaces/${workspaceId}/invitations`,
+      `/workspaces/${workspaceId}/invitations`,
       data
     );
     return response.data;
@@ -166,7 +167,7 @@ class WorkspaceService {
 
   /**
    * Get list of pending invitations
-   * GET /v1/workspaces/:id/invitations
+    * GET /workspaces/:id/invitations
    */
   async listInvitations(
     workspaceId: string,
@@ -174,7 +175,7 @@ class WorkspaceService {
     limit: number = 50
   ): Promise<WorkspaceInvitation[]> {
     const response = await this.api.get<WorkspaceInvitation[]>(
-      `/v1/workspaces/${workspaceId}/invitations`,
+      `/workspaces/${workspaceId}/invitations`,
       {
         params: { skip, limit },
       }
@@ -184,24 +185,24 @@ class WorkspaceService {
 
   /**
    * Cancel pending invitation
-   * DELETE /v1/workspaces/:id/invitations/:invitationId
+    * DELETE /workspaces/:id/invitations/:invitationId
    */
   async cancelInvitation(
     workspaceId: string,
     invitationId: string
   ): Promise<void> {
     await this.api.delete(
-      `/v1/workspaces/${workspaceId}/invitations/${invitationId}`
+      `/workspaces/${workspaceId}/invitations/${invitationId}`
     );
   }
 
   /**
    * Accept workspace invitation
-   * POST /v1/workspaces/invitations/accept
+    * POST /workspaces/invitations/accept
    */
   async acceptInvitation(token: string): Promise<{ workspace_id: string; workspace_name: string }> {
     const response = await this.api.post<{ workspace_id: string; workspace_name: string }>(
-      '/v1/workspaces/invitations/accept',
+      '/workspaces/invitations/accept',
       {},
       { params: { token } }
     );
@@ -210,11 +211,11 @@ class WorkspaceService {
 
   /**
    * Get last accessed workspace
-   * GET /v1/workspaces/me/last-accessed
+    * GET /workspaces/me/last-accessed
    */
   async getLastAccessedWorkspace(): Promise<{ workspace_id: string; name: string; accessed_at: string }> {
     const response = await this.api.get<{ workspace_id: string; name: string; accessed_at: string }>(
-      '/v1/workspaces/me/last-accessed'
+      '/workspaces/me/last-accessed'
     );
     return response.data;
   }
@@ -225,25 +226,25 @@ class WorkspaceService {
 
   /**
    * Get workspace settings
-   * GET /v1/workspaces/:id/settings
+    * GET /workspaces/:id/settings
    */
   async getSettings(workspaceId: string): Promise<WorkspaceSetting> {
     const response = await this.api.get<WorkspaceSetting>(
-      `/v1/workspaces/${workspaceId}/settings`
+      `/workspaces/${workspaceId}/settings`
     );
     return response.data;
   }
 
   /**
    * Update workspace settings
-   * PUT /v1/workspaces/:id/settings
+    * PUT /workspaces/:id/settings
    */
   async updateSettings(
     workspaceId: string,
     data: UpdateSettingsDTO
   ): Promise<WorkspaceSetting> {
     const response = await this.api.put<WorkspaceSetting>(
-      `/v1/workspaces/${workspaceId}/settings`,
+      `/workspaces/${workspaceId}/settings`,
       data
     );
     return response.data;
@@ -255,15 +256,15 @@ class WorkspaceService {
 
   /**
    * Log workspace access (context switch)
-   * POST /v1/workspaces/:id/access
+   * POST /workspaces/:id/access
    */
   async logAccess(workspaceId: string): Promise<void> {
-    await this.api.post(`/v1/workspaces/${workspaceId}/access`);
+    await this.api.post(`/workspaces/${workspaceId}/access`);
   }
 
   /**
    * Get access history
-   * GET /v1/workspaces/:id/access-logs
+    * GET /workspaces/:id/access-logs
    */
   async getAccessLogs(
     workspaceId: string,
@@ -272,7 +273,7 @@ class WorkspaceService {
     limit: number = 50
   ): Promise<WorkspaceAccessLog[]> {
     const response = await this.api.get<WorkspaceAccessLog[]>(
-      `/v1/workspaces/${workspaceId}/access-logs`,
+      `/workspaces/${workspaceId}/access-logs`,
       {
         params: {
           user_id: userId,
@@ -313,14 +314,14 @@ class WorkspaceService {
   async sendBulkInvitations(
     workspaceId: string,
     emails: string[],
-    role: string = 'member'
+    role: WorkspaceRole = 'member'
   ): Promise<WorkspaceInvitation[]> {
     const results: WorkspaceInvitation[] = [];
     for (const email of emails) {
       try {
         const result = await this.sendInvitation(workspaceId, {
           email,
-          invited_role: role as any,
+          invited_role: role,
         });
         results.push(result);
       } catch (error) {

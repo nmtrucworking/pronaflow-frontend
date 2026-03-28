@@ -3,11 +3,10 @@
  * Module 1: Identity and Access Management
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
 import { useLogin, useMFA } from '@/hooks/useAuth';
-import authService from '@/services/authService';
 import { LogIn, Loader2, Github, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 interface LoginState {
@@ -60,12 +59,27 @@ const Login = () => {
     } else if (!validateEmail(loginState.email)) {
       newErrors.email = 'Invalid email format';
     }
-    if (!loginState.password || loginState.password.length < 8) {
+
+    if (!loginState.password) {
       newErrors.password = 'Password is required';
     }
+
     setLoginState((prev) => ({ ...prev, errors: newErrors }));
     return Object.keys(newErrors).length === 0;
   };
+
+  useEffect(() => {
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+    const rememberedEmail = localStorage.getItem('rememberedEmail') || '';
+
+    if (rememberMe && rememberedEmail) {
+      setLoginState((prev) => ({
+        ...prev,
+        email: rememberedEmail,
+        rememberMe: true,
+      }));
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.currentTarget;
@@ -89,11 +103,22 @@ const Login = () => {
       if (loginState.rememberMe) {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('rememberedEmail', loginState.email);
+      } else {
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('rememberedEmail');
       }
+
       navigate(ROUTES.app.dashboard);
     } else if (result.mfaRequired) {
       setShowMFAModal(true);
-      authService.setTokens('', '');
+    } else if (result.unverifiedEmail) {
+      navigate(`${ROUTES.auth.verifyEmail}?email=${encodeURIComponent(loginState.email)}`);
+    } else if (result.isLocked) {
+      setLoginState((prev) => ({
+        ...prev,
+        accountLocked: true,
+        lockoutTimeRemaining: Math.ceil((result.retryAfterSeconds ?? 300) / 60),
+      }));
     }
   };
 
@@ -290,7 +315,14 @@ const Login = () => {
 
             <button
               type="button"
-              onClick={() => setShowMFAModal(false)}
+              onClick={() => {
+                setShowMFAModal(false);
+                setMfaState({
+                  totpCode: '',
+                  error: null,
+                  isVerifying: false,
+                });
+              }}
               className="token-action-secondary-outline w-full py-2 px-4 rounded-md text-sm font-medium bg-white dark:bg-slate-900"
             >
               Back
