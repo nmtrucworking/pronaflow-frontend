@@ -42,6 +42,15 @@ import AnalyticsPage from './features/analytics/pages/AnalyticsPage';
 import CommandPalette from './components/CommandPalette';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 
+// Import Admin Pages (Module 14)
+import {
+  AdminLayout,
+  AdminDashboardPage,
+  UsersManagementPage,
+  RolesManagementPage,
+} from './features/admin';
+import SecurityIncidentsPage from './features/admin/pages/SecurityIncidentsPage';
+
 // Import Error Pages
 import { Error404Page, Error500Page } from './features/error';
 
@@ -115,6 +124,17 @@ const router = createBrowserRouter([
       { path: ROUTES.help.privacy, element: <PrivacyPage /> },
       { path: ROUTES.help.status, element: <StatusPage /> },
       { path: ROUTES.help.terms, element: <TermsPage /> },
+    ],
+  },
+  // Admin Routes (Module 14)
+  {
+    element: <AdminLayout />,
+    errorElement: <Error500Page />,
+    children: [
+      { path: ROUTES.admin.dashboard, element: <AdminDashboardPage /> },
+      { path: ROUTES.admin.users, element: <UsersManagementPage /> },
+      { path: ROUTES.admin.roles, element: <RolesManagementPage /> },
+      { path: ROUTES.admin.securityIncidents, element: <SecurityIncidentsPage /> },
     ],
   },
   {

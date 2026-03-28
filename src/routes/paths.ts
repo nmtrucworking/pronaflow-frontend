@@ -55,6 +55,18 @@ export const ROUTES = {
     members: (id: string) => `/workspaces/${id}/members`,
     settings: (id: string) => `/workspaces/${id}/settings`,
   },
+
+  admin: {
+    root: '/admin',
+    dashboard: '/admin/dashboard',
+    users: '/admin/users',
+    roles: '/admin/roles',
+    permissions: '/admin/permissions',
+    systemConfig: '/admin/system-config',
+    featureFlags: '/admin/feature-flags',
+    securityIncidents: '/admin/security-incidents',
+    auditLogs: '/admin/audit-logs',
+  },
 } as const;
 
 export const toChildPath = (absolutePath: string): string =>
