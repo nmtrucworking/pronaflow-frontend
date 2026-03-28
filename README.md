@@ -87,6 +87,27 @@ frontend/
 - Implementation guide: docs/implementation/IMPLEMENTATION_GUIDE.md
 - Deployment notes: docs/deployment/DEPLOYMENT_SUMMARY.md
 
+## Deploy Test on GitHub Pages
+
+### Local pre-check
+
+```bash
+npm run build:pages
+```
+
+### Enable GitHub Pages in repository settings
+
+1. Open repository Settings.
+2. Go to Pages.
+3. Under Build and deployment, select Source = GitHub Actions.
+
+### Trigger deploy
+
+- Push to branch main, or
+- Run workflow Deploy Frontend to GitHub Pages manually from Actions tab.
+
+After workflow finishes, GitHub Pages URL is shown in the deploy job output.
+
 ## Contributing
 
 1. Create a branch from main.

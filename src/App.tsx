@@ -121,7 +121,9 @@ const router = createBrowserRouter([
     path: ROUTES.notFound,
     element: <Error404Page />,
   }
-]);
+], {
+  basename: import.meta.env.BASE_URL,
+});
 
 function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
