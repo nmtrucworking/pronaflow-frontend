@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, SlidersHorizontal, Search, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWorkspaces, useCreateWorkspace, useDeleteWorkspace, useLogAccess } from '@/hooks/useWorkspace';
 import { useWorkspaceStore } from '@/store/features/workspaceStore';
@@ -14,11 +14,27 @@ import { WorkspaceCard } from '../components/WorkspaceCard';
 import { CreateWorkspaceForm } from '../forms/WorkspaceForms';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Workspace, CreateWorkspaceDTO } from '@/types/workspace';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+type WorkspaceStatusFilter = 'all' | 'ACTIVE' | 'SOFT_DELETED';
+type WorkspaceSortField = 'name' | 'created_at' | 'updated_at';
+type SortOrder = 'asc' | 'desc';
 
 export const WorkspaceListPage: React.FC = () => {
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<WorkspaceStatusFilter>('all');
+  const [sortBy, setSortBy] = useState<WorkspaceSortField>('updated_at');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // API Calls
   const { data: workspacesData, isLoading } = useWorkspaces(page * 10, 10);
@@ -46,43 +62,149 @@ export const WorkspaceListPage: React.FC = () => {
     }
   };
 
+  const workspaces = workspacesData?.items || [];
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const visibleWorkspaces = workspaces
+    .filter((workspace) => {
+      const matchesStatus = statusFilter === 'all' || workspace.status === statusFilter;
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        workspace.name.toLowerCase().includes(normalizedSearch) ||
+        (workspace.description || '').toLowerCase().includes(normalizedSearch);
+
+      return matchesStatus && matchesSearch;
+    })
+    .sort((left, right) => {
+      const direction = sortOrder === 'asc' ? 1 : -1;
+
+      if (sortBy === 'name') {
+        return left.name.localeCompare(right.name) * direction;
+      }
+
+      const leftTime = new Date(left[sortBy]).getTime();
+      const rightTime = new Date(right[sortBy]).getTime();
+      return (leftTime - rightTime) * direction;
+    });
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Workspaces</h1>
             <p className="text-gray-500 mt-2">Manage your workspaces and team collaborations</p>
           </div>
 
-          <Dialog.Root open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <Dialog.Trigger asChild>
-              <Button size="lg">
-                <Plus className="w-5 h-5 mr-2" />
-                New Workspace
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="relative w-full md:max-w-sm">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search workspaces..."
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="md">
+                    <SlidersHorizontal className="w-4 h-4 mr-2" />
+                    View Options
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel>Status</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                    <span className="flex-1">All workspaces</span>
+                    {statusFilter === 'all' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('ACTIVE')}>
+                    <span className="flex-1">Active only</span>
+                    {statusFilter === 'ACTIVE' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('SOFT_DELETED')}>
+                    <span className="flex-1">Archived only</span>
+                    {statusFilter === 'SOFT_DELETED' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setSortBy('updated_at')}>
+                    <span className="flex-1">Last updated</span>
+                    {sortBy === 'updated_at' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('created_at')}>
+                    <span className="flex-1">Created date</span>
+                    {sortBy === 'created_at' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('name')}>
+                    <span className="flex-1">Name</span>
+                    {sortBy === 'name' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Order</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setSortOrder('desc')}>
+                    <span className="flex-1">Descending</span>
+                    {sortOrder === 'desc' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder('asc')}>
+                    <span className="flex-1">Ascending</span>
+                    {sortOrder === 'asc' && <Check className="w-4 h-4 text-blue-600" />}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Dialog.Root open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <Dialog.Trigger asChild>
+                  <Button size="lg">
+                    <Plus className="w-5 h-5 mr-2" />
+                    New Workspace
+                  </Button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+                  <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-[600px] z-50">
+                    <div className="space-y-4">
+                      <div>
+                        <Dialog.Title className="text-xl font-bold text-slate-900">
+                          Create New Workspace
+                        </Dialog.Title>
+                        <Dialog.Description className="text-sm text-slate-600 mt-1">
+                          Create a new workspace to collaborate with your team
+                        </Dialog.Description>
+                      </div>
+                      <CreateWorkspaceForm
+                        onSubmit={handleCreateWorkspace}
+                        isLoading={createWorkspaceMutation.isPending}
+                      />
+                    </div>
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-500 px-1">
+            <span>Showing {visibleWorkspaces.length} of {workspaces.length} workspaces on this page</span>
+            {(searchTerm || statusFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                }}
+              >
+                Clear filters
               </Button>
-            </Dialog.Trigger>
-            <Dialog.Portal>
-              <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-              <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-[600px] z-50">
-                <div className="space-y-4">
-                  <div>
-                    <Dialog.Title className="text-xl font-bold text-slate-900">
-                      Create New Workspace
-                    </Dialog.Title>
-                    <Dialog.Description className="text-sm text-slate-600 mt-1">
-                      Create a new workspace to collaborate with your team
-                    </Dialog.Description>
-                  </div>
-                  <CreateWorkspaceForm
-                    onSubmit={handleCreateWorkspace}
-                    isLoading={createWorkspaceMutation.isPending}
-                  />
-                </div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
+            )}
+          </div>
         </div>
 
         {/* Loading State */}
@@ -93,10 +215,10 @@ export const WorkspaceListPage: React.FC = () => {
         )}
 
         {/* Workspaces Grid */}
-        {!isLoading && workspacesData?.items && workspacesData.items.length > 0 ? (
+        {!isLoading && visibleWorkspaces.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {workspacesData.items.map((workspace) => (
+              {visibleWorkspaces.map((workspace) => (
                 <WorkspaceCard
                   key={workspace.id}
                   workspace={workspace}
@@ -110,7 +232,7 @@ export const WorkspaceListPage: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {workspacesData.total > 10 && (
+            {workspacesData && workspacesData.total > 10 && (
               <div className="flex justify-center gap-2 mt-8">
                 <Button
                   variant="secondary"

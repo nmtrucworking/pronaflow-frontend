@@ -11,6 +11,22 @@ export default defineConfig({
   plugins: [
     react()
   ],
+  build: {
+    chunkSizeWarningLimit: 2500,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (
+          warning.code === 'INVALID_ANNOTATION' &&
+          typeof warning.id === 'string' &&
+          warning.id.includes('gantt-task-react/dist/index.modern.js')
+        ) {
+          return
+        }
+
+        warn(warning)
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),

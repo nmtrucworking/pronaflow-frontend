@@ -1,7 +1,12 @@
 import COLORS from './src/config/colors.ts';
 import colors from 'tailwindcss/colors';
 
-const { lightBlue, warmGray, trueGray, coolGray, blueGray, ...baseColors } = colors;
+const deprecatedColorAliases = new Set(['lightBlue', 'warmGray', 'trueGray', 'coolGray', 'blueGray']);
+const baseColors = Object.fromEntries(
+  Object.keys(colors)
+    .filter((key) => !deprecatedColorAliases.has(key))
+    .map((key) => [key, colors[key]])
+);
 
 /** @type {import('tailwindcss').Config} */
 export default {

@@ -17,10 +17,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Building2, Users, Settings, MoreVertical, Trash2, Edit2 } from 'lucide-react';
+import { Tooltip } from '@/components/ui';
 
 interface WorkspaceCardProps {
   workspace: Workspace;
@@ -61,11 +63,12 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
         {canManage && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" title="Workspace actions" aria-label="Workspace actions">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Manage workspace</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => onEdit?.(workspace)}>
                 <Edit2 className="w-4 h-4 mr-2" />
                 Edit
@@ -100,7 +103,9 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
           <p className="text-sm text-gray-600 mb-4">{workspace.description}</p>
         )}
         <div className="flex gap-2 text-xs text-gray-500">
-          <span>Created: {new Date(workspace.created_at).toLocaleDateString()}</span>
+          <Tooltip content={`Updated: ${new Date(workspace.updated_at).toLocaleString()}`} placement="top" delay={150}>
+            <span>Created: {new Date(workspace.created_at).toLocaleDateString()}</span>
+          </Tooltip>
         </div>
       </CardContent>
     </Card>

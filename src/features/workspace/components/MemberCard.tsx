@@ -17,11 +17,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreVertical, Trash2, UserCog, Shield } from 'lucide-react';
+import { MoreVertical, Trash2, UserCog, Shield, UserCheck } from 'lucide-react';
+import { Tooltip } from '@/components/ui';
 
 interface MemberCardProps {
   member: WorkspaceMember;
@@ -70,11 +72,12 @@ export const MemberCard: React.FC<MemberCardProps> = ({
         {canManage && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" title="Member actions" aria-label="Member actions">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Manage member</DropdownMenuLabel>
               {member.role !== 'owner' && (
                 <>
                   <DropdownMenuItem onClick={() => onChangeRole?.(member, 'admin')}>
@@ -102,9 +105,17 @@ export const MemberCard: React.FC<MemberCardProps> = ({
 
       <CardContent>
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-medium px-2 py-1 rounded ${getRoleColor(member.role)}`}>
-            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-          </span>
+          <Tooltip content={`Current role: ${member.role}`} placement="top" delay={150}>
+            <span className={`text-xs font-medium px-2 py-1 rounded ${getRoleColor(member.role)}`}>
+              {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+            </span>
+          </Tooltip>
+          <Tooltip content={member.is_active ? 'Active in workspace' : 'Invitation pending'} placement="top" delay={150}>
+            <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+              <UserCheck className="w-3 h-3" />
+              {member.is_active ? 'Active' : 'Invited'}
+            </span>
+          </Tooltip>
           <span className="text-xs text-gray-500">
             Joined {new Date(member.joined_at).toLocaleDateString()}
           </span>

@@ -13,8 +13,17 @@ import {
   CardTitle,
 } from '@/components/ui/Card';
 import { Button } from '@/components/ui/button';
-import { Mail, Trash2, Copy, Clock } from 'lucide-react';
+import { Mail, Trash2, Copy, Clock, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip } from '@/components/ui';
 
 interface InvitationCardProps {
   invitation: WorkspaceInvitation;
@@ -61,41 +70,49 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
         </div>
 
         <div className="flex gap-2">
-          {!isExpired && (
-            <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
-                variant="secondary" // Changed from "outline" to "secondary"
+                variant="ghost"
                 size="sm"
-                onClick={handleCopyEmail}
-                title="Copy email"
+                title="Invitation actions"
+                aria-label="Invitation actions"
               >
-                <Copy className="w-4 h-4" />
+                <MoreVertical className="w-4 h-4" />
               </Button>
-              <Button
-                variant="secondary" // Changed from "outline" to "secondary"
-                size="sm"
-                onClick={() => onResend?.(invitation.id)}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Manage invitation</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleCopyEmail}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy email
+              </DropdownMenuItem>
+              {!isExpired && (
+                <DropdownMenuItem onClick={() => onResend?.(invitation.id)}>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Resend invitation
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onCancel?.(invitation.id)}
+                className="text-red-600"
               >
-                Resend
-              </Button>
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onCancel?.(invitation.id)}
-            className="text-red-600"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Cancel invitation
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
 
       <CardContent>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium px-2 py-1 rounded bg-purple-100 text-purple-700">
-            {invitation.invited_role.charAt(0).toUpperCase() + invitation.invited_role.slice(1)}
-          </span>
+          <Tooltip content={`Role to be granted after acceptance: ${invitation.invited_role}`} placement="top" delay={150}>
+            <span className="text-xs font-medium px-2 py-1 rounded bg-purple-100 text-purple-700">
+              {invitation.invited_role.charAt(0).toUpperCase() + invitation.invited_role.slice(1)}
+            </span>
+          </Tooltip>
           <span className="text-xs text-gray-500">
             Invited {new Date(invitation.created_at).toLocaleDateString()}
           </span>
