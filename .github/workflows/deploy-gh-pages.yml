@@ -34,6 +34,9 @@ jobs:
       - name: Build app for GitHub Pages
         run: npm run build:pages
 
+      - name: Disable Jekyll processing
+        run: touch ./dist/.nojekyll
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

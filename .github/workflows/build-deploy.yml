@@ -38,6 +38,9 @@ jobs:
       - name: Build application
         run: npm run build:pages
 
+      - name: Disable Jekyll processing
+        run: touch ./dist/.nojekyll
+
       - name: Set artifact name
         id: set-artifact
         run: echo "name=dist-${{ github.run_number }}" >> $GITHUB_OUTPUT
