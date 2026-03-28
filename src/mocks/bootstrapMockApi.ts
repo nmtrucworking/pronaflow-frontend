@@ -1,6 +1,12 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { MOCK_PROJECTS } from '@/mocks/projects';
 import { MOCK_TASKS } from '@/mocks/task';
+import {
+  MOCK_WORKSPACES,
+  MOCK_WORKSPACE_MEMBERS,
+  MOCK_WORKSPACE_INVITATIONS,
+  MOCK_WORKSPACE_SETTINGS,
+} from '@/mocks/workspaces';
 
 const APP_MODE = (import.meta.env.VITE_API_MODE ?? 'backend').toLowerCase();
 const MOCK_DELAY_MS = Number(import.meta.env.VITE_MOCK_API_DELAY_MS ?? 0);
@@ -16,19 +22,6 @@ const MOCK_USER = {
   roles: ['admin'],
   created_at: new Date().toISOString(),
 };
-
-const MOCK_WORKSPACES = [
-  {
-    id: 'ws-1',
-    name: 'Mock Workspace',
-    description: 'Workspace giả lập cho kiểm tra UI/UX',
-    owner_id: 'mock-user-1',
-    status: 'ACTIVE',
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -117,6 +110,52 @@ const getMockPayload = (config: InternalAxiosRequestConfig): { data: unknown; st
 
   if (method === 'get' && /\/tasks\/[^/]+$/i.test(path)) {
     return { data: MOCK_TASKS[0] ?? null };
+  }
+
+  if (method === 'get' && /\/workspaces\/me\/last-accessed$/i.test(path)) {
+    const workspace = MOCK_WORKSPACES[0];
+    return {
+      data: {
+        workspace_id: workspace?.id ?? 'ws-1',
+        name: workspace?.name ?? 'Mock Workspace',
+        accessed_at: new Date().toISOString(),
+      },
+    };
+  }
+
+  if (method === 'get' && /\/(v1\/)?workspaces\/[^/]+\/members$/i.test(path)) {
+    return {
+      data: {
+        total: MOCK_WORKSPACE_MEMBERS.length,
+        items: MOCK_WORKSPACE_MEMBERS,
+      },
+    };
+  }
+
+  if (method === 'get' && /\/(v1\/)?workspaces\/[^/]+\/invitations$/i.test(path)) {
+    return {
+      data: {
+        total: MOCK_WORKSPACE_INVITATIONS.length,
+        items: MOCK_WORKSPACE_INVITATIONS,
+      },
+    };
+  }
+
+  if (method === 'get' && /\/(v1\/)?workspaces\/[^/]+\/settings$/i.test(path)) {
+    return { data: MOCK_WORKSPACE_SETTINGS };
+  }
+
+  if (method === 'get' && /\/(v1\/)?workspaces\/[^/]+$/i.test(path)) {
+    const workspaceId = path.split('/').pop();
+    const workspace = MOCK_WORKSPACES.find((item) => item.id === workspaceId) ?? MOCK_WORKSPACES[0];
+
+    return {
+      data: {
+        ...workspace,
+        members: MOCK_WORKSPACE_MEMBERS,
+        settings: MOCK_WORKSPACE_SETTINGS,
+      },
+    };
   }
 
   if (method === 'get' && /\/(v1\/)?workspaces$/i.test(path)) {

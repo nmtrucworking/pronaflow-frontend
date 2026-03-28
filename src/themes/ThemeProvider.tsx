@@ -74,6 +74,8 @@ export function ThemeProvider({
       const root = document.documentElement;
       root.classList.remove('light', 'dark');
       root.classList.add(mode);
+
+      document.body.classList.add('legacy-dark-scope');
     }
   }, [mode]);
 

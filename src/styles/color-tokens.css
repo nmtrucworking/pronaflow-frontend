@@ -182,50 +182,220 @@
 
 /* ==================== DARK MODE VARIANTS ==================== */
 
-.dark {
-  .token-page-shell {
-    @apply bg-slate-900 text-slate-100;
-  }
+.dark .token-page-shell {
+  @apply bg-slate-900 text-slate-100;
+}
 
-  .token-page-header {
-    @apply bg-slate-900 border-slate-800;
-  }
+.dark .token-page-header {
+  @apply bg-slate-900 border-slate-800;
+}
 
-  .token-toolbar-group {
-    @apply bg-slate-800 border-slate-700;
-  }
+.dark .token-toolbar-group {
+  @apply bg-slate-800 border-slate-700;
+}
 
-  .token-card-base {
-    @apply bg-slate-900 text-slate-100 border-slate-700;
-  }
+.dark .token-card-base {
+  @apply bg-slate-900 text-slate-100 border-slate-700;
+}
 
-  .token-card-interactive {
-    @apply bg-slate-900 text-slate-100 border-slate-700 hover:bg-slate-800 hover:border-slate-600;
-  }
+.dark .token-card-interactive {
+  @apply bg-slate-900 text-slate-100 border-slate-700 hover:bg-slate-800 hover:border-slate-600;
+}
 
-  .token-input-base {
-    @apply bg-slate-800 text-slate-100 border-slate-600 placeholder-slate-400 focus:ring-emerald-500;
-  }
+.dark .token-input-base {
+  @apply bg-slate-800 text-slate-100 border-slate-600 placeholder-slate-400 focus:ring-emerald-500;
+}
 
-  .token-text-primary {
-    @apply text-slate-100;
-  }
+.dark .token-text-primary {
+  @apply text-slate-100;
+}
 
-  .token-text-secondary {
-    @apply text-slate-300;
-  }
+.dark .token-text-secondary {
+  @apply text-slate-300;
+}
 
-  .token-text-muted {
-    @apply text-slate-400;
-  }
+.dark .token-text-muted {
+  @apply text-slate-400;
+}
 
-  .token-badge-default {
-    @apply bg-slate-800 text-slate-200;
-  }
+.dark .token-badge-default {
+  @apply bg-slate-800 text-slate-200;
+}
 
-  .token-tag {
-    @apply bg-slate-800 border-slate-700 text-slate-200;
-  }
+.dark .token-tag {
+  @apply bg-slate-800 border-slate-700 text-slate-200;
+}
+
+/* ==================== LEGACY PAGE DARK COMPAT ==================== */
+
+.dark .legacy-dark-scope {
+  @apply bg-slate-950 text-slate-100;
+}
+
+.dark .legacy-dark-scope .bg-white {
+  @apply bg-slate-900;
+}
+
+.dark .legacy-dark-scope .bg-white\/80 {
+  @apply bg-slate-900/80;
+}
+
+.dark .legacy-dark-scope .bg-white\/60 {
+  @apply bg-slate-900/60;
+}
+
+.dark .legacy-dark-scope .bg-slate-50 {
+  @apply bg-slate-900;
+}
+
+.dark .legacy-dark-scope .bg-slate-50\/50 {
+  @apply bg-slate-900/60;
+}
+
+.dark .legacy-dark-scope .bg-slate-100 {
+  @apply bg-slate-800;
+}
+
+.dark .legacy-dark-scope .border-slate-100 {
+  @apply border-slate-800;
+}
+
+.dark .legacy-dark-scope .border-slate-200 {
+  @apply border-slate-700;
+}
+
+.dark .legacy-dark-scope .border-slate-300 {
+  @apply border-slate-600;
+}
+
+.dark .legacy-dark-scope .text-slate-900 {
+  @apply text-slate-100;
+}
+
+.dark .legacy-dark-scope .text-slate-800 {
+  @apply text-slate-100;
+}
+
+.dark .legacy-dark-scope .text-slate-700 {
+  @apply text-slate-200;
+}
+
+.dark .legacy-dark-scope .text-slate-600 {
+  @apply text-slate-300;
+}
+
+.dark .legacy-dark-scope .text-slate-500 {
+  @apply text-slate-400;
+}
+
+.dark .legacy-dark-scope .hover\:bg-slate-50:hover {
+  @apply bg-slate-800;
+}
+
+.dark .legacy-dark-scope .hover\:bg-white:hover {
+  @apply bg-slate-800;
+}
+
+.dark .legacy-dark-scope .hover\:text-slate-900:hover {
+  @apply text-slate-100;
+}
+
+.dark .legacy-dark-scope .hover\:border-slate-300:hover {
+  @apply border-slate-500;
+}
+
+.dark .legacy-dark-scope .bg-gray-50 {
+  @apply bg-slate-900;
+}
+
+.dark .legacy-dark-scope .bg-gray-100 {
+  @apply bg-slate-800;
+}
+
+.dark .legacy-dark-scope .border-gray-200 {
+  @apply border-slate-700;
+}
+
+.dark .legacy-dark-scope .border-gray-300 {
+  @apply border-slate-600;
+}
+
+.dark .legacy-dark-scope .text-gray-900 {
+  @apply text-slate-100;
+}
+
+.dark .legacy-dark-scope .text-gray-800 {
+  @apply text-slate-100;
+}
+
+.dark .legacy-dark-scope .text-gray-700 {
+  @apply text-slate-200;
+}
+
+.dark .legacy-dark-scope .text-gray-600 {
+  @apply text-slate-300;
+}
+
+.dark .legacy-dark-scope .text-gray-500 {
+  @apply text-slate-400;
+}
+
+.dark .legacy-dark-scope .text-gray-400 {
+  color: theme('colors.slate.500');
+}
+
+.dark .legacy-dark-scope .hover\:border-gray-300:hover {
+  @apply border-slate-500;
+}
+
+.dark .legacy-dark-scope .from-slate-50 {
+  --tw-gradient-from: rgb(15 23 42 / 1) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(15 23 42 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .legacy-dark-scope .to-white {
+  --tw-gradient-to: rgb(15 23 42 / 1) var(--tw-gradient-to-position);
+}
+
+.dark .legacy-dark-scope .bg-blue-50 {
+  @apply bg-blue-900/20;
+}
+
+.dark .legacy-dark-scope .bg-indigo-50 {
+  @apply bg-indigo-900/20;
+}
+
+.dark .legacy-dark-scope .bg-purple-50 {
+  @apply bg-purple-900/20;
+}
+
+.dark .legacy-dark-scope .bg-orange-50 {
+  @apply bg-orange-900/20;
+}
+
+.dark .legacy-dark-scope .bg-emerald-50 {
+  @apply bg-emerald-900/20;
+}
+
+.dark .legacy-dark-scope .bg-indigo-100 {
+  @apply bg-indigo-900/30;
+}
+
+.dark .legacy-dark-scope .text-blue-600 {
+  @apply text-blue-300;
+}
+
+.dark .legacy-dark-scope .text-indigo-600 {
+  @apply text-indigo-300;
+}
+
+.dark .legacy-dark-scope .text-indigo-700 {
+  @apply text-indigo-200;
+}
+
+.dark .legacy-dark-scope .text-orange-600 {
+  @apply text-orange-300;
 }
 
 /* ==================== UTILITY CLASSES FOR QUICK STYLING ==================== */

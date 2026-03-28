@@ -102,7 +102,7 @@ export default function TrashBinPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+    <div className="legacy-dark-scope min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <TrashHeader hasItems={items.length > 0} onEmptyTrash={handleEmptyTrash} />
 
       <main className="flex-1 px-8 py-8 max-w-7xl mx-auto w-full">

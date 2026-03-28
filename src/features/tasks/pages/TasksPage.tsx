@@ -131,7 +131,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50/50 text-slate-900 font-sans overflow-hidden">
+    <div className="legacy-dark-scope h-screen flex flex-col bg-slate-50/50 text-slate-900 font-sans overflow-hidden">
       {/* HEADER */}
       <header className="px-6 py-5 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 flex-shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

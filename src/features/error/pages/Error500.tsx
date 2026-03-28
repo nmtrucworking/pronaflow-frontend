@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, Home, ShieldAlert, Server } from 'lucide-react';
+import { RefreshCw, Home, Server } from 'lucide-react';
 import COLORS from '@/config/colors';
 import { ROUTES } from '@/routes/paths';
 
@@ -14,16 +14,6 @@ const App: React.FC = () => {
     gradB: COLORS.semantic.success[100],
     gradC: COLORS.semantic.success[100],
     gradD: COLORS.semantic.success[50],
-    serverGradStart: COLORS.ui.background.tertiary,
-    serverGradEnd: COLORS.ui.border.medium,
-    border: COLORS.ui.border.strong,
-    panelBg: COLORS.ui.background.primary,
-    lineBg: COLORS.ui.background.tertiary,
-    statusOk: COLORS.status.success,
-    issueBg: COLORS.semantic.error[50],
-    issueBorder: COLORS.semantic.error[100],
-    issueDot: COLORS.semantic.error[600],
-    issueLine: COLORS.semantic.error[100],
   } as const;
   
   // Định nghĩa các hiệu ứng chuyển động thông qua CSS Injection
@@ -39,12 +29,6 @@ const App: React.FC = () => {
       66% { transform: translate(-20px, 20px) scale(0.9); }
       100% { transform: translate(0px, 0px) scale(1); }
     }
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-1px, 0, 0); }
-      20%, 80% { transform: translate3d(2px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
-    }
     .bg-flow-animation {
       background: linear-gradient(-45deg, var(--pf-error500-grad-a), var(--pf-error500-grad-b), var(--pf-error500-grad-c), var(--pf-error500-grad-d));
       background-size: 400% 400%;
@@ -55,9 +39,6 @@ const App: React.FC = () => {
     }
     .animation-delay-2000 {
       animation-delay: 2s;
-    }
-    .hover-shake:hover {
-      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
     }
   `;
 
@@ -127,44 +108,27 @@ const App: React.FC = () => {
 
           <div className="mt-8 text-sm text-slate-400">
             Mã định danh lỗi: <span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">INTERNAL_SERVER_ERROR</span>
+            <div className="mt-3">
+              <a
+                href={`${ROUTES.help.status}#error-codes`}
+                className="inline-flex items-center text-emerald-700 hover:text-emerald-800 font-medium underline underline-offset-2"
+              >
+                Xem danh sách mã lỗi
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Khối minh họa kỹ thuật (SVG Server Diagnostics) */}
+        {/* Khối minh họa kỹ thuật (asset animation) */}
         <div className="w-full md:w-1/2 flex justify-center">
-          <div className="relative w-full max-w-md hover-shake cursor-help">
-            <svg viewBox="0 0 400 350" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto drop-shadow-xl">
-              <defs>
-                <linearGradient id="serverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" style={{ stopColor: uiColors.serverGradStart, stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: uiColors.serverGradEnd, stopOpacity: 1 }} />
-                </linearGradient>
-              </defs>
-
-              {/* Thân máy chủ */}
-              <rect x="50" y="50" width="300" height="250" rx="15" fill="url(#serverGrad)" stroke={uiColors.border} strokeWidth="2" />
-
-              {/* Phân vùng tài nguyên 1 */}
-              <rect x="70" y="80" width="260" height="40" rx="5" fill={uiColors.panelBg} stroke={uiColors.serverGradEnd} />
-              <circle cx="90" cy="100" r="4" fill={uiColors.statusOk} className="animate-ping" />
-              <rect x="110" y="96" width="200" height="8" rx="2" fill={uiColors.lineBg} />
-
-              {/* Phân vùng tài nguyên 2 */}
-              <rect x="70" y="140" width="260" height="40" rx="5" fill={uiColors.panelBg} stroke={uiColors.serverGradEnd} />
-              <circle cx="90" cy="160" r="4" fill={uiColors.statusOk} />
-              <rect x="110" y="156" width="200" height="8" rx="2" fill={uiColors.lineBg} />
-
-              {/* Phân vùng gặp sự cố */}
-              <rect x="70" y="200" width="260" height="40" rx="5" fill={uiColors.issueBg} stroke={uiColors.issueBorder} />
-              <circle cx="90" cy="220" r="4" fill={uiColors.issueDot} className="animate-pulse" />
-              <rect x="110" y="216" width="100" height="8" rx="2" fill={uiColors.issueLine} />
-
-              {/* Chỉ báo trạng thái cảnh báo */}
-              <g transform="translate(240, 230)">
-                <circle cx="40" cy="40" r="35" fill={uiColors.panelBg} stroke={uiColors.serverGradEnd} strokeWidth="4" />
-                <ShieldAlert className="w-10 h-10 text-amber-500 ml-4 mt-4" />
-              </g>
-            </svg>
+          <div className="relative w-full max-w-md cursor-help">
+            <img
+              src="/assets/error-500-server-animation.svg"
+              alt="Server diagnostics animation"
+              className="w-full h-auto drop-shadow-xl"
+              loading="eager"
+              decoding="async"
+            />
           </div>
         </div>
       </div>

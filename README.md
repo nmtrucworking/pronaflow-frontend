@@ -1,120 +1,99 @@
 # PronaFlow Frontend
 
-Hệ thống quản lý dự án và quy trình làm việc được xây dựng với React, TypeScript và Vite.
+Frontend application for PronaFlow project and workflow management platform, built with React, TypeScript, and Vite.
+
+## Overview
+
+This repository contains the UI layer of PronaFlow, focused on:
+
+- Project and task management workflows
+- Modular feature-based architecture
+- Backend and mock API runtime modes for development and UX testing
+- Comprehensive internal documentation under docs
 
 ## Tech Stack
 
-- **Framework:** React 18.3.1
-- **Language:** TypeScript 5.5.3
-- **Build Tool:** Vite 5.4.1
-- **Styling:** TailwindCSS 3.4.10
-- **State Management:** Redux Toolkit, Zustand
-- **Routing:** React Router DOM 7.13.0
-- **Form Handling:** React Hook Form + Zod
-- **UI Components:** Radix UI
-- **Data Fetching:** TanStack React Query
-- **i18n:** i18next
-- **Animation:** Framer Motion
+- React 18
+- TypeScript 5
+- Vite 5
+- Tailwind CSS 3
+- Redux Toolkit and Zustand
+- TanStack React Query
+- React Router
+- React Hook Form and Zod
+- Radix UI
+- Framer Motion
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Node.js (phiên bản 18 trở lên)
-- npm hoặc yarn
+- Node.js 18+
+- npm
 
-### Installation
+### Setup
 
 ```bash
-# Clone repository
 git clone <repository-url>
-
-# Di chuyển vào thư mục frontend
 cd frontend
-
-# Cài đặt dependencies
 npm install
+```
 
-# Chạy development server (backend thật)
+### Run
+
+```bash
+# Real backend mode
 npm run dev:backend
 
-# Chạy development server (mock API để test UI/UX)
+# Mock API mode (UI/UX testing)
 npm run dev:mock
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| npm run dev | Alias for backend mode (vite --mode backend) |
+| npm run dev:backend | Start dev server with real backend |
+| npm run dev:mock | Start dev server with mock API |
+| npm run build | Type-check and build for production |
+| npm run preview | Preview production build |
+| npm run lint | Run ESLint |
 
 ## Project Structure
 
 ```text
 frontend/
-├── docs/                    # Tài liệu dự án
-│   ├── deployment/         # Tài liệu triển khai
-│   ├── implementation/     # Tài liệu implementation
-│   ├── modules/           # Tài liệu modules
-│   ├── reports/           # Báo cáo dự án
-│   ├── frontend/          # Tài liệu kỹ thuật frontend
-│   └── backend/           # Tài liệu kỹ thuật backend
-├── public/                 # Static assets
-│   ├── assets/
-│   ├── branding/
-│   ├── defaults/
-│   ├── icons/
-│   └── previews/
-├── src/                    # Source code
-│   ├── components/        # React components
-│   ├── features/          # Feature modules
-│   ├── layouts/           # Layout components
-│   ├── routes/            # Routing configuration
-│   ├── store/             # Redux store
-│   ├── services/          # API services
-│   ├── hooks/             # Custom hooks
-│   ├── utils/             # Utility functions
-│   ├── types/             # TypeScript types
-│   ├── config/            # App configuration
-│   ├── styles/            # Global styles
-│   └── themes/            # Theme configuration
-├── index.html
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.js
-└── README.md
+	docs/             Project documentation and reports
+	public/           Static assets (branding, icons, previews)
+	src/
+		components/     Shared UI components
+		features/       Domain/feature modules
+		layouts/        App layout definitions
+		routes/         Route configuration
+		services/       API integration layer
+		store/          Global state (Redux)
+		hooks/          Reusable custom hooks
+		utils/          Utility functions
+		types/          Shared TypeScript types
+		styles/         Global styling
+		themes/         Theme setup
 ```
-
-## Available Scripts
-
-- `npm run dev` - Alias của backend mode (`vite --mode backend`)
-- `npm run dev:backend` - Chạy với API backend thật
-- `npm run dev:mock` - Chạy giả lập API để kiểm tra UI/UX
-- `npm run build` - Build production
-- `npm run preview` - Preview production build
-- `npm run lint` - Chạy ESLint
 
 ## Documentation
 
-Tài liệu chi tiết về dự án được tổ chức trong thư mục `docs/`:
-
-- **Deployment:** Tài liệu về quá trình triển khai
-- **Implementation:** Hướng dẫn implementation các modules
-- **Modules:** Chi tiết về từng module trong hệ thống
-- **Reports:** Báo cáo tiến độ và tổng kết
-- **Frontend/Backend:** Tài liệu kỹ thuật chi tiết
+- Main index: docs/INDEX.md
+- API docs: docs/api/API_DOCUMENTATION_INDEX.md
+- Implementation guide: docs/implementation/IMPLEMENTATION_GUIDE.md
+- Deployment notes: docs/deployment/DEPLOYMENT_SUMMARY.md
 
 ## Contributing
 
-1. Tạo branch mới từ `main`
-2. Commit changes với clear message
-3. Push lên repository
-4. Tạo Pull Request
+1. Create a branch from main.
+2. Keep PRs focused and descriptive.
+3. Ensure lint/build pass locally.
+4. Open a Pull Request using the provided template.
 
 ## License
 
-Private - PronaFlow Project
-
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Private repository. All rights reserved by the PronaFlow project owners.

@@ -147,7 +147,7 @@ function Popover({
     );
 }
 
-function ProjectTags({ tags }: { tags: string[] }) {
+function ProjectTags({ tags, onAddTag }: { tags: string[]; onAddTag?: () => void }) {
     return (
         <div className="flex flex-wrap items-center gap-2 mt-3">
             {tags.map((tag, idx) => (
@@ -156,7 +156,11 @@ function ProjectTags({ tags }: { tags: string[] }) {
                     {tag}
                 </span>
             ))}
-            <button className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-400 border border-dashed border-slate-300 hover:text-indigo-600 hover:border-indigo-300 transition-colors">
+            <button
+                type="button"
+                onClick={onAddTag}
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-400 border border-dashed border-slate-300 hover:text-indigo-600 hover:border-indigo-300 transition-colors"
+            >
                 <Plus className="w-3 h-3 mr-1" /> Thêm thẻ
             </button>
         </div>
@@ -217,6 +221,23 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean, onChange?: () =
     );
 }
 
+const PROJECT_TYPE_PRESETS: Record<ProjectType, {
+    label: string;
+    strategy: string;
+    warnings: string[];
+}> = {
+    AGILE: {
+        label: 'Agile (Linh hoạt)',
+        strategy: 'Ưu tiên vòng lặp ngắn, phản hồi nhanh và linh hoạt thay đổi phạm vi.',
+        warnings: ['Nhóm cần thống nhất nhịp Sprint và cách quản lý backlog trước khi chuyển đổi.'],
+    },
+    WATERFALL: {
+        label: 'Waterfall (Tuần tự)',
+        strategy: 'Ưu tiên timeline tuần tự, milestone rõ ràng và quy trình kiểm soát chặt.',
+        warnings: ['Nhóm cần rà soát baseline/dependency để tránh lệch kế hoạch khi chuyển đổi.'],
+    },
+};
+
 // --- 5. POPOVER MENUS ---
 
 function TaskActionsMenu() {
@@ -238,7 +259,7 @@ function TaskActionsMenu() {
     );
 }
 
-function ProjectStatusPopover({ currentStatus }: { currentStatus: ProjectStatus }) {
+function ProjectStatusPopover({ currentStatus, onStatusChange }: { currentStatus: ProjectStatus; onStatusChange?: (nextStatus: ProjectStatus) => void }) {
     const [isOpen, setIsOpen] = useState(false);
     const statuses: ProjectStatus[] = ['ON_HOLD', 'NOT_STARTED', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
     return (
@@ -255,7 +276,18 @@ function ProjectStatusPopover({ currentStatus }: { currentStatus: ProjectStatus 
                 <div className="py-1">
                     <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chuyển trạng thái</div>
                     {statuses.map(s => (
-                        <button key={s} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
+                        <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                                onStatusChange?.(s);
+                                setIsOpen(false);
+                            }}
+                            className={cn(
+                                "w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors rounded-md",
+                                s === currentStatus && "bg-indigo-50 text-indigo-700"
+                            )}
+                        >
                             <div className={cn("w-2 h-2 rounded-full", PROJECT_STATUS_CONFIG[s].color)}></div>
                             {PROJECT_STATUS_CONFIG[s].label}
                             {s === currentStatus && <Check className="w-3.5 h-3.5 ml-auto text-indigo-600" />}
@@ -267,12 +299,12 @@ function ProjectStatusPopover({ currentStatus }: { currentStatus: ProjectStatus 
     )
 }
 
-function ProjectPriorityPopover({ currentPriority }: { currentPriority: ProjectPriority }) {
+function ProjectPriorityPopover({ currentPriority, onPriorityChange }: { currentPriority: ProjectPriority; onPriorityChange?: (nextPriority: ProjectPriority) => void }) {
     const [isOpen, setIsOpen] = useState(false);
     const priorities: ProjectPriority[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
     return (
         <Popover
-            isOpen={isOpen} setIsOpen={setIsOpen} width="w-48"
+            isOpen={isOpen} setIsOpen={setIsOpen} align="start" width="w-52"
             trigger={
                 <button className={cn("inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border transition-all hover:brightness-95", PRIORITY_CONFIG[currentPriority].bg, PRIORITY_CONFIG[currentPriority].color, "border-transparent")}>
                     {PRIORITY_CONFIG[currentPriority].label}
@@ -282,7 +314,18 @@ function ProjectPriorityPopover({ currentPriority }: { currentPriority: ProjectP
                 <div className="py-1">
                     <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Độ ưu tiên</div>
                     {priorities.map(p => (
-                        <button key={p} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
+                        <button
+                            key={p}
+                            type="button"
+                            onClick={() => {
+                                onPriorityChange?.(p);
+                                setIsOpen(false);
+                            }}
+                            className={cn(
+                                "w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors rounded-md",
+                                p === currentPriority && "bg-indigo-50 text-indigo-700"
+                            )}
+                        >
                             <Flag className={cn("w-4 h-4", PRIORITY_CONFIG[p].color)} />
                             {PRIORITY_CONFIG[p].label}
                             {p === currentPriority && <Check className="w-3.5 h-3.5 ml-auto text-indigo-600" />}
@@ -297,13 +340,48 @@ function ProjectPriorityPopover({ currentPriority }: { currentPriority: ProjectP
 // --- 6. SUB-VIEW COMPONENTS ---
 
 function ProjectOverview({ project }: { project: Project }) {
+    const isAgile = project.type === 'AGILE';
+    const executionHighlights = isAgile
+        ? [
+            'Vận hành theo Sprint/Backlog với vòng lặp ngắn.',
+            'Ưu tiên phản hồi nhanh và điều chỉnh phạm vi liên tục.',
+            'Gantt chỉ đóng vai trò tham chiếu, không phải trục chính.',
+        ]
+        : [
+            'Triển khai tuần tự theo milestone và phụ thuộc rõ ràng.',
+            'Ưu tiên baseline, cổng kiểm soát và kế hoạch dài hạn.',
+            'Gantt là trục điều phối trung tâm cho timeline dự án.',
+        ];
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard label="Hoàn thành dự án" value={`${project.progress}%`} subtext="Tổng thể tiến độ" icon={Target} trend={12} colorClass="bg-indigo-100 text-indigo-600" />
-                <StatCard label="Tác vụ còn lại" value="18" subtext="8 việc đang thực thi" icon={Zap} colorClass="bg-purple-100 text-purple-600" />
-                <StatCard label="Quỹ thời gian" value="42 ngày" subtext="Đến mốc bàn giao kế tiếp" icon={Clock} colorClass="bg-sky-100 text-sky-600" />
-                <StatCard label="Chỉ số sức khỏe" value="Tốt" subtext="Tiến độ thực tế ổn định" icon={Activity} colorClass="bg-emerald-100 text-emerald-600" />
+                <StatCard label={isAgile ? 'Sprint đang chạy' : 'Milestone đang chạy'} value={isAgile ? 'Sprint 14' : 'Phase 3'} subtext={isAgile ? 'Còn 6 ngày để chốt sprint' : 'Còn 12 ngày đến mốc bàn giao'} icon={isAgile ? Zap : Layers} colorClass={isAgile ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'} />
+                <StatCard label={isAgile ? 'Backlog mở' : 'Task phụ thuộc'} value={isAgile ? '24' : '18'} subtext={isAgile ? '9 task cần refine' : '8 task có critical dependency'} icon={isAgile ? List : ArrowUpDown} colorClass="bg-sky-100 text-sky-600" />
+                <StatCard label="Chỉ số sức khỏe" value={isAgile ? 'Ổn định' : 'Kiểm soát tốt'} subtext={isAgile ? 'Burndown bám sát kế hoạch' : 'Timeline thực tế lệch +2%'} icon={Activity} colorClass="bg-emerald-100 text-emerald-600" />
+            </div>
+            <div className={cn(
+                "rounded-2xl border p-5",
+                isAgile ? "bg-indigo-50 border-indigo-200" : "bg-blue-50 border-blue-200"
+            )}>
+                <div className="flex items-start gap-3">
+                    <div className={cn("p-2 rounded-lg", isAgile ? "bg-indigo-100 text-indigo-700" : "bg-blue-100 text-blue-700")}>
+                        {isAgile ? <Zap className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
+                    </div>
+                    <div className="space-y-2">
+                        <h4 className="text-sm font-bold text-slate-900">Chế độ vận hành hiện tại: {PROJECT_TYPE_PRESETS[project.type].label}</h4>
+                        <p className="text-xs text-slate-700 leading-relaxed">{PROJECT_TYPE_PRESETS[project.type].strategy}</p>
+                        <ul className="space-y-1">
+                            {executionHighlights.map(item => (
+                                <li key={item} className="text-xs text-slate-700 flex items-start gap-2">
+                                    <Check className="w-3.5 h-3.5 mt-0.5 text-emerald-600" />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -430,8 +508,33 @@ function ProjectTaskList() {
     );
 }
 
-function ProjectSettings({ project }: { project: Project }) {
+function ProjectSettings({ project, onProjectTypeChange }: { project: Project; onProjectTypeChange?: (nextType: ProjectType) => void }) {
     const [activeSubTab, setActiveSubTab] = useState<'GENERAL' | 'MEMBERS' | 'FEATURES' | 'NOTIFICATIONS'>('GENERAL');
+    const [selectedProjectType, setSelectedProjectType] = useState<ProjectType>(project.type);
+    const [pendingProjectType, setPendingProjectType] = useState<ProjectType | null>(null);
+
+    useEffect(() => {
+        setSelectedProjectType(project.type);
+        setPendingProjectType(null);
+    }, [project.type]);
+
+    const requestProjectTypeChange = (nextType: ProjectType) => {
+        if (nextType === selectedProjectType) {
+            return;
+        }
+
+        setPendingProjectType(nextType);
+    };
+
+    const confirmProjectTypeChange = () => {
+        if (!pendingProjectType) {
+            return;
+        }
+
+        setSelectedProjectType(pendingProjectType);
+        onProjectTypeChange?.(pendingProjectType);
+        setPendingProjectType(null);
+    };
 
     const subTabs = [
         { id: 'GENERAL', label: 'Thông tin chung', icon: Settings },
@@ -496,10 +599,21 @@ function ProjectSettings({ project }: { project: Project }) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Loại hình thực thi</label>
-                                        <select defaultValue={project.type} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                                        <select
+                                            value={selectedProjectType}
+                                            onChange={(e) => requestProjectTypeChange(e.target.value as ProjectType)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"
+                                        >
                                             <option value="AGILE">Agile (Linh hoạt)</option>
                                             <option value="WATERFALL">Waterfall (Tuần tự)</option>
                                         </select>
+                                        <p className="text-xs text-slate-500 leading-relaxed">
+                                            {PROJECT_TYPE_PRESETS[selectedProjectType].strategy}
+                                        </p>
+                                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                                            <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Lưu ý khi chuyển đổi</p>
+                                            <p className="text-xs text-amber-900 mt-1">{PROJECT_TYPE_PRESETS[selectedProjectType].warnings[0]}</p>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Độ ưu tiên mặc định</label>
@@ -589,8 +703,8 @@ function ProjectSettings({ project }: { project: Project }) {
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                                 {[
-                                    { title: 'Quản lý Sprint (Agile)', desc: 'Kích hoạt Backlog và Burndown Chart.', icon: Zap, active: project.type === 'AGILE' },
-                                    { title: 'Biểu đồ Gantt (Timeline)', desc: 'Theo dõi tiến độ trên trục thời gian.', icon: CalendarRange, active: true },
+                                    { title: 'Quản lý Sprint (Agile)', desc: 'Kích hoạt Backlog và Burndown Chart.', icon: Zap, active: selectedProjectType === 'AGILE' },
+                                    { title: 'Biểu đồ Gantt (Timeline)', desc: 'Theo dõi tiến độ trên trục thời gian.', icon: CalendarRange, active: selectedProjectType === 'WATERFALL' },
                                     { title: 'Module QA & Testing', desc: 'Quản lý Test Case và Bug Tracking.', icon: Bug, active: false },
                                     { title: 'Theo dõi thời gian', desc: 'Cho phép thành viên log thời gian thực hiện.', icon: Clock, active: true },
                                 ].map((f, i) => (
@@ -629,6 +743,43 @@ function ProjectSettings({ project }: { project: Project }) {
                     )}
                 </div>
             </div>
+
+            {pendingProjectType && (
+                <div className="fixed inset-0 z-[70] bg-slate-900/45 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+                        <div>
+                            <h4 className="text-lg font-bold text-slate-900">Xác nhận chuyển đổi loại dự án</h4>
+                            <p className="text-sm text-slate-600 mt-1">
+                                Bạn đang chuyển từ <span className="font-semibold">{PROJECT_TYPE_PRESETS[selectedProjectType].label}</span> sang <span className="font-semibold">{PROJECT_TYPE_PRESETS[pendingProjectType].label}</span>.
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <p className="text-xs text-amber-900 flex items-start gap-2">
+                                <AlertTriangle className="w-3.5 h-3.5 mt-0.5" />
+                                Việc chuyển đổi sẽ thay đổi hành vi module ưu tiên trong dự án. Hãy xác nhận đội đã thống nhất quy trình.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setPendingProjectType(null)}
+                                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmProjectTypeChange}
+                                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
+                            >
+                                Xác nhận chuyển đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -653,12 +804,12 @@ export default function ProjectDetails({
     const [currentProject, setCurrentProject] = useState<Project>(initialProject || MOCK_PROJECTS[0]);
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'GANTT' | 'LIST' | 'NOTES' | 'DOCS' | 'SETTINGS'>(externalActiveTab || 'OVERVIEW');
 
-    // Update currentProject when initialProject changes
+    // Update currentProject when initialProject identity changes
     useEffect(() => {
-        if (initialProject) {
+        if (initialProject && initialProject.id !== currentProject.id) {
             setCurrentProject(initialProject);
         }
-    }, [initialProject]);
+    }, [initialProject?.id]);
 
     // Sync activeTab with external prop
     useEffect(() => {
@@ -670,6 +821,61 @@ export default function ProjectDetails({
     const handleTabChange = (tab: 'OVERVIEW' | 'GANTT' | 'LIST' | 'NOTES' | 'DOCS' | 'SETTINGS') => {
         setActiveTab(tab);
         onTabChange?.(tab);
+    };
+
+    const handleProjectTypeChange = (nextType: ProjectType) => {
+        setCurrentProject(prev => ({ ...prev, type: nextType }));
+    };
+
+    const handleProjectStatusChange = (nextStatus: ProjectStatus) => {
+        setCurrentProject(prev => ({ ...prev, status: nextStatus }));
+    };
+
+    const handleProjectPriorityChange = (nextPriority: ProjectPriority) => {
+        setCurrentProject(prev => ({ ...prev, priority: nextPriority }));
+    };
+
+    const handleAddTag = () => {
+        const tagName = window.prompt('Nhập tên thẻ mới');
+        if (!tagName) {
+            return;
+        }
+
+        const normalizedTag = tagName.trim();
+        if (!normalizedTag) {
+            return;
+        }
+
+        setCurrentProject(prev => {
+            if (prev.tags.some(tag => tag.toLowerCase() === normalizedTag.toLowerCase())) {
+                return prev;
+            }
+
+            return { ...prev, tags: [...prev.tags, normalizedTag] };
+        });
+    };
+
+    const handleExportAnalytics = () => {
+        const payload = {
+            projectId: currentProject.id,
+            projectKey: currentProject.key,
+            projectName: currentProject.name,
+            projectType: currentProject.type,
+            status: currentProject.status,
+            priority: currentProject.priority,
+            progress: currentProject.progress,
+            generatedAt: new Date().toISOString(),
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${currentProject.key.toLowerCase()}-analytics-report.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     const toggleDemoProject = () => setCurrentProject(prev => 
@@ -724,14 +930,26 @@ export default function ProjectDetails({
                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <ProjectStatusPopover currentStatus={currentProject.status} />
+                                    <ProjectStatusPopover currentStatus={currentProject.status} onStatusChange={handleProjectStatusChange} />
                                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{currentProject.name}</h1>
+                                    <span className={cn(
+                                        "inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border",
+                                        currentProject.type === 'AGILE'
+                                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                            : "bg-blue-50 text-blue-700 border-blue-200"
+                                    )}>
+                                        {currentProject.type === 'AGILE' ? <Zap className="w-3.5 h-3.5" /> : <Layers className="w-3.5 h-3.5" />}
+                                        {PROJECT_TYPE_PRESETS[currentProject.type].label}
+                                    </span>
                                 </div>
                                 <p className="text-slate-500 max-w-3xl text-sm leading-relaxed mb-3">{currentProject.description}</p>
+                                <p className="text-xs text-slate-600 mb-3">
+                                    {PROJECT_TYPE_PRESETS[currentProject.type].strategy}
+                                </p>
                                 <div className="flex items-center gap-4">
-                                    <ProjectPriorityPopover currentPriority={currentProject.priority} />
+                                    <ProjectPriorityPopover currentPriority={currentProject.priority} onPriorityChange={handleProjectPriorityChange} />
                                     <div className="h-3 w-px bg-slate-200"></div>
-                                    <ProjectTags tags={currentProject.tags} />
+                                    <ProjectTags tags={currentProject.tags} onAddTag={handleAddTag} />
                                 </div>
                             </div>
 
@@ -755,6 +973,7 @@ export default function ProjectDetails({
                                 </div>
                                 <button
                                     type="button"
+                                    onClick={handleExportAnalytics}
                                     className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow-sm hover:bg-indigo-700 transition-colors"
                                 >
                                     <Download className="w-4 h-4" />
@@ -831,7 +1050,7 @@ export default function ProjectDetails({
                         </div>
                     )}
 
-                    {activeTab === 'SETTINGS' && <ProjectSettings project={currentProject} />}
+                    {activeTab === 'SETTINGS' && <ProjectSettings project={currentProject} onProjectTypeChange={handleProjectTypeChange} />}
                 </div>
             </main>
         </div>

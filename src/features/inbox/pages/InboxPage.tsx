@@ -61,7 +61,7 @@ export default function InboxPage() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
+    <div className="legacy-dark-scope flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
       {/* LEFT PANE: Notification List */}
       <div
         className={`${

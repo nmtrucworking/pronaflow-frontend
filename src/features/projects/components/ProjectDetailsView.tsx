@@ -11,7 +11,7 @@ export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({ project,
   if (!project) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="legacy-dark-scope h-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
       <ProjectDetails project={project} onBack={onBack} />
     </div>
   );

@@ -95,27 +95,25 @@
 }
 
 /* Dark Mode Color Overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* ==================== DARK MODE TEXT ==================== */
-    --color-text-primary: theme('colors.slate.50');
-    --color-text-secondary: theme('colors.slate.200');
-    --color-text-muted: theme('colors.slate.400');
-    --color-text-inverse: theme('colors.slate.900');
+:root.dark {
+  /* ==================== DARK MODE TEXT ==================== */
+  --color-text-primary: theme('colors.slate.50');
+  --color-text-secondary: theme('colors.slate.200');
+  --color-text-muted: theme('colors.slate.400');
+  --color-text-inverse: theme('colors.slate.900');
 
-    /* ==================== DARK MODE BACKGROUNDS ==================== */
-    --color-bg-primary: theme('colors.slate.900');
-    --color-bg-secondary: theme('colors.slate.800');
-    --color-bg-tertiary: theme('colors.slate.700');
-    --color-bg-modal: rgba(15, 23, 42, 0.95);
-    --color-bg-overlay: rgba(0, 0, 0, 0.8);
+  /* ==================== DARK MODE BACKGROUNDS ==================== */
+  --color-bg-primary: theme('colors.slate.900');
+  --color-bg-secondary: theme('colors.slate.800');
+  --color-bg-tertiary: theme('colors.slate.700');
+  --color-bg-modal: rgba(15, 23, 42, 0.95);
+  --color-bg-overlay: rgba(0, 0, 0, 0.8);
 
-    /* ==================== DARK MODE BORDERS ==================== */
-    --color-border-light: theme('colors.slate.700');
-    --color-border-medium: theme('colors.slate.600');
-    --color-border-strong: theme('colors.slate.500');
-    --color-border-focus: theme('colors.emerald.500');
-  }
+  /* ==================== DARK MODE BORDERS ==================== */
+  --color-border-light: theme('colors.slate.700');
+  --color-border-medium: theme('colors.slate.600');
+  --color-border-strong: theme('colors.slate.500');
+  --color-border-focus: theme('colors.emerald.500');
 }
 
 /* Base Layer Customizations */
@@ -127,7 +125,7 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 font-sans text-base leading-6;
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans text-base leading-6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -135,7 +133,7 @@
 
   /* Typography Reset */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-slate-900 tracking-tight;
+    @apply font-semibold text-slate-900 dark:text-slate-100 tracking-tight;
   }
 
   h1 { @apply text-3xl leading-tight; }

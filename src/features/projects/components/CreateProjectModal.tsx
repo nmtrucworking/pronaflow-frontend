@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Zap, Layers } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { ProjectType, ProjectPriority } from '@/types/project';
 
@@ -14,6 +15,32 @@ interface CreateProjectModalProps {
     priority: ProjectPriority;
   }) => void;
 }
+
+const PROJECT_TYPE_OPTIONS: Array<{
+  value: ProjectType;
+  label: string;
+  icon: typeof Zap;
+  title: string;
+  description: string;
+  hints: string[];
+}> = [
+  {
+    value: 'AGILE',
+    label: '🔄 Agile',
+    icon: Zap,
+    title: 'Agile - linh hoạt theo sprint',
+    description: 'Phù hợp team cần phản hồi nhanh, chia nhỏ công việc và cập nhật liên tục.',
+    hints: ['Ưu tiên tốc độ triển khai', 'Dễ thay đổi scope giữa các vòng lặp'],
+  },
+  {
+    value: 'WATERFALL',
+    label: '📊 Waterfall',
+    icon: Layers,
+    title: 'Waterfall - tuần tự theo kế hoạch',
+    description: 'Phù hợp dự án có phạm vi ổn định, cần mốc kiểm soát và kế hoạch dài hạn.',
+    hints: ['Rõ timeline & phụ thuộc', 'Dễ kiểm soát baseline và phê duyệt'],
+  },
+];
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   open,
@@ -151,26 +178,65 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 <label className="block text-sm font-semibold text-slate-900">
                   Loại dự án
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { value: 'AGILE', label: '🔄 Agile', icon: Zap },
-                    { value: 'WATERFALL', label: '📊 Waterfall', icon: Layers },
-                  ].map(({ value, label, icon: Icon }) => (
+                <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+                  {PROJECT_TYPE_OPTIONS.map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, type: value as ProjectType }))}
                       className={cn(
-                        "relative px-4 py-3 rounded-lg border-2 transition-all duration-200 flex items-center gap-2 font-medium text-sm",
+                        "relative overflow-hidden px-4 py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm",
                         formData.type === value
-                          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                          ? "text-indigo-700"
+                          : "text-slate-600 hover:text-slate-800"
                       )}
                     >
-                      <Icon className="w-4 h-4" />
-                      {label}
+                      {formData.type === value && (
+                        <motion.span
+                          layoutId="active-project-type"
+                          className="absolute inset-0 rounded-lg border border-indigo-200 bg-white shadow-sm"
+                          transition={{ type: 'spring', stiffness: 360, damping: 30 }}
+                        />
+                      )}
+
+                      <motion.span
+                        className="relative z-10 inline-flex items-center gap-2"
+                        animate={{ y: formData.type === value ? 0 : 0.5, scale: formData.type === value ? 1 : 0.98 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {label}
+                      </motion.span>
                     </button>
                   ))}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 overflow-hidden">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {PROJECT_TYPE_OPTIONS.filter(option => option.value === formData.type).map(option => (
+                      <motion.div
+                        key={option.value}
+                        initial={{ opacity: 0, y: 6, filter: 'blur(2px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, y: -6, filter: 'blur(2px)' }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="space-y-2"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">{option.title}</p>
+                        <p className="text-xs text-slate-600 leading-relaxed">{option.description}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {option.hints.map(hint => (
+                            <span
+                              key={hint}
+                              className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600"
+                            >
+                              {hint}
+                            </span>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
 

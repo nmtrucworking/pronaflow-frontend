@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -52,6 +52,10 @@ import { twMerge } from 'tailwind-merge';
 // Import Module 9 Components
 import AccessibilityPanel from '@/features/personalization/components/AccessibilityPanel';
 import DashboardCustomizer from '@/features/personalization/components/DashboardCustomizer';
+import { useTheme } from '@/themes/ThemeProvider';
+
+const SETTINGS_TAB_IDS = ['profile', 'security', 'preferences', 'notifications', 'accessibility', 'dashboard', 'shortcuts'] as const;
+type SettingsTabId = (typeof SETTINGS_TAB_IDS)[number];
 
 // --- UTILS ---
 function cn(...inputs: ClassValue[]) {
@@ -476,9 +480,198 @@ const ProfileSettings = () => {
  * 2. Preferences Tab (Theme & Language)
  */
 const PreferenceSettings = () => {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const { preference, setTheme } = useTheme();
+  const [theme, setThemeSelection] = useState<'light' | 'dark' | 'system'>(preference);
   const [colorMode, setColorMode] = useState('default');
   const [fontScale, setFontScale] = useState(100);
+  const [language, setLanguage] = useState('vi-VN');
+  const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
+  const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+  const [timeFormat, setTimeFormat] = useState<'24h' | '12h'>('24h');
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+  const [sidebarAutoCollapse, setSidebarAutoCollapse] = useState(false);
+  const [startWeek, setStartWeek] = useState<'monday' | 'sunday' | 'saturday'>('monday');
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const colorModePreset: Record<string, {
+    label: string;
+    hint: string;
+    shellClass: string;
+    toneClass: string;
+  }> = {
+    default: {
+      label: 'Mặc định',
+      hint: 'Màu hiển thị cân bằng theo thiết kế hệ thống.',
+      shellClass: 'from-slate-50 to-white border-slate-200',
+      toneClass: 'bg-indigo-500',
+    },
+    protanopia: {
+      label: 'Mù màu đỏ (Protanopia)',
+      hint: 'Giảm nhầm lẫn giữa dải đỏ/xanh bằng tăng tương phản nhánh lạnh.',
+      shellClass: 'from-sky-50 to-cyan-50 border-sky-200',
+      toneClass: 'bg-cyan-600',
+    },
+    deuteranopia: {
+      label: 'Mù màu lục (Deuteranopia)',
+      hint: 'Tăng phân tách dải xanh lá để nhận biết trạng thái rõ hơn.',
+      shellClass: 'from-amber-50 to-slate-50 border-amber-200',
+      toneClass: 'bg-amber-600',
+    },
+    tritanopia: {
+      label: 'Mù màu lam (Tritanopia)',
+      hint: 'Điều chỉnh dải xanh lam/tím theo tông ấm dễ phân biệt hơn.',
+      shellClass: 'from-orange-50 to-rose-50 border-orange-200',
+      toneClass: 'bg-orange-600',
+    },
+    high_contrast: {
+      label: 'Độ tương phản cao',
+      hint: 'Đẩy mạnh tương phản chữ và nền để tăng khả năng đọc.',
+      shellClass: 'from-slate-900 to-black border-slate-700',
+      toneClass: 'bg-emerald-400',
+    },
+  };
+
+  useEffect(() => {
+    setThemeSelection(preference);
+  }, [preference]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('pronaflow-preferences');
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored);
+      setColorMode(parsed.colorMode ?? 'default');
+      setFontScale(parsed.fontScale ?? 100);
+      setLanguage(parsed.language ?? 'vi-VN');
+      setTimezone(parsed.timezone ?? 'Asia/Ho_Chi_Minh');
+      setDateFormat(parsed.dateFormat ?? 'DD/MM/YYYY');
+      setTimeFormat(parsed.timeFormat === '12h' ? '12h' : '24h');
+      setDensity(parsed.density === 'compact' ? 'compact' : 'comfortable');
+      setSidebarAutoCollapse(Boolean(parsed.sidebarAutoCollapse));
+      setStartWeek(parsed.startWeek === 'sunday' || parsed.startWeek === 'saturday' ? parsed.startWeek : 'monday');
+    } catch {
+      // ignore corrupted local storage
+    }
+  }, []);
+
+  useEffect(() => {
+    setTheme(theme);
+  }, [theme, setTheme]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const body = document.body;
+    const previousFilter = body.style.filter;
+    const previousTransition = body.style.transition;
+
+    const modeFilterMap: Record<string, string> = {
+      default: '',
+      protanopia: 'contrast(1.04) saturate(0.86) hue-rotate(-14deg)',
+      deuteranopia: 'contrast(1.05) saturate(0.8) hue-rotate(22deg)',
+      tritanopia: 'contrast(1.05) saturate(0.84) hue-rotate(104deg)',
+      high_contrast: 'contrast(1.2) saturate(1.12)',
+    };
+
+    body.style.transition = 'filter 240ms ease';
+    body.style.filter = modeFilterMap[colorMode] ?? '';
+
+    return () => {
+      body.style.filter = previousFilter;
+      body.style.transition = previousTransition;
+    };
+  }, [colorMode]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const root = document.documentElement;
+    const previousFontSize = root.style.fontSize;
+    root.style.fontSize = `${fontScale}%`;
+
+    return () => {
+      root.style.fontSize = previousFontSize;
+    };
+  }, [fontScale]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const root = document.documentElement;
+    root.setAttribute('lang', language);
+    root.setAttribute('data-density', density);
+
+    window.dispatchEvent(new CustomEvent('pronaflow-preferences-updated', {
+      detail: {
+        density,
+        sidebarAutoCollapse,
+        language,
+        timezone,
+        dateFormat,
+        timeFormat,
+        startWeek,
+        fontScale,
+      },
+    }));
+  }, [density, sidebarAutoCollapse, language, timezone, dateFormat, timeFormat, startWeek, fontScale]);
+
+  const previewDateTime = useMemo(() => {
+    const sampleDate = new Date('2026-03-01T14:35:00.000Z');
+
+    const dateParts = new Intl.DateTimeFormat(language, {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(sampleDate);
+
+    const getPart = (type: 'day' | 'month' | 'year') => dateParts.find((part) => part.type === type)?.value ?? '--';
+    const day = getPart('day');
+    const month = getPart('month');
+    const year = getPart('year');
+
+    const formattedDate =
+      dateFormat === 'MM/DD/YYYY'
+        ? `${month}/${day}/${year}`
+        : dateFormat === 'YYYY-MM-DD'
+          ? `${year}-${month}-${day}`
+          : `${day}/${month}/${year}`;
+
+    const formattedTime = new Intl.DateTimeFormat(language, {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: timeFormat === '12h',
+    }).format(sampleDate);
+
+    return { formattedDate, formattedTime };
+  }, [language, timezone, dateFormat, timeFormat]);
+
+  const handleSavePreferences = () => {
+    setSaveState('saving');
+
+    const payload = {
+      theme,
+      colorMode,
+      fontScale,
+      language,
+      timezone,
+      dateFormat,
+      timeFormat,
+      density,
+      sidebarAutoCollapse,
+      startWeek,
+      savedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem('pronaflow-preferences', JSON.stringify(payload));
+
+    setTimeout(() => {
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 1500);
+    }, 350);
+  };
 
   return (
     <div className="max-w-2xl animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
@@ -499,7 +692,12 @@ const PreferenceSettings = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setTheme(item.id as any)}
+                  type="button"
+                  onClick={() => {
+                    const nextTheme = item.id as 'light' | 'dark' | 'system';
+                    setThemeSelection(nextTheme);
+                    setTheme(nextTheme);
+                  }}
                   className={cn(
                     "flex flex-col items-center p-3 rounded-xl border-2 transition-all active:scale-95 relative group",
                     isActive 
@@ -570,6 +768,46 @@ const PreferenceSettings = () => {
                   }
                 </div>
               )}
+
+              <div className={cn(
+                "mt-3 rounded-xl border bg-gradient-to-br p-3 transition-all",
+                colorModePreset[colorMode]?.shellClass ?? colorModePreset.default.shellClass
+              )}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className={cn("text-xs font-semibold", colorMode === 'high_contrast' ? 'text-white' : 'text-slate-700')}>
+                    Preview: {colorModePreset[colorMode]?.label ?? colorModePreset.default.label}
+                  </p>
+                  <span className={cn(
+                    "text-[10px] px-2 py-0.5 rounded-full font-medium border",
+                    colorMode === 'high_contrast'
+                      ? 'bg-white/10 text-white border-white/30'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  )}>
+                    UX Mode
+                  </span>
+                </div>
+
+                <div className={cn(
+                  "rounded-lg p-3 border",
+                  colorMode === 'high_contrast'
+                    ? 'bg-slate-900 border-slate-700'
+                    : 'bg-white border-slate-200'
+                )}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("w-2.5 h-2.5 rounded-full", colorModePreset[colorMode]?.toneClass ?? 'bg-indigo-500')} />
+                      <p className={cn("text-xs font-medium", colorMode === 'high_contrast' ? 'text-slate-100' : 'text-slate-700')}>Task trạng thái ưu tiên</p>
+                    </div>
+                    <p className={cn("text-[11px]", colorMode === 'high_contrast' ? 'text-slate-300' : 'text-slate-500')}>97%</p>
+                  </div>
+                  <div className={cn("h-1.5 rounded-full overflow-hidden", colorMode === 'high_contrast' ? 'bg-slate-700' : 'bg-slate-100')}>
+                    <div className={cn("h-full rounded-full", colorModePreset[colorMode]?.toneClass ?? 'bg-indigo-500')} style={{ width: '68%' }} />
+                  </div>
+                  <p className={cn("text-[11px] mt-2 leading-relaxed", colorMode === 'high_contrast' ? 'text-slate-300' : 'text-slate-500')}>
+                    {colorModePreset[colorMode]?.hint ?? colorModePreset.default.hint}
+                  </p>
+                </div>
+              </div>
             </div>
           </InputGroup>
 
@@ -592,6 +830,9 @@ const PreferenceSettings = () => {
               <span className="text-lg text-slate-900 dark:text-white font-bold">A</span>
             </div>
             <p className="text-[11px] text-slate-500">Điều chỉnh kích thước văn bản để dễ đọc hơn trên các thiết bị màn hình nhỏ.</p>
+            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Preview: văn bản toàn hệ thống đang hiển thị theo {fontScale}%.</p>
+            </div>
           </div>
         </div>
 
@@ -609,6 +850,8 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
                   className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="vi-VN">🇻🇳 Tiếng Việt</option>
@@ -627,6 +870,8 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
                   className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="Asia/Ho_Chi_Minh">(GMT+7) Ho Chi Minh</option>
@@ -648,6 +893,8 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
+                  value={dateFormat}
+                  onChange={(e) => setDateFormat(e.target.value)}
                   className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="DD/MM/YYYY">DD/MM/YYYY (03/02/2026)</option>
@@ -664,6 +911,8 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <select 
+                  value={timeFormat}
+                  onChange={(e) => setTimeFormat(e.target.value as '24h' | '12h')}
                   className="w-full pl-3 pr-8 py-2.5 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 dark:focus:border-indigo-500 cursor-pointer shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                 >
                   <option value="24h">24 giờ (14:30)</option>
@@ -672,6 +921,12 @@ const PreferenceSettings = () => {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </InputGroup>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-3">
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Preview định dạng hiện tại</p>
+            <p className="text-sm text-slate-900 dark:text-slate-100 font-medium">{previewDateTime.formattedDate} • {previewDateTime.formattedTime}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{language} • {timezone} • {dateFormat} • {timeFormat}</p>
           </div>
         </div>
 
@@ -690,11 +945,11 @@ const PreferenceSettings = () => {
               <div className="relative">
                 <div className="flex items-center space-x-4 h-[38px]">
                   <label className="flex items-center space-x-2 cursor-pointer group">
-                    <input type="radio" name="density" className="accent-indigo-600 w-4 h-4" defaultChecked />
+                    <input type="radio" name="density" value="comfortable" checked={density === 'comfortable'} onChange={() => setDensity('comfortable')} className="accent-indigo-600 w-4 h-4" />
                     <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">Thoải mái</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer group">
-                    <input type="radio" name="density" className="accent-indigo-600 w-4 h-4" />
+                    <input type="radio" name="density" value="compact" checked={density === 'compact'} onChange={() => setDensity('compact')} className="accent-indigo-600 w-4 h-4" />
                     <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">Thu gọn</span>
                   </label>
                 </div>
@@ -708,11 +963,15 @@ const PreferenceSettings = () => {
             >
               <div className="flex items-center justify-between h-[38px]">
                 <span className="text-sm text-slate-500">Tự động thu gọn</span>
-                <Switch.Root className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer" defaultChecked={false}>
+                <Switch.Root checked={sidebarAutoCollapse} onCheckedChange={setSidebarAutoCollapse} className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer">
                   <Switch.Thumb className="block w-[16px] h-[16px] bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
                 </Switch.Root>
               </div>
             </InputGroup>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-3 text-[11px] text-slate-600 dark:text-slate-300">
+            Đang áp dụng: mật độ <span className="font-semibold">{density === 'compact' ? 'Thu gọn' : 'Thoải mái'}</span> • Sidebar tự thu gọn <span className="font-semibold">{sidebarAutoCollapse ? 'Bật' : 'Tắt'}</span>
           </div>
         </div>
 
@@ -730,7 +989,7 @@ const PreferenceSettings = () => {
             >
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <select className="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer">
+                <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer">
                   <option>Tiếng Việt (Vietnam)</option>
                   <option>English (US)</option>
                   <option>日本語 (Japan)</option>
@@ -741,7 +1000,7 @@ const PreferenceSettings = () => {
 
             <InputGroup label="Định dạng ngày" id="date_format">
               <div className="relative">
-                <select className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer">
+                <select value={dateFormat.toLowerCase()} onChange={(e) => setDateFormat(e.target.value.toUpperCase())} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer">
                   <option value="dd/mm/yyyy">DD/MM/YYYY (31/01/2024)</option>
                   <option value="mm/dd/yyyy">MM/DD/YYYY (01/31/2024)</option>
                   <option value="yyyy-mm-dd">YYYY-MM-DD (2024-01-31)</option>
@@ -752,7 +1011,7 @@ const PreferenceSettings = () => {
 
             <InputGroup label="Ngày bắt đầu tuần" id="start_week">
               <div className="relative">
-                <select className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer">
+                <select value={startWeek} onChange={(e) => setStartWeek(e.target.value as 'monday' | 'sunday' | 'saturday')} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer">
                   <option value="monday">Thứ Hai</option>
                   <option value="sunday">Chủ Nhật</option>
                   <option value="saturday">Thứ Bảy</option>
@@ -765,17 +1024,28 @@ const PreferenceSettings = () => {
               <div className="relative">
                 <div className="flex items-center space-x-4 h-[38px]">
                   <label className="flex items-center space-x-2 cursor-pointer group">
-                    <input type="radio" name="time_fmt" className="accent-indigo-600 w-4 h-4" defaultChecked />
+                    <input type="radio" name="time_fmt" value="24h" checked={timeFormat === '24h'} onChange={() => setTimeFormat('24h')} className="accent-indigo-600 w-4 h-4" />
                     <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">24 giờ</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer group">
-                    <input type="radio" name="time_fmt" className="accent-indigo-600 w-4 h-4" />
+                    <input type="radio" name="time_fmt" value="12h" checked={timeFormat === '12h'} onChange={() => setTimeFormat('12h')} className="accent-indigo-600 w-4 h-4" />
                     <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">12 giờ (AM/PM)</span>
                   </label>
                 </div>
               </div>
             </InputGroup>
           </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={handleSavePreferences}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+          >
+            {saveState === 'saving' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+            {saveState === 'saving' ? 'Đang lưu...' : saveState === 'saved' ? 'Đã lưu' : 'Lưu tùy chọn'}
+          </button>
         </div>
       </div>
     </div>
@@ -1174,7 +1444,7 @@ const NotificationSettings = () => {
 // --- MAIN LAYOUT COMPONENT ---
 
 export default function GeneralSettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState<SettingsTabId>('profile');
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Navigation Items
@@ -1192,20 +1462,27 @@ export default function GeneralSettingsPage() {
     const tabFromQuery = searchParams.get('tab');
     if (!tabFromQuery) return;
 
-    const isValidTab = navItems.some((item) => item.id === tabFromQuery);
-    if (isValidTab && tabFromQuery !== activeTab) {
-      setActiveTab(tabFromQuery);
+    if ((SETTINGS_TAB_IDS as readonly string[]).includes(tabFromQuery) && tabFromQuery !== activeTab) {
+      setActiveTab(tabFromQuery as SettingsTabId);
     }
-  }, [searchParams, navItems, activeTab]);
+  }, [searchParams, activeTab]);
 
-  useEffect(() => {
-    const current = searchParams.get('tab');
-    if (current === activeTab) return;
+  const handleTabChange = (nextTab: string) => {
+    if (!(SETTINGS_TAB_IDS as readonly string[]).includes(nextTab)) {
+      return;
+    }
 
-    const next = new URLSearchParams(searchParams);
-    next.set('tab', activeTab);
-    setSearchParams(next, { replace: true });
-  }, [activeTab, searchParams, setSearchParams]);
+    const normalizedTab = nextTab as SettingsTabId;
+    if (normalizedTab !== activeTab) {
+      setActiveTab(normalizedTab);
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextParams.get('tab') !== normalizedTab) {
+      nextParams.set('tab', normalizedTab);
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col h-screen overflow-hidden">
@@ -1258,7 +1535,7 @@ export default function GeneralSettingsPage() {
 
           <Tabs.Root 
             value={activeTab} 
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="flex flex-col md:flex-row gap-8 items-start h-full min-h-0" 
             orientation="vertical"
           >

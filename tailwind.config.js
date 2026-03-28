@@ -5,6 +5,7 @@ const { lightBlue, warmGray, trueGray, coolGray, blueGray, ...baseColors } = col
 
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -21,8 +22,14 @@ export default {
       indigo: COLORS.primary,
       
       // Neutral/Gray - Slate
-      slate: COLORS.neutral,
-      gray: COLORS.neutral,
+      slate: {
+        ...COLORS.neutral,
+        950: COLORS.neutral[900],
+      },
+      gray: {
+        ...COLORS.neutral,
+        950: COLORS.neutral[900],
+      },
 
       // Semantic Colors
       success: COLORS.semantic.success,

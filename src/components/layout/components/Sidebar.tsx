@@ -38,6 +38,16 @@ export default function App({
   const navigate = useNavigate();
   const [currentPath, setCurrentPath] = useState<string>(activePath);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [densityMode, setDensityMode] = useState<'comfortable' | 'compact'>(() => {
+    try {
+      const raw = localStorage.getItem('pronaflow-preferences');
+      if (!raw) return 'comfortable';
+      const parsed = JSON.parse(raw);
+      return parsed?.density === 'compact' ? 'compact' : 'comfortable';
+    } catch {
+      return 'comfortable';
+    }
+  });
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     overview: true,
     workspace: true,
@@ -177,6 +187,26 @@ export default function App({
     setCurrentPath(activePath);
   }, [activePath]);
 
+  useEffect(() => {
+    const handlePreferencesUpdated = (event: Event) => {
+      const detail = (event as CustomEvent)?.detail;
+      if (!detail) return;
+
+      if (detail.density === 'compact' || detail.density === 'comfortable') {
+        setDensityMode(detail.density);
+      }
+
+      if (typeof detail.sidebarAutoCollapse === 'boolean') {
+        setIsCollapsed(detail.sidebarAutoCollapse);
+      }
+    };
+
+    window.addEventListener('pronaflow-preferences-updated', handlePreferencesUpdated as EventListener);
+    return () => {
+      window.removeEventListener('pronaflow-preferences-updated', handlePreferencesUpdated as EventListener);
+    };
+  }, []);
+
   const toggleSidebar = () => {
     setIsCollapsed(prev => !prev);
   };
@@ -224,27 +254,28 @@ export default function App({
   }
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden font-sans text-slate-900">
+    <div className="flex h-screen bg-slate-100 dark:bg-slate-950 overflow-hidden font-sans text-slate-900 dark:text-slate-100">
       <aside
-        className={`relative flex flex-col bg-slate-50 border-r border-slate-200 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-30 ${isCollapsed ? 'w-[72px]' : 'w-[260px]'
+        className={`relative flex flex-col bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-30 ${isCollapsed ? 'w-[72px]' : 'w-[260px]'
           }`}
+        data-density={densityMode}
       >
         {/* Nút Thu Gọn Sidebar */}
         <button
           onClick={toggleSidebar}
           aria-label="Toggle Sidebar"
-          className="absolute top-6 -right-3 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center z-40 hover:text-blue-600 hover:border-blue-600 shadow-sm transition-colors"
+          className="absolute top-6 -right-3 w-6 h-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center z-40 hover:text-blue-600 hover:border-blue-600 shadow-sm transition-colors"
         >
           <ChevronLeft className={`w-4 h-4 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
         </button>
 
         {/* 1. Header: Thông tin Workspace */}
-        <header className="relative h-16 px-4 flex items-center justify-between border-b border-slate-200">
+        <header className="relative h-16 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
           {!isCollapsed ? (
             <Popover.Root>
               <Popover.Trigger asChild>
                 <button
-                  className="flex items-center gap-2 overflow-hidden w-full cursor-pointer hover:bg-slate-200/50 transition-colors group rounded-md px-2 py-1.5 -mx-2"
+                  className="flex items-center gap-2 overflow-hidden w-full cursor-pointer hover:bg-slate-200/50 dark:hover:bg-slate-800/60 transition-colors group rounded-md px-2 py-1.5 -mx-2"
                   aria-label="Switch workspace"
                 >
                   <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white flex items-center justify-center font-bold text-lg shadow-blue-200/50 shadow-md flex-shrink-0">
@@ -254,12 +285,12 @@ export default function App({
                     <span className="font-semibold text-[15px] leading-tight truncate">
                       {workspaceDetails?.name || 'Loading...'}
                     </span>
-                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
                       {workspaceDetails?.workspace_type || 'Workspace'}
                     </span>
                   </div>
                   <Popover.Anchor />
-                  <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
+                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform group-data-[state=open]:rotate-180" />
                 </button>
               </Popover.Trigger>
               <WorkspacePopover 
@@ -281,19 +312,19 @@ export default function App({
         <div className="p-3 pt-4">
           <div
             onClick={handleSearchClick}
-            className={`flex items-center gap-2 bg-white border border-slate-200 rounded-lg h-9 px-2.5 transition-all group ${isCollapsed ? 'justify-center border-transparent bg-transparent cursor-pointer' : 'hover:border-slate-300'
+            className={`flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg h-9 px-2.5 transition-all group ${isCollapsed ? 'justify-center border-transparent bg-transparent cursor-pointer' : 'hover:border-slate-300 dark:hover:border-slate-600'
               }`}
           >
-            <Search className="w-4 h-4 text-slate-500 group-hover:text-slate-900 flex-shrink-0" />
+            <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 flex-shrink-0" />
             {!isCollapsed && (
               <>
                 <input
                   ref={searchInputRef}
                   type="text"
                   placeholder={`Quick Search... (${isMac ? '⌘K' : 'Ctrl+K'})`}
-                  className="w-full bg-transparent border-none outline-none text-[13px] text-slate-900 placeholder:text-slate-400"
+                  className="w-full bg-transparent border-none outline-none text-[13px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
-                <span className="text-[10px] bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 font-mono text-slate-400 font-medium">{isMac ? '⌘K' : 'Ctrl+K'}</span>
+                <span className="text-[10px] bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-1.5 py-0.5 font-mono text-slate-400 dark:text-slate-300 font-medium">{isMac ? '⌘K' : 'Ctrl+K'}</span>
               </>
             )}
           </div>
@@ -306,18 +337,18 @@ export default function App({
               {/* Tiêu đề phân mục */}
               <div
                 onClick={() => toggleSection(section.id)}
-                className={`flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${isCollapsed ? 'justify-center cursor-default' : 'cursor-pointer hover:bg-slate-200/30 group'
+                className={`flex items-center justify-between px-2 py-1.5 rounded-md transition-colors ${isCollapsed ? 'justify-center cursor-default' : 'cursor-pointer hover:bg-slate-200/30 dark:hover:bg-slate-800/60 group'
                   }`}
               >
                 {!isCollapsed ? (
                   <>
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.05em] opacity-80 select-none">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.05em] opacity-80 select-none">
                       {section.title}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${!expandedSections[section.id] ? '-rotate-90' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${!expandedSections[section.id] ? '-rotate-90' : ''}`} />
                   </>
                 ) : (
-                  <div className="h-[1px] w-8 bg-slate-200 my-2" />
+                  <div className="h-[1px] w-8 bg-slate-200 dark:bg-slate-700 my-2" />
                 )}
               </div>
 
@@ -334,8 +365,8 @@ export default function App({
                           className={({ isActive }) => cn(
                             "flex items-center gap-3 px-3 py-2 rounded-md transition-colors font-medium text-sm",
                             isActive
-                              ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100" // Style khi active
-                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"       // Style khi inactive
+                                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-800/60" // Style khi active
+                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"       // Style khi inactive
                           )}
                         >
                           <item.icon className="w-4 h-4" />
@@ -352,7 +383,7 @@ export default function App({
         </nav>
 
         {/* 4. Footer Section */}
-        <footer className="mt-auto border-t border-slate-200 p-3 bg-slate-50/80 space-y-1">
+        <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 p-3 bg-slate-50/80 dark:bg-slate-900/90 space-y-1">
           {/* Thông báo hệ thống */}
           {!isCollapsed ? (
             <NavLink
@@ -377,7 +408,7 @@ export default function App({
           {!isCollapsed ? (
             <NavLink
               to={ROUTES.help.root}
-              className="w-full flex items-center gap-3 p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all group relative"
+              className="w-full flex items-center gap-3 p-2 rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all group relative"
             >
               <LifeBuoy className="w-5 h-5 flex-shrink-0" />
               <span className="text-[14px] font-medium whitespace-nowrap">Help & Support</span>
@@ -386,7 +417,7 @@ export default function App({
             <RadixTooltip text="Help & Support">
               <NavLink
                 to={ROUTES.help.root}
-                className="w-full flex items-center justify-center p-2 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all"
+                className="w-full flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all"
               >
                 <LifeBuoy className="w-5 h-5 flex-shrink-0" />
               </NavLink>
@@ -398,27 +429,27 @@ export default function App({
             <Popover.Root>
               <Popover.Trigger asChild>
                 <button
-                  className="relative flex items-center gap-3 p-2 rounded-lg hover:bg-slate-200 cursor-pointer group transition-colors w-full"
+                  className="relative flex items-center gap-3 p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer group transition-colors w-full"
                   aria-label="Account settings"
                 >
                   <div className="relative flex-shrink-0">
                     <img
                       src={currentUser?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || currentUser?.username || 'User')}&background=random`}
-                      className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
+                      className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover"
                       alt="Profile"
                     />
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-700 rounded-full"></div>
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <span className="block text-sm font-semibold truncate leading-tight">
                       {currentUser?.full_name || currentUser?.username || 'Loading...'}
                     </span>
-                    <span className="block text-xs text-slate-500 truncate">
+                    <span className="block text-xs text-slate-500 dark:text-slate-400 truncate">
                       {currentUser?.email || ''}
                     </span>
                   </div>
                   <Popover.Anchor />
-                  <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+                  <MoreHorizontal className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
                 </button>
               </Popover.Trigger>
               <UserPopover onLogout={handleLogout} />
@@ -429,10 +460,10 @@ export default function App({
                 <div className="relative flex-shrink-0">
                   <img
                     src={currentUser?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.full_name || currentUser?.username || 'User')}&background=random`}
-                    className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
+                    className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover"
                     alt="Profile"
                   />
-                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-700 rounded-full"></div>
                 </div>
               </div>
             </RadixTooltip>
@@ -476,9 +507,9 @@ function NavItem({
 
   const badgeColors: Record<BadgeType, string> = {
     urgent: 'bg-red-100 text-red-600',
-    count: 'bg-slate-200 text-slate-600',
+    count: 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200',
     new: 'bg-indigo-600 text-white',
-    info: 'bg-blue-100 text-blue-700'
+    info: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -492,8 +523,8 @@ function NavItem({
     <button
       onClick={handleClick}
       className={`group relative flex items-center h-10 px-3 rounded-lg transition-all duration-200 text-sm font-medium w-full ${isActive
-          ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-100'
-          : 'text-slate-500 hover:bg-slate-200/60 hover:text-slate-900'
+          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 ring-1 ring-blue-100 dark:ring-blue-800/60'
+          : 'text-slate-500 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
         } ${isCollapsed ? 'justify-center px-0' : 'justify-between'}`}
     >
       <div className="flex items-center gap-3 overflow-hidden">
@@ -533,10 +564,10 @@ function RadixTooltip({ text, children }: { text: string; children: React.ReactN
           <Tooltip.Content
             side="right"
             sideOffset={8}
-            className="px-2 py-1 bg-slate-800 text-white text-[11px] font-medium rounded shadow-lg whitespace-nowrap z-[60] data-[state=delayed-open]:data-[side=right]:animate-in data-[state=delayed-open]:data-[side=right]:fade-in-0 data-[state=delayed-open]:data-[side=right]:slide-in-from-left-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+            className="px-2 py-1 bg-slate-800 dark:bg-slate-700 text-white text-[11px] font-medium rounded shadow-lg whitespace-nowrap z-[60] data-[state=delayed-open]:data-[side=right]:animate-in data-[state=delayed-open]:data-[side=right]:fade-in-0 data-[state=delayed-open]:data-[side=right]:slide-in-from-left-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
           >
             {text}
-            <Tooltip.Arrow className="fill-slate-800" />
+            <Tooltip.Arrow className="fill-slate-800 dark:fill-slate-700" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
@@ -575,10 +606,10 @@ function WorkspacePopover({
         side="bottom"
         align="start"
         sideOffset={8}
-        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+        className="w-[228px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Switch Workspace</div>
+        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Switch Workspace</div>
         
         {workspaces.map((workspace) => (
           <Popover.Close asChild key={workspace.workspace_id}>
@@ -587,12 +618,12 @@ function WorkspacePopover({
               onClick={() => onSelectWorkspace(workspace.workspace_id)}
               className={`w-full flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                 workspace.workspace_id === currentWorkspaceId
-                  ? 'bg-blue-50/50 text-blue-700 border border-blue-100/50'
-                  : 'hover:bg-slate-100 text-slate-600'
+                  ? 'bg-blue-50/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100/50 dark:border-blue-800/60'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
               }`}
             >
               <div className={`w-6 h-6 rounded text-white text-[10px] flex items-center justify-center font-bold ${
-                workspace.workspace_id === currentWorkspaceId ? 'bg-blue-600' : 'bg-slate-400'
+                workspace.workspace_id === currentWorkspaceId ? 'bg-blue-600' : 'bg-slate-400 dark:bg-slate-500'
               }`}>
                 {workspace.name?.charAt(0).toUpperCase() || 'W'}
               </div>
@@ -602,21 +633,21 @@ function WorkspacePopover({
           </Popover.Close>
         ))}
         
-        <div className="h-px bg-slate-100 my-1.5" />
+        <div className="h-px bg-slate-100 dark:bg-slate-800 my-1.5" />
         <Popover.Close asChild>
           <Link
             to={ROUTES.workspace.create}
-            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
-            <PlusCircle className="w-4 h-4 text-slate-400" /> Create Workspace
+            <PlusCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Create Workspace
           </Link>
         </Popover.Close>
         <Popover.Close asChild>
           <Link
             to={ROUTES.app.workspaceSettings}
-            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
           >
-            <Settings className="w-4 h-4 text-slate-400" /> Workspace Settings
+            <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Workspace Settings
           </Link>
         </Popover.Close>
       </Popover.Content>
@@ -635,10 +666,10 @@ function UserPopover({ onLogout }: { onLogout: () => void }) {
         side="top"
         align="start"
         sideOffset={8}
-        className="w-[228px] bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-2"
+        className="w-[228px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-2"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">My Account</div>
+        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">My Account</div>
         <div className="space-y-0.5">
           {[
             { icon: User, label: 'Profile & Status', to: `${ROUTES.app.settings}?tab=profile` },
@@ -648,14 +679,14 @@ function UserPopover({ onLogout }: { onLogout: () => void }) {
             <Popover.Close asChild key={idx}>
               <Link
                 to={item.to}
-                className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
               >
-                <item.icon className="w-4 h-4 text-slate-400" /> {item.label}
+                <item.icon className="w-4 h-4 text-slate-400 dark:text-slate-500" /> {item.label}
               </Link>
             </Popover.Close>
           ))}
         </div>
-        <div className="h-px bg-slate-100 my-1.5" />
+        <div className="h-px bg-slate-100 dark:bg-slate-800 my-1.5" />
         <Popover.Close asChild>
           <button
             onClick={onLogout}

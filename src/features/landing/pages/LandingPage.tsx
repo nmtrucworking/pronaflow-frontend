@@ -1070,7 +1070,7 @@ const Footer = () => {
 
 export default function LandingPage() {
   return (
-    <div className="font-sans text-slate-900 bg-white selection:bg-indigo-100 selection:text-indigo-900 scroll-smooth">
+    <div className="legacy-dark-scope font-sans text-slate-900 bg-white selection:bg-indigo-100 selection:text-indigo-900 scroll-smooth">
       <style>{`
         @keyframes gradient-x {
           0% { background-position: 0% 50%; }

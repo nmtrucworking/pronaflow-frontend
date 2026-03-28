@@ -18,7 +18,7 @@ export const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   onOpenFullPage,
 }) => {
   return (
-    <div className="h-screen flex bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 overflow-hidden">
+    <div className="legacy-dark-scope h-screen flex bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {children}
@@ -38,7 +38,7 @@ export const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           {/* Sidebar Container */}
           <div
             className={cn(
-              'fixed lg:relative right-0 top-0 h-full bg-white border-l border-slate-200 shadow-2xl z-40 transition-all duration-300 ease-out overflow-hidden',
+              'fixed lg:relative right-0 top-0 h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-40 transition-all duration-300 ease-out overflow-hidden',
               showSidebar 
                 ? 'w-full sm:w-[480px] lg:w-[600px] xl:w-[700px] translate-x-0' 
                 : 'w-0 translate-x-full lg:translate-x-0 opacity-0 pointer-events-none'
