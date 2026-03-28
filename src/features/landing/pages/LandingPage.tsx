@@ -123,7 +123,7 @@ const Navbar = () => {
           <button onClick={() => navigate(ROUTES.root)} className="flex items-center gap-2">
             <img
               className="h-8 w-8 transition-transform duration-300 group-hover:rotate-[360deg]" 
-              src="/branding/logo-dark.svg" 
+              src={`${import.meta.env.BASE_URL}branding/logo-dark.svg`} 
               alt="PronaFlow" 
             />
             <span className="font-bold text-xl tracking-tight text-slate-900">PronaFlow</span>
@@ -1013,7 +1013,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-16">
           <div className="lg:col-span-4">
             <div className="flex items-center gap-2 mb-6 group cursor-pointer w-fit">
-              <img src="/branding/logo-dark.svg" alt="PronaFlow" className="w-10 h-10" />
+              <img src={`${import.meta.env.BASE_URL}branding/logo-dark.svg`} alt="PronaFlow" className="w-10 h-10" />
               <span className="font-bold text-2xl text-slate-900 tracking-tight">PronaFlow</span>
             </div>
             <p className="text-slate-500 max-w-sm text-sm leading-relaxed mb-8 font-medium">
