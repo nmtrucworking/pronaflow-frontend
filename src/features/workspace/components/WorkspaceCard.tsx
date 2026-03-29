@@ -21,15 +21,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Building2, Users, Settings, MoreVertical, Trash2, Edit2 } from 'lucide-react';
+import { Building2, Users, Settings, MoreVertical, Trash2, Edit2, UserPlus, LogOut, Mail } from 'lucide-react';
 import { Tooltip } from '@/components/ui';
 
 interface WorkspaceCardProps {
   workspace: Workspace;
   role?: WorkspaceRole;
+  invitationsCount?: number;
   onSelect?: (workspace: Workspace) => void;
   onEdit?: (workspace: Workspace) => void;
   onDelete?: (workspaceId: string) => void;
+  onInviteMember?: (workspaceId: string) => void;
+  onLeaveWorkspace?: (workspace: Workspace) => void;
+  onViewInvitations?: (workspace: Workspace) => void;
   onManageMembers?: (workspaceId: string) => void;
   onManageSettings?: (workspaceId: string) => void;
 }
@@ -37,13 +41,18 @@ interface WorkspaceCardProps {
 export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
   workspace,
   role = 'member',
+  invitationsCount = 0,
   onSelect,
   onEdit,
   onDelete,
+  onInviteMember,
+  onLeaveWorkspace,
+  onViewInvitations,
   onManageMembers,
   onManageSettings,
 }) => {
   const canManage = role === 'owner' || role === 'admin';
+  const canLeave = role !== 'owner';
 
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onSelect?.(workspace)}>
@@ -60,27 +69,64 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
           </CardDescription>
         </div>
 
-        {canManage && (
+        {(canManage || canLeave) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" title="Workspace actions" aria-label="Workspace actions">
+              <Button
+                variant="ghost"
+                size="sm"
+                title="Workspace actions"
+                aria-label="Workspace actions"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Manage workspace</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onEdit?.(workspace)}>
-                <Edit2 className="w-4 h-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onManageMembers?.(workspace.id)}>
-                <Users className="w-4 h-4 mr-2" />
-                Manage Members
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onManageSettings?.(workspace.id)}>
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+              {canManage && (
+                <>
+                  <DropdownMenuLabel>Manage workspace</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => onEdit?.(workspace)}>
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onInviteMember?.(workspace.id)}>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Invite member
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onManageMembers?.(workspace.id)}>
+                    <Users className="w-4 h-4 mr-2" />
+                    Manage Members
+                  </DropdownMenuItem>
+                  {invitationsCount > 0 && (
+                    <DropdownMenuItem onClick={() => onViewInvitations?.(workspace)}>
+                      <Mail className="w-4 h-4 mr-2" />
+                      <span className="flex-1">View Invitations</span>
+                      <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-blue-600 rounded-full">
+                        {invitationsCount}
+                      </span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => onManageSettings?.(workspace.id)}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
+                </>
+              )}
+
+              {canLeave && (
+                <>
+                  {canManage && <DropdownMenuSeparator />}
+                  <DropdownMenuItem
+                    onClick={() => onLeaveWorkspace?.(workspace)}
+                    className="text-amber-700"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Leave workspace
+                  </DropdownMenuItem>
+                </>
+              )}
+
               {role === 'owner' && (
                 <>
                   <DropdownMenuSeparator />
