@@ -8,7 +8,23 @@ import { PriorityBadge } from './PriorityBadge';
 import { ProjectTag } from './ProjectTag';
 import { AssigneeAvatarGroup } from './AssigneeAvatarGroup';
 
-export const TaskListRow = ({ task, density = 'COMFORTABLE', onViewDetails, onOpenProject }: { task: TaskEntity; density?: DensityMode; onViewDetails: () => void; onOpenProject?: () => void }) => {
+interface TaskListRowProps {
+  task: TaskEntity;
+  density?: DensityMode;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  onViewDetails: () => void;
+  onOpenProject?: () => void;
+}
+
+export const TaskListRow = ({
+  task,
+  density = 'COMFORTABLE',
+  isSelected = false,
+  onSelect,
+  onViewDetails,
+  onOpenProject,
+}: TaskListRowProps) => {
   const StatusIcon = STATUS_CONFIG[task.status].icon;
   const isCompact = density === 'COMPACT';
   const isDone = task.status === 'DONE';
@@ -38,6 +54,12 @@ export const TaskListRow = ({ task, density = 'COMFORTABLE', onViewDetails, onOp
       )}
     > 
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500 opacity-0 -translate-x-full group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out" />
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={onSelect}
+        className="mr-3 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+      />
       <button className="flex-shrink-0 mr-4 text-slate-400 hover:text-indigo-600 transition-colors active:scale-90 duration-200 transform focus:outline-none"><StatusIcon className={cn("w-5 h-5 transition-all duration-300", isDone ? "text-emerald-500" : "group-hover:stroke-[2.5px]")} /></button>
       <div className="flex-1 min-w-0 grid grid-cols-12 gap-4 items-center">
         <div className="col-span-6 md:col-span-5 pr-4 cursor-pointer" onClick={onViewDetails}>

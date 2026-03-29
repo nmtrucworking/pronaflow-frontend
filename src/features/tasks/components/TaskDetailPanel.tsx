@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -21,7 +21,9 @@ import {
   Workflow,
   X,
 } from 'lucide-react';
-import type { TaskEntity, TaskPriority, TaskStatus } from '../types';
+import { toast } from 'sonner';
+import { taskService } from '@/services/taskService';
+import type { TaskDependency, TaskEntity, TaskPriority, TaskStatus, TaskSubtask } from '../types';
 import { PRIORITY_CONFIG, STATUS_CONFIG, USERS } from '../constants';
 import { cn } from '../utils';
 import { useClickOutside } from '../hooks/useClickOutside';
@@ -29,13 +31,217 @@ import { TaskCommentSection } from './TaskCommentSection';
 
 export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, onClose: () => void }) => {
   const [activePopover, setActivePopover] = useState<'status' | 'priority' | 'assignee' | 'deadline' | null>(null);
+  const [currentStatus, setCurrentStatus] = useState<TaskStatus>('NOT_STARTED');
+  const [currentPriority, setCurrentPriority] = useState<TaskPriority>('MEDIUM');
+  const [subtasks, setSubtasks] = useState<TaskSubtask[]>([]);
+  const [dependencies, setDependencies] = useState<TaskDependency[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
+  const [isSavingSubtask, setIsSavingSubtask] = useState(false);
+  const [isSavingDependency, setIsSavingDependency] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   useClickOutside(popoverRef, () => setActivePopover(null));
 
   if (!task) return null;
 
+  useEffect(() => {
+    setCurrentStatus(task.status);
+    setCurrentPriority(task.priority);
+    setSubtasks(task.subtasks ?? []);
+    setDependencies(task.dependencies ?? []);
+    setNewSubtaskTitle('');
+    setNewDependencyTaskId('');
+  }, [task.id, task.priority, task.status, task.subtasks, task.dependencies]);
+
+  useEffect(() => {
+    const loadTaskRelations = async () => {
+      try {
+        const [subtaskList, dependencyList] = await Promise.all([
+          taskService.getSubtasks(task.id),
+          taskService.getDependencies(task.id),
+        ]);
+
+        setSubtasks(
+          subtaskList.map((subtask, index) => ({
+            id: subtask.id,
+            title: subtask.title,
+            is_completed: subtask.is_done,
+            assignee_id: subtask.assignee_id,
+            position: subtask.position ?? index,
+          }))
+        );
+
+        setDependencies(
+          dependencyList.map((dependency) => ({
+            id: dependency.id,
+            task_id: dependency.task_id,
+            depends_on_task_id: dependency.depends_on_task_id,
+            dependency_type: dependency.dependency_type,
+          }))
+        );
+      } catch (error) {
+        // Keep fallback data from parent task payload
+      }
+    };
+
+    void loadTaskRelations();
+  }, [task.id]);
+
   const statusOptions: TaskStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
   const priorityOptions: TaskPriority[] = ['URGENT', 'HIGH', 'MEDIUM', 'LOW'];
+
+  const toApiStatus = (status: TaskStatus) => {
+    if (status === 'IN_PROGRESS') {
+      return 'IN_PROGRESS' as const;
+    }
+    if (status === 'IN_REVIEW') {
+      return 'IN_REVIEW' as const;
+    }
+    if (status === 'DONE') {
+      return 'DONE' as const;
+    }
+    return 'TO_DO' as const;
+  };
+
+  const toApiPriority = (priority: TaskPriority) => {
+    if (priority === 'URGENT') {
+      return 'CRITICAL' as const;
+    }
+    return priority;
+  };
+
+  const handleStatusChange = async (nextStatus: TaskStatus) => {
+    try {
+      await taskService.updateTaskStatus(task.id, toApiStatus(nextStatus));
+      setCurrentStatus(nextStatus);
+      toast.success('Status updated.');
+    } catch (error) {
+      toast.error('Failed to update status.');
+    } finally {
+      setActivePopover(null);
+    }
+  };
+
+  const handlePriorityChange = async (nextPriority: TaskPriority) => {
+    try {
+      await taskService.updateTask(task.id, {
+        priority: toApiPriority(nextPriority),
+      });
+      setCurrentPriority(nextPriority);
+      toast.success('Priority updated.');
+    } catch (error) {
+      toast.error('Failed to update priority.');
+    } finally {
+      setActivePopover(null);
+    }
+  };
+
+  const completedSubtaskCount = subtasks.filter((subtask) => subtask.is_completed).length;
+  const completionPercentage = subtasks.length > 0 ? Math.round((completedSubtaskCount / subtasks.length) * 100) : 0;
+
+  const handleAddSubtask = async () => {
+    const title = newSubtaskTitle.trim();
+    if (!title) {
+      return;
+    }
+
+    setIsSavingSubtask(true);
+    try {
+      const createdSubtask = await taskService.createSubtask(task.id, {
+        title,
+        position: subtasks.length,
+      });
+
+      setSubtasks((prev) => [
+        ...prev,
+        {
+          id: createdSubtask.id,
+          title: createdSubtask.title,
+          is_completed: createdSubtask.is_done,
+          assignee_id: createdSubtask.assignee_id,
+          position: createdSubtask.position,
+        },
+      ]);
+      setNewSubtaskTitle('');
+      toast.success('Subtask created.');
+    } catch (error) {
+      toast.error('Failed to create subtask.');
+    } finally {
+      setIsSavingSubtask(false);
+    }
+  };
+
+  const handleToggleSubtask = async (subtask: TaskSubtask) => {
+    try {
+      const updatedSubtask = await taskService.updateSubtask(task.id, subtask.id, {
+        is_completed: !subtask.is_completed,
+      });
+
+      setSubtasks((prev) =>
+        prev.map((item) =>
+          item.id === subtask.id
+            ? {
+                ...item,
+                is_completed: updatedSubtask.is_done,
+              }
+            : item
+        )
+      );
+    } catch (error) {
+      toast.error('Failed to update subtask.');
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    try {
+      await taskService.deleteSubtask(task.id, subtaskId);
+      setSubtasks((prev) => prev.filter((item) => item.id !== subtaskId));
+      toast.success('Subtask deleted.');
+    } catch (error) {
+      toast.error('Failed to delete subtask.');
+    }
+  };
+
+  const handleAddDependency = async () => {
+    const dependsOnTaskId = newDependencyTaskId.trim();
+    if (!dependsOnTaskId) {
+      return;
+    }
+
+    setIsSavingDependency(true);
+    try {
+      const createdDependency = await taskService.createDependency(task.id, {
+        depends_on_task_id: dependsOnTaskId,
+        dependency_type: 'FS',
+      });
+
+      setDependencies((prev) => [
+        ...prev,
+        {
+          id: createdDependency.id,
+          task_id: createdDependency.task_id,
+          depends_on_task_id: createdDependency.depends_on_task_id,
+          dependency_type: createdDependency.dependency_type,
+        },
+      ]);
+      setNewDependencyTaskId('');
+      toast.success('Dependency created.');
+    } catch (error) {
+      toast.error('Failed to create dependency.');
+    } finally {
+      setIsSavingDependency(false);
+    }
+  };
+
+  const handleDeleteDependency = async (dependencyId: string) => {
+    try {
+      await taskService.deleteDependency(dependencyId);
+      setDependencies((prev) => prev.filter((item) => item.id !== dependencyId));
+      toast.success('Dependency removed.');
+    } catch (error) {
+      toast.error('Failed to remove dependency.');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100]">
@@ -101,7 +307,7 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                 >
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-500" />
-                    {STATUS_CONFIG[task.status].label}
+                    {STATUS_CONFIG[currentStatus].label}
                   </div>
                   <ChevronDown className="w-3 h-3 text-slate-400" />
                 </button>
@@ -114,11 +320,13 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                           key={status}
                           className={cn(
                             "w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-2",
-                            task.status === status
+                            currentStatus === status
                               ? "bg-indigo-50 text-indigo-700 font-medium"
                               : "text-slate-600 hover:bg-slate-50"
                           )}
-                          onClick={() => setActivePopover(null)}
+                          onClick={() => {
+                            void handleStatusChange(status);
+                          }}
                         >
                           <div className={cn("w-2 h-2 rounded-full", STATUS_CONFIG[status].color.replace('text-', 'bg-'))} />
                           {STATUS_CONFIG[status].label}
@@ -139,7 +347,7 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                   onClick={() => setActivePopover(activePopover === 'priority' ? null : 'priority')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-200 text-slate-700 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all min-w-[120px] justify-center"
                 >
-                  {PRIORITY_CONFIG[task.priority].label}
+                  {PRIORITY_CONFIG[currentPriority].label}
                 </button>
 
                 {activePopover === 'priority' && (
@@ -150,11 +358,13 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                           key={priority}
                           className={cn(
                             "w-full text-left px-3 py-2 text-sm rounded-md",
-                            task.priority === priority
+                            currentPriority === priority
                               ? "bg-indigo-50 text-indigo-700 font-medium"
                               : "text-slate-600 hover:bg-slate-50"
                           )}
-                          onClick={() => setActivePopover(null)}
+                          onClick={() => {
+                            void handlePriorityChange(priority);
+                          }}
                         >
                           {PRIORITY_CONFIG[priority].label}
                         </button>
@@ -252,56 +462,54 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
               <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <Workflow className="w-4 h-4 text-slate-400" /> Liên kết & Phụ thuộc
               </h3>
-              <div className="relative pl-6 border-l-2 border-slate-100 space-y-6">
-                <div className="relative group">
-                  <div className="absolute -left-[31px] top-3 w-6 h-6 flex items-center justify-center bg-slate-100 border border-slate-200 rounded-full z-10">
-                    <ArrowDown className="w-3.5 h-3.5 text-slate-400" />
+              <div className="space-y-3">
+                {dependencies.length === 0 && (
+                  <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+                    Chưa có dependency nào.
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-red-50/40 border border-red-100 rounded-lg hover:border-red-200 transition-all cursor-pointer">
-                    <div className="p-2 bg-white rounded-md border border-red-100 shadow-sm text-red-500">
-                      <AlertTriangle className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Cần xong trước</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white text-slate-500 border border-slate-200">In Review</span>
-                      </div>
-                      <p className="text-sm font-medium text-slate-700 truncate mt-0.5">Phê duyệt Wireframe từ khách hàng</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-400 font-mono">TASK-99</span>
-                        <img src="https://ui-avatars.com/api/?name=Alice&background=random" className="w-4 h-4 rounded-full border border-white" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
-                <div className="relative">
-                  <div className="absolute -left-[31px] top-1/2 -translate-y-1/2 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white ring-2 ring-indigo-100 z-10"></div>
-                  <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-md text-xs text-indigo-700 font-medium text-center">
-                    Công việc hiện tại ({task.key})
-                  </div>
-                </div>
-
-                <div className="relative group">
-                  <div className="absolute -left-[31px] top-3 w-6 h-6 flex items-center justify-center bg-slate-100 border border-slate-200 rounded-full z-10">
-                    <ArrowDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:border-indigo-200 transition-all cursor-pointer">
+                {dependencies.map((dependency) => (
+                  <div key={dependency.id} className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     <div className="p-2 bg-white rounded-md border border-slate-200 shadow-sm text-indigo-600">
                       <ArrowRight className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Chặn công việc</span>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white text-slate-500 border border-slate-200">To Do</span>
+                      <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+                        {dependency.dependency_type || 'FS'} dependency
                       </div>
-                      <p className="text-sm font-medium text-slate-700 truncate mt-0.5">Slicing HTML/CSS Trang chủ</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-400 font-mono">TASK-105</span>
-                        <div className="w-4 h-4 rounded-full bg-slate-200 border border-white flex items-center justify-center text-[8px] text-slate-500">?</div>
-                      </div>
+                      <p className="text-sm font-medium text-slate-700 truncate mt-0.5">
+                        Depends on task: {dependency.depends_on_task_id}
+                      </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDependency(dependency.id)}
+                      className="text-slate-400 hover:text-red-600 transition-colors"
+                      title="Xóa dependency"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
+                ))}
+
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="text"
+                    value={newDependencyTaskId}
+                    onChange={(event) => setNewDependencyTaskId(event.target.value)}
+                    placeholder="Nhập depends_on_task_id"
+                    className="flex-1 text-sm border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    disabled={isSavingDependency || !newDependencyTaskId.trim()}
+                    onClick={handleAddDependency}
+                    className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
                 </div>
               </div>
             </div>
@@ -312,25 +520,64 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                 <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                   <CheckSquare className="w-4 h-4 text-slate-400" /> Công việc con
                 </h3>
-                <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">1/3</span>
+                <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{completedSubtaskCount}/{subtasks.length}</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-1.5 mb-4 overflow-hidden">
-                <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: '33%' }}></div>
+                <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }}></div>
               </div>
               <div className="space-y-2">
-                <div className="flex items-center gap-3 group p-2 rounded-md hover:bg-slate-50 transition-colors">
-                  <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer" />
-                  <span className="text-sm text-slate-400 line-through decoration-slate-400">Phác thảo Layout Wireframe</span>
-                  <button className="opacity-0 group-hover:opacity-100 ml-auto text-slate-300 hover:text-red-500 transition-opacity"><X className="w-3.5 h-3.5" /></button>
-                </div>
-                <div className="flex items-center gap-3 group p-2 rounded-md hover:bg-slate-50 transition-colors">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer" />
-                  <span className="text-sm text-slate-700">Thiết kế Dark Mode</span>
-                  <button className="opacity-0 group-hover:opacity-100 ml-auto text-slate-300 hover:text-red-500 transition-opacity"><X className="w-3.5 h-3.5" /></button>
-                </div>
+                {subtasks.length === 0 && (
+                  <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+                    Chưa có subtask nào.
+                  </div>
+                )}
+
+                {subtasks.map((subtask) => (
+                  <div key={subtask.id} className="flex items-center gap-3 group p-2 rounded-md hover:bg-slate-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={subtask.is_completed}
+                      onChange={() => handleToggleSubtask(subtask)}
+                      className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <span className={cn('text-sm', subtask.is_completed ? 'text-slate-400 line-through decoration-slate-400' : 'text-slate-700')}>
+                      {subtask.title}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubtask(subtask.id)}
+                      className="opacity-0 group-hover:opacity-100 ml-auto text-slate-300 hover:text-red-500 transition-opacity"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+
                 <div className="flex items-center gap-3 mt-2 px-2 py-1.5">
                   <Plus className="w-4 h-4 text-slate-400" />
-                  <input type="text" placeholder="Thêm công việc con..." className="text-sm text-slate-600 placeholder-slate-400 bg-transparent border-none focus:ring-0 p-0 w-full" />
+                  <input
+                    type="text"
+                    value={newSubtaskTitle}
+                    onChange={(event) => setNewSubtaskTitle(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        void handleAddSubtask();
+                      }
+                    }}
+                    placeholder="Thêm công việc con..."
+                    className="text-sm text-slate-600 placeholder-slate-400 bg-transparent border-none focus:ring-0 p-0 w-full"
+                  />
+                  <button
+                    type="button"
+                    disabled={isSavingSubtask || !newSubtaskTitle.trim()}
+                    onClick={() => {
+                      void handleAddSubtask();
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    Add
+                  </button>
                 </div>
               </div>
             </div>

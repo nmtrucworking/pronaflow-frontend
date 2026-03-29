@@ -17,6 +17,21 @@ export interface UserEntity {
   avatar: string;
 }
 
+export interface TaskSubtask {
+  id: string;
+  title: string;
+  is_completed: boolean;
+  assignee_id?: string;
+  position: number;
+}
+
+export interface TaskDependency {
+  id: string;
+  task_id: string;
+  depends_on_task_id: string;
+  dependency_type: string;
+}
+
 export interface TaskEntity {
   id: string;
   key: string;
@@ -28,4 +43,6 @@ export interface TaskEntity {
   estimatedHours: number;
   assignees: UserEntity[];
   description?: string;
+  subtasks?: TaskSubtask[];
+  dependencies?: TaskDependency[];
 }

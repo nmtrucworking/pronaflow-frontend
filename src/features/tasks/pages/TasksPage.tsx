@@ -1,8 +1,9 @@
-// @ts-nocheck
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
   ArrowUpCircle,
   ArrowUpDown,
   Calendar as CalendarIcon,
@@ -15,15 +16,27 @@ import {
   LayoutList,
   Plus,
   Search,
-  Upload
+  Upload,
+  Layers,
+  Archive,
+  ArchiveRestore,
+  Pencil,
+  Trash2,
+  X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
+import { useProjects } from '@/hooks/projectHooks';
+import { taskService } from '@/services/taskService';
+import type { ApiTaskPriority, ApiTaskStatus, CreateTaskDTO, TaskListItem, TaskResponse } from '@/services/taskService';
 import { cn } from '../utils';
-import { MOCK_TASKS, STATUS_CONFIG, USERS } from '../constants';
-import { ProjectRef, SortOption, TaskEntity, TaskPriority, TaskStatus, ViewMode } from '../types';
+import { STATUS_CONFIG, USERS } from '../constants';
+import type { ProjectRef, SortOption, TaskEntity, TaskPriority, TaskStatus, ViewMode } from '../types';
+import { useBulkDeleteTasks, useBulkUpdateTasks, useCreateTask, useTask, useTasks } from '../hooks/useTaskQueries';
 import { CsvImportModal } from '../components/CsvImportModal';
 import { CreateTaskModal } from '../components/CreateTaskModal';
+import { Modal } from '../components/Modal';
 import { Popover } from '../components/Popover';
 import { TaskDetailPanel } from '../components/TaskDetailPanel';
 import { TaskGroupSection } from '../components/TaskGroupSection';
@@ -31,26 +44,263 @@ import { TaskKanbanCard } from '../components/TaskKanbanCard';
 import { TaskListRow } from '../components/TaskListRow';
 import { TaskEmptyState } from '../components/TaskEmptyState';
 import { TaskBulkActionBar } from '../components/TaskBulkActionBar';
-import { taskService } from '../../../services/taskService';
+import { TaskSkeletonLoader } from '../components/TaskSkeletonLoader';
+
+interface TaskResponseWithRelations extends TaskResponse {
+  task_number?: number;
+  planned_end?: string;
+  key?: string;
+  project?: {
+    project_id?: string;
+    name?: string;
+    key?: string;
+  };
+  assignees?: Array<{
+    user_id?: string;
+    id?: string;
+    username?: string;
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+    avatar?: string;
+  }>;
+}
+
+const PROJECT_COLORS = ['bg-indigo-500', 'bg-emerald-500', 'bg-cyan-500', 'bg-orange-500', 'bg-rose-500', 'bg-violet-500'];
+
+function normalizeTaskStatus(status: ApiTaskStatus | string | undefined): TaskStatus {
+  const normalized = (status ?? '').toString().toUpperCase();
+
+  if (normalized === 'IN_PROGRESS') {
+    return 'IN_PROGRESS';
+  }
+  if (normalized === 'IN_REVIEW') {
+    return 'IN_REVIEW';
+  }
+  if (normalized === 'DONE' || normalized === 'COMPLETED' || normalized === 'CANCELLED') {
+    return 'DONE';
+  }
+
+  return 'NOT_STARTED';
+}
+
+function normalizeTaskPriority(priority: ApiTaskPriority | string | undefined): TaskPriority {
+  const normalized = (priority ?? '').toString().toUpperCase();
+
+  if (normalized === 'CRITICAL' || normalized === 'URGENT') {
+    return 'URGENT';
+  }
+  if (normalized === 'HIGH') {
+    return 'HIGH';
+  }
+  if (normalized === 'LOW') {
+    return 'LOW';
+  }
+
+  return 'MEDIUM';
+}
+
+function toApiTaskStatus(status: TaskStatus): ApiTaskStatus {
+  if (status === 'IN_PROGRESS') {
+    return 'IN_PROGRESS';
+  }
+  if (status === 'IN_REVIEW') {
+    return 'IN_REVIEW';
+  }
+  if (status === 'DONE') {
+    return 'DONE';
+  }
+
+  return 'TO_DO';
+}
+
+function toApiTaskPriority(priority: TaskPriority): ApiTaskPriority {
+  if (priority === 'URGENT') {
+    return 'CRITICAL';
+  }
+
+  return priority;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (!error || typeof error !== 'object') {
+    return 'Unknown error.';
+  }
+
+  const response = (error as { response?: { data?: { detail?: string; message?: string } } }).response;
+  return response?.data?.detail || response?.data?.message || 'Failed to load task data.';
+}
+
+function toTaskEntity(task: TaskResponseWithRelations, index: number, projectLookup: Map<string, ProjectRef>): TaskEntity {
+  const projectId = task.project_id || task.project?.project_id || 'unknown-project';
+  const fallbackProject: ProjectRef = {
+    id: projectId,
+    name: task.project?.name || 'Unknown project',
+    key: task.project?.key || 'TASK',
+    color: PROJECT_COLORS[index % PROJECT_COLORS.length],
+  };
+
+  const project = projectLookup.get(projectId) ?? fallbackProject;
+
+  const assignees = Array.isArray(task.assignees)
+    ? task.assignees.map((assignee, assigneeIndex) => ({
+        id: assignee.user_id || assignee.id || `user-${assigneeIndex}`,
+        name: assignee.full_name || assignee.username || assignee.name || 'Unknown user',
+        avatar:
+          assignee.avatar_url ||
+          assignee.avatar ||
+          'https://ui-avatars.com/api/?name=User&background=64748B&color=fff',
+      }))
+    : task.assigned_to && USERS[task.assigned_to]
+      ? [USERS[task.assigned_to]]
+      : [];
+
+  const dueSource = task.due_date || task.planned_end || task.updated_at || task.created_at;
+  const dueDate = dueSource ? new Date(dueSource).toISOString() : new Date().toISOString();
+
+  return {
+    id: task.task_id,
+    key: task.key || `${project.key}-${task.task_number ?? index + 1}`,
+    title: task.title,
+    project,
+    status: normalizeTaskStatus(task.status),
+    priority: normalizeTaskPriority(task.priority),
+    dueDate,
+    estimatedHours: task.estimated_hours ?? 0,
+    assignees,
+    description: task.description,
+    subtasks: (task.subtasks ?? []).map((subtask, subtaskIndex) => ({
+      id: subtask.id,
+      title: subtask.title,
+      is_completed: subtask.is_done,
+      assignee_id: subtask.assignee_id,
+      position: subtask.position ?? subtaskIndex,
+    })),
+    dependencies: (task.dependency_links ?? []).map((dependency) => ({
+      id: dependency.id,
+      task_id: dependency.task_id,
+      depends_on_task_id: dependency.depends_on_task_id,
+      dependency_type: dependency.dependency_type,
+    })),
+  };
+}
 
 export default function TasksPage() {
   const navigate = useNavigate();
 
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
-  const [tasks, setTasks] = useState<TaskEntity[]>(MOCK_TASKS);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('DUE_DATE_ASC');
   const [selectedTask, setSelectedTask] = useState<TaskEntity | null>(null);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({ OVERDUE: false, TODAY: false, UPCOMING: false, DONE: true });
+  const [isTaskListModalOpen, setIsTaskListModalOpen] = useState(false);
+  const [managedProjectId, setManagedProjectId] = useState('');
+  const [taskLists, setTaskLists] = useState<TaskListItem[]>([]);
+  const [isTaskListLoading, setIsTaskListLoading] = useState(false);
+  const [editingTaskListId, setEditingTaskListId] = useState<string | null>(null);
+  const [editingTaskListName, setEditingTaskListName] = useState('');
+  const [newTaskListName, setNewTaskListName] = useState('');
+  const [isTaskListActionLoading, setIsTaskListActionLoading] = useState(false);
+  const [deleteTargetTaskListId, setDeleteTargetTaskListId] = useState<string | null>(null);
+  const [deleteForce, setDeleteForce] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    OVERDUE: false,
+    TODAY: false,
+    UPCOMING: false,
+    DONE: true,
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [isBulkLoading, setIsBulkLoading] = useState(false);
 
-  const toggleSection = (section: string) => setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  
+  const { data: projectsResponse } = useProjects(undefined, undefined, 1, 200);
+  const { data: taskListResponse, isLoading, isError, error, refetch } = useTasks({
+    page: 1,
+    page_size: 200,
+    sort_by: 'updated_at',
+  });
+
+  const { mutate: createTask } = useCreateTask();
+  const { mutateAsync: bulkUpdateTasks } = useBulkUpdateTasks();
+  const { mutateAsync: bulkDeleteTasks } = useBulkDeleteTasks();
+  const { data: selectedTaskDetail } = useTask(selectedTask?.id);
+
+  const rawTasks = useMemo<TaskResponseWithRelations[]>(() => {
+    return (taskListResponse?.tasks ?? []) as TaskResponseWithRelations[];
+  }, [taskListResponse]);
+
+  const projectOptions = useMemo<ProjectRef[]>(() => {
+    if (projectsResponse?.projects?.length) {
+      return projectsResponse.projects.map((project, index) => ({
+        id: project.project_id,
+        name: project.name,
+        key: project.key,
+        color: PROJECT_COLORS[index % PROJECT_COLORS.length],
+      }));
+    }
+
+    const uniqueProjects = new Map<string, ProjectRef>();
+    rawTasks.forEach((task, index) => {
+      const projectId = task.project_id || task.project?.project_id;
+      if (!projectId || uniqueProjects.has(projectId)) {
+        return;
+      }
+
+      uniqueProjects.set(projectId, {
+        id: projectId,
+        name: task.project?.name || 'Unknown project',
+        key: task.project?.key || 'TASK',
+        color: PROJECT_COLORS[index % PROJECT_COLORS.length],
+      });
+    });
+
+    return Array.from(uniqueProjects.values());
+  }, [projectsResponse, rawTasks]);
+
+  const projectLookup = useMemo(() => {
+    return new Map(projectOptions.map((project) => [project.id, project]));
+  }, [projectOptions]);
+
+  useEffect(() => {
+    if (!managedProjectId && projectOptions.length > 0) {
+      setManagedProjectId(projectOptions[0].id);
+    }
+  }, [managedProjectId, projectOptions]);
+
+  const tasks = useMemo<TaskEntity[]>(() => {
+    return rawTasks.map((task, index) => toTaskEntity(task, index, projectLookup));
+  }, [rawTasks, projectLookup]);
+
+  const selectedTaskWithDetail = useMemo(() => {
+    if (!selectedTask) {
+      return null;
+    }
+
+    if (!selectedTaskDetail) {
+      return selectedTask;
+    }
+
+    return toTaskEntity(selectedTaskDetail as TaskResponseWithRelations, 0, projectLookup);
+  }, [projectLookup, selectedTask, selectedTaskDetail]);
+
+  const taskListByProject = useMemo(() => {
+    const projectToTaskList = new Map<string, string>();
+
+    rawTasks.forEach((task) => {
+      if (task.project_id && task.task_list_id && !projectToTaskList.has(task.project_id)) {
+        projectToTaskList.set(task.project_id, task.task_list_id);
+      }
+    });
+
+    return projectToTaskList;
+  }, [rawTasks]);
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const toggleTaskSelection = (taskId: string) => {
     const newSelected = new Set(selectedTaskIds);
     if (newSelected.has(taskId)) {
@@ -61,30 +311,65 @@ export default function TasksPage() {
     setSelectedTaskIds(newSelected);
   };
 
-  // Filtering Logic
   const filteredTasks = useMemo(() => {
-    let tasksToFilter = tasks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    if (sortOption === 'DUE_DATE_ASC') tasksToFilter.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-    else if (sortOption === 'PRIORITY_DESC') { const pMap = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 }; tasksToFilter.sort((a, b) => pMap[b.priority] - pMap[a.priority]); }
-    else if (sortOption === 'TITLE_ASC') tasksToFilter.sort((a, b) => a.title.localeCompare(b.title));
+    const tasksToFilter = tasks.filter((task) =>
+      task.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (sortOption === 'DUE_DATE_ASC') {
+      tasksToFilter.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    } else if (sortOption === 'PRIORITY_DESC') {
+      const priorityMap: Record<TaskPriority, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+      tasksToFilter.sort((a, b) => priorityMap[b.priority] - priorityMap[a.priority]);
+    } else if (sortOption === 'TITLE_ASC') {
+      tasksToFilter.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
     return tasksToFilter;
   }, [tasks, searchQuery, sortOption]);
 
-  const projectOptions = useMemo<ProjectRef[]>(() => {
-    const uniqueProjects = new Map<string, ProjectRef>();
-    tasks.forEach((task) => {
-      if (!uniqueProjects.has(task.project.id)) {
-        uniqueProjects.set(task.project.id, task.project);
-      }
-    });
-    return Array.from(uniqueProjects.values());
-  }, [tasks]);
+  const groupedTasks = useMemo(() => {
+    const today = new Date().toDateString();
+    const now = new Date();
+
+    return {
+      overdue: filteredTasks.filter((task) => new Date(task.dueDate) < now && task.status !== 'DONE'),
+      today: filteredTasks.filter(
+        (task) => new Date(task.dueDate).toDateString() === today && task.status !== 'DONE'
+      ),
+      upcoming: filteredTasks.filter((task) => new Date(task.dueDate) > now && task.status !== 'DONE'),
+      done: filteredTasks.filter((task) => task.status === 'DONE'),
+    };
+  }, [filteredTasks]);
+
+  const kanbanColumns = {
+    NOT_STARTED: filteredTasks.filter((task) => task.status === 'NOT_STARTED'),
+    IN_PROGRESS: filteredTasks.filter((task) => task.status === 'IN_PROGRESS'),
+    IN_REVIEW: filteredTasks.filter((task) => task.status === 'IN_REVIEW'),
+    DONE: filteredTasks.filter((task) => task.status === 'DONE'),
+  };
 
   const openProject = (project: ProjectRef) => {
     navigate(`${ROUTES.app.projects}?project=${encodeURIComponent(project.id)}`);
   };
 
-  const handleCreateTask = (payload: {
+  const sortedTaskLists = useMemo(() => {
+    return [...taskLists].sort((a, b) => {
+      if (a.position === b.position) {
+        return a.name.localeCompare(b.name);
+      }
+      return a.position - b.position;
+    });
+  }, [taskLists]);
+
+  const deleteTargetTaskList = useMemo(() => {
+    if (!deleteTargetTaskListId) {
+      return null;
+    }
+    return taskLists.find((list) => list.id === deleteTargetTaskListId) ?? null;
+  }, [deleteTargetTaskListId, taskLists]);
+
+  const handleCreateTask = async (payload: {
     title: string;
     projectId: string;
     priority: TaskPriority;
@@ -92,88 +377,292 @@ export default function TasksPage() {
     assigneeId?: string;
     description?: string;
   }) => {
-    const project = projectOptions.find((item) => item.id === payload.projectId);
-    if (!project) return;
+    let taskListId = taskListByProject.get(payload.projectId);
 
-    const assignee = payload.assigneeId ? USERS[payload.assigneeId as keyof typeof USERS] : undefined;
-    const newTask: TaskEntity = {
-      id: `t-${Date.now()}`,
-      key: `${project.key}-${Math.floor(100 + Math.random() * 900)}`,
+    if (!taskListId) {
+      try {
+        const existingLists = await taskService.listTaskLists(payload.projectId);
+        if (existingLists.length > 0) {
+          taskListId = existingLists[0].id;
+        } else {
+          const createdList = await taskService.createTaskList({
+            project_id: payload.projectId,
+            name: 'General',
+            position: 0,
+          });
+          taskListId = createdList.id;
+          toast.success('Created default task list for this project.');
+        }
+      } catch (listError) {
+        toast.error(getErrorMessage(listError));
+        return;
+      }
+    }
+
+    const requestBody: CreateTaskDTO = {
+      project_id: payload.projectId,
+      task_list_id: taskListId,
       title: payload.title,
-      project,
-      status: 'NOT_STARTED',
-      priority: payload.priority,
-      dueDate: new Date(payload.dueDate).toISOString(),
-      estimatedHours: 0,
-      assignees: assignee ? [assignee] : [],
       description: payload.description,
+      status: 'TO_DO',
+      priority: toApiTaskPriority(payload.priority),
+      due_date: new Date(payload.dueDate).toISOString(),
+      assigned_to: payload.assigneeId,
     };
 
-    setTasks((prev) => [newTask, ...prev]);
-    setSelectedTask(newTask);
+    createTask(requestBody, {
+      onSuccess: () => {
+        toast.success('Task created successfully.');
+      },
+      onError: (mutationError) => {
+        toast.error(getErrorMessage(mutationError));
+      },
+    });
   };
 
-  const groupedTasks = useMemo(() => {
-    const today = new Date().toDateString();
-    return {
-      overdue: filteredTasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== 'DONE'),
-      today: filteredTasks.filter(t => new Date(t.dueDate).toDateString() === today && t.status !== 'DONE'),
-      upcoming: filteredTasks.filter(t => new Date(t.dueDate) > new Date() && t.status !== 'DONE'),
-      done: filteredTasks.filter(t => t.status === 'DONE')
-    };
-  }, [filteredTasks]);
+  const handleQuickCreateTaskList = async () => {
+    if (projectOptions.length === 0) {
+      toast.error('No project available to create task list.');
+      return;
+    }
 
-  const kanbanColumns = {
-    NOT_STARTED: filteredTasks.filter(t => t.status === 'NOT_STARTED'),
-    IN_PROGRESS: filteredTasks.filter(t => t.status === 'IN_PROGRESS'),
-    IN_REVIEW: filteredTasks.filter(t => t.status === 'IN_REVIEW'),
-    DONE: filteredTasks.filter(t => t.status === 'DONE'),
+    const projectId = managedProjectId || projectOptions[0].id;
+    setManagedProjectId(projectId);
+    setIsTaskListModalOpen(true);
+    setDeleteTargetTaskListId(null);
+    setDeleteForce(false);
+    setEditingTaskListId(null);
+    setEditingTaskListName('');
+    await loadTaskLists(projectId);
+  };
+
+  const loadTaskLists = async (projectId: string) => {
+    if (!projectId) {
+      setTaskLists([]);
+      return;
+    }
+
+    setIsTaskListLoading(true);
+    try {
+      const lists = await taskService.listTaskLists(projectId, true);
+      setTaskLists(lists);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsTaskListLoading(false);
+    }
+  };
+
+  const openTaskListManager = async () => {
+    if (projectOptions.length === 0) {
+      toast.error('No project available.');
+      return;
+    }
+
+    const projectId = managedProjectId || projectOptions[0].id;
+    setManagedProjectId(projectId);
+    setDeleteTargetTaskListId(null);
+    setDeleteForce(false);
+    setEditingTaskListId(null);
+    setEditingTaskListName('');
+    setIsTaskListModalOpen(true);
+    await loadTaskLists(projectId);
+  };
+
+  const handleCreateTaskListInManager = async () => {
+    const name = newTaskListName.trim();
+    if (!managedProjectId) {
+      toast.error('Select a project first.');
+      return;
+    }
+
+    if (!name) {
+      toast.error('Task list name is required.');
+      return;
+    }
+
+    try {
+      setIsTaskListActionLoading(true);
+      await taskService.createTaskList({
+        project_id: managedProjectId,
+        name,
+        position: sortedTaskLists.length,
+      });
+      setNewTaskListName('');
+      toast.success('Task list created successfully.');
+      await loadTaskLists(managedProjectId);
+      await refetch();
+    } catch (createListError) {
+      toast.error(getErrorMessage(createListError));
+    } finally {
+      setIsTaskListActionLoading(false);
+    }
+  };
+
+  const startRenameTaskList = (taskList: TaskListItem) => {
+    setEditingTaskListId(taskList.id);
+    setEditingTaskListName(taskList.name);
+  };
+
+  const cancelRenameTaskList = () => {
+    setEditingTaskListId(null);
+    setEditingTaskListName('');
+  };
+
+  const handleRenameTaskList = async (taskList: TaskListItem) => {
+    const nextName = editingTaskListName.trim();
+    if (!nextName || nextName === taskList.name) {
+      cancelRenameTaskList();
+      return;
+    }
+
+    try {
+      setIsTaskListActionLoading(true);
+      await taskService.updateTaskList(taskList.id, { name: nextName });
+      cancelRenameTaskList();
+      toast.success('Task list renamed.');
+      await loadTaskLists(taskList.project_id);
+      await refetch();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsTaskListActionLoading(false);
+    }
+  };
+
+  const handleArchiveToggleTaskList = async (taskList: TaskListItem) => {
+    try {
+      setIsTaskListActionLoading(true);
+      await taskService.updateTaskList(taskList.id, { is_archived: !taskList.is_archived });
+      toast.success(taskList.is_archived ? 'Task list restored.' : 'Task list archived.');
+      if (deleteTargetTaskListId === taskList.id) {
+        setDeleteTargetTaskListId(null);
+        setDeleteForce(false);
+      }
+      await loadTaskLists(taskList.project_id);
+      await refetch();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsTaskListActionLoading(false);
+    }
+  };
+
+  const requestDeleteTaskList = (taskList: TaskListItem) => {
+    setDeleteTargetTaskListId(taskList.id);
+    setDeleteForce(false);
+  };
+
+  const cancelDeleteTaskList = () => {
+    setDeleteTargetTaskListId(null);
+    setDeleteForce(false);
+  };
+
+  const confirmDeleteTaskList = async () => {
+    if (!deleteTargetTaskList) {
+      return;
+    }
+
+    try {
+      setIsTaskListActionLoading(true);
+      await taskService.deleteTaskList(deleteTargetTaskList.id, deleteForce);
+      cancelDeleteTaskList();
+      toast.success('Task list deleted.');
+      await loadTaskLists(deleteTargetTaskList.project_id);
+      await refetch();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsTaskListActionLoading(false);
+    }
+  };
+
+  const handleMoveTaskList = async (taskListId: string, direction: 'up' | 'down') => {
+    const currentIndex = sortedTaskLists.findIndex((taskList) => taskList.id === taskListId);
+    if (currentIndex < 0) {
+      return;
+    }
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sortedTaskLists.length) {
+      return;
+    }
+
+    const reordered = [...sortedTaskLists];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    const nextById = new Map(reordered.map((item, index) => [item.id, { ...item, position: index }]));
+    const changed = reordered
+      .map((item, index) => ({ id: item.id, position: index, previousPosition: item.position }))
+      .filter((item) => item.position !== item.previousPosition);
+
+    if (changed.length === 0) {
+      return;
+    }
+
+    setTaskLists((prev) => prev.map((item) => nextById.get(item.id) ?? item));
+
+    try {
+      setIsTaskListActionLoading(true);
+      await Promise.all(changed.map((item) => taskService.updateTaskList(item.id, { position: item.position })));
+      toast.success('Task list order updated.');
+      await refetch();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      if (managedProjectId) {
+        await loadTaskLists(managedProjectId);
+      }
+    } finally {
+      setIsTaskListActionLoading(false);
+    }
   };
 
   return (
     <div className="legacy-dark-scope h-screen flex flex-col bg-slate-50/50 text-slate-900 font-sans overflow-hidden">
-      {/* HEADER */}
       <header className="px-6 py-5 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 flex-shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">Công việc của tôi <span className="text-sm font-normal text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mt-1 shadow-sm">{filteredTasks.length}</span></h1>
-            <p className="text-sm text-slate-500 mt-1 flex items-center gap-2"><span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5"/> {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}</span><span className="w-1 h-1 bg-slate-300 rounded-full"></span>{groupedTasks.overdue.length > 0 ? <span className="font-semibold text-red-600 flex items-center gap-1 animate-pulse"><AlertCircle className="w-3.5 h-3.5"/> {groupedTasks.overdue.length} task quá hạn</span> : <span className="text-emerald-600 font-medium">Tất cả đều đúng tiến độ</span>}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">My Tasks <span className="text-sm font-normal text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mt-1 shadow-sm">{filteredTasks.length}</span></h1>
+            <p className="text-sm text-slate-500 mt-1 flex items-center gap-2"><span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}</span><span className="w-1 h-1 bg-slate-300 rounded-full"></span>{groupedTasks.overdue.length > 0 ? <span className="font-semibold text-red-600 flex items-center gap-1 animate-pulse"><AlertCircle className="w-3.5 h-3.5" /> {groupedTasks.overdue.length} overdue</span> : <span className="text-emerald-600 font-medium">On track</span>}</p>
           </div>
           <div className="flex items-center gap-2 md:gap-3 flex-wrap">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-              <input type="text" placeholder="Tìm kiếm nhanh..." className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:bg-white w-full md:w-56 transition-all shadow-sm hover:shadow" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+              <input type="text" placeholder="Quick search..." className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 focus:bg-white w-full md:w-56 transition-all shadow-sm hover:shadow" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
             </div>
-            
-            {/* Filter Popover */}
-            <Popover 
-              isOpen={isFilterOpen} setIsOpen={setIsFilterOpen}
-              trigger={<button className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all active:scale-95 text-sm font-medium"><Filter className="w-4 h-4" /><span className="hidden sm:inline">Lọc & Sắp xếp</span></button>}
+
+            <Popover
+              isOpen={isFilterOpen}
+              setIsOpen={setIsFilterOpen}
+              trigger={<button className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all active:scale-95 text-sm font-medium"><Filter className="w-4 h-4" /><span className="hidden sm:inline">Filter & Sort</span></button>}
               content={
                 <div className="w-64 p-2">
-                  <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Sắp xếp theo</div>
-                  <button onClick={() => setSortOption('DUE_DATE_ASC')} className={cn("w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors", sortOption === 'DUE_DATE_ASC' ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700 hover:bg-slate-100")}><span className="flex items-center gap-2"><CalendarIcon className="w-4 h-4"/> Ngày đến hạn (Tăng dần)</span>{sortOption === 'DUE_DATE_ASC' && <Check className="w-4 h-4" />}</button>
-                  <button onClick={() => setSortOption('PRIORITY_DESC')} className={cn("w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors", sortOption === 'PRIORITY_DESC' ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700 hover:bg-slate-100")}><span className="flex items-center gap-2"><ArrowUpCircle className="w-4 h-4"/> Độ ưu tiên (Cao nhất)</span>{sortOption === 'PRIORITY_DESC' && <Check className="w-4 h-4" />}</button>
-                  <button onClick={() => setSortOption('TITLE_ASC')} className={cn("w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors", sortOption === 'TITLE_ASC' ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700 hover:bg-slate-100")}><span className="flex items-center gap-2"><ArrowUpDown className="w-4 h-4"/> Tiêu đề (A-Z)</span>{sortOption === 'TITLE_ASC' && <Check className="w-4 h-4" />}</button>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Sort by</div>
+                  <button onClick={() => setSortOption('DUE_DATE_ASC')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'DUE_DATE_ASC' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><CalendarIcon className="w-4 h-4" /> Due date (asc)</span>{sortOption === 'DUE_DATE_ASC' && <Check className="w-4 h-4" />}</button>
+                  <button onClick={() => setSortOption('PRIORITY_DESC')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'PRIORITY_DESC' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><ArrowUpCircle className="w-4 h-4" /> Priority (desc)</span>{sortOption === 'PRIORITY_DESC' && <Check className="w-4 h-4" />}</button>
+                  <button onClick={() => setSortOption('TITLE_ASC')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'TITLE_ASC' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> Title (A-Z)</span>{sortOption === 'TITLE_ASC' && <Check className="w-4 h-4" />}</button>
                 </div>
               }
             />
 
             <div className="flex items-center p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-inner">
-              <button onClick={() => setViewMode('LIST')} className={cn("p-1.5 rounded-md transition-all ease-out active:scale-95", viewMode === 'LIST' ? "bg-white shadow-sm text-indigo-600 ring-1 ring-black/5" : "text-slate-500 hover:text-slate-700")}><LayoutList className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode('KANBAN')} className={cn("p-1.5 rounded-md transition-all ease-out active:scale-95", viewMode === 'KANBAN' ? "bg-white shadow-sm text-indigo-600 ring-1 ring-black/5" : "text-slate-500 hover:text-slate-700")}><KanbanIcon className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('LIST')} className={cn('p-1.5 rounded-md transition-all ease-out active:scale-95', viewMode === 'LIST' ? 'bg-white shadow-sm text-indigo-600 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700')}><LayoutList className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode('KANBAN')} className={cn('p-1.5 rounded-md transition-all ease-out active:scale-95', viewMode === 'KANBAN' ? 'bg-white shadow-sm text-indigo-600 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700')}><KanbanIcon className="w-4 h-4" /></button>
             </div>
-            
-            {/* Create Popover */}
-            <Popover 
-              isOpen={isCreateOpen} setIsOpen={setIsCreateOpen}
-              trigger={<button className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 font-medium text-sm"><Plus className="w-4 h-4" /><span className="hidden sm:inline">Tạo mới</span></button>}
+
+            <Popover
+              isOpen={isCreateOpen}
+              setIsOpen={setIsCreateOpen}
+              trigger={<button className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 font-medium text-sm"><Plus className="w-4 h-4" /><span className="hidden sm:inline">Create</span></button>}
               content={
                 <div className="w-56 p-1.5">
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Khởi tạo</div>
-                  <button onClick={() => { setIsCreateOpen(false); setIsCreateTaskModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group"><div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-colors"><FilePlus className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">Công việc mới</div><div className="text-[10px] text-slate-500 font-normal">Mở form tạo task đầy đủ</div></div></button>
+                  <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Create</div>
+                  <button onClick={() => { setIsCreateOpen(false); setIsCreateTaskModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group"><div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-colors"><FilePlus className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">New task</div><div className="text-[10px] text-slate-500 font-normal">Open full task form</div></div></button>
+                  <button onClick={() => { setIsCreateOpen(false); void handleQuickCreateTaskList(); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group"><div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-colors"><Layers className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">New task list</div><div className="text-[10px] text-slate-500 font-normal">Open manager to create list</div></div></button>
+                  <button onClick={() => { setIsCreateOpen(false); void openTaskListManager(); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors group"><div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-md group-hover:bg-indigo-200 transition-colors"><Layers className="w-4 h-4" /></div><div className="text-left"><div className="font-medium">Manage task lists</div><div className="text-[10px] text-slate-500 font-normal">Rename, archive, delete</div></div></button>
                   <div className="h-px bg-slate-100 my-1.5"></div>
-                  <button onClick={() => { setIsCreateOpen(false); setIsCsvModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-colors group"><Upload className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /><span>Nhập dữ liệu (CSV)</span></button>
+                  <button onClick={() => { setIsCreateOpen(false); setIsCsvModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-colors group"><Upload className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /><span>Import CSV</span></button>
                 </div>
               }
             />
@@ -181,42 +670,52 @@ export default function TasksPage() {
         </div>
       </header>
 
-      {/* CONTENT AREA - SPLIT SCROLL LOGIC */}
-      <main className={cn(
-        "flex-1 flex flex-col relative", 
-        viewMode === 'LIST' ? "overflow-y-auto" : "overflow-hidden"
-      )}>
-        
-        {viewMode === 'LIST' && (
+      <main className={cn('flex-1 flex flex-col relative', viewMode === 'LIST' ? 'overflow-y-auto' : 'overflow-hidden')}>
+        {isLoading && (
+          <div className="p-6 w-full max-w-5xl mx-auto">
+            <TaskSkeletonLoader count={4} variant={viewMode === 'LIST' ? 'list' : 'kanban'} />
+          </div>
+        )}
+
+        {!isLoading && isError && (
+          <div className="p-6 w-full max-w-5xl mx-auto">
+            <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-5">
+              <div className="font-semibold">Failed to load tasks</div>
+              <p className="text-sm mt-1">{getErrorMessage(error)}</p>
+              <button onClick={() => refetch()} className="mt-3 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700">Retry</button>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && !isError && viewMode === 'LIST' && (
           <div className="flex-1 w-full max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
             {filteredTasks.length === 0 ? (
-              <TaskEmptyState 
-                type={searchQuery ? "no-results" : "no-tasks"}
+              <TaskEmptyState
+                type={searchQuery ? 'no-results' : 'no-tasks'}
                 searchQuery={searchQuery}
                 onCreateTask={() => setIsCreateTaskModalOpen(true)}
                 onClearSearch={() => setSearchQuery('')}
               />
             ) : (
               <>
-                {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Quá hạn" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>}
-                <TaskGroupSection title="Hôm nay" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />) : <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateTaskModalOpen(true)} />}</TaskGroupSection>
-                <TaskGroupSection title="Sắp tới" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
-                <TaskGroupSection title="Đã hoàn thành" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map(task => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
+                {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Overdue" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>}
+                <TaskGroupSection title="Today" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />) : <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateTaskModalOpen(true)} />}</TaskGroupSection>
+                <TaskGroupSection title="Upcoming" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
+                <TaskGroupSection title="Done" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
               </>
             )}
           </div>
         )}
 
-        {/* KANBAN VIEW - HORIZONTAL SCROLL ONLY */}
-        {viewMode === 'KANBAN' && (
+        {!isLoading && !isError && viewMode === 'KANBAN' && (
           <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 custom-scrollbar">
             <div className="h-full flex gap-6 min-w-max">
               {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-                const tasks = kanbanColumns[key as TaskStatus];
+                const columnTasks = kanbanColumns[key as TaskStatus];
                 return (
                   <div key={key} className="flex-shrink-0 w-80 flex flex-col h-full group/column">
-                    <div className={cn("flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl border transition-colors duration-300 flex-shrink-0", config.bg, `border-${config.color.split('-')[1]}-200`)}><div className="flex items-center gap-2 font-bold text-sm text-slate-700"><config.icon className={cn("w-4 h-4", config.color)} />{config.label}</div><span className="bg-white/60 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{tasks.length}</span></div>
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar p-1 pb-4">{tasks.map(task => <TaskKanbanCard key={task.id} task={task} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}<button onClick={() => setIsCreateTaskModalOpen(true)} className="w-full py-2.5 mt-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 opacity-0 group-hover/column:opacity-100"><Plus className="w-4 h-4" /> Thêm nhanh</button></div>
+                    <div className={cn('flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl border transition-colors duration-300 flex-shrink-0', config.bg)}><div className="flex items-center gap-2 font-bold text-sm text-slate-700"><config.icon className={cn('w-4 h-4', config.color)} />{config.label}</div><span className="bg-white/60 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{columnTasks.length}</span></div>
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar p-1 pb-4">{columnTasks.map((task) => <TaskKanbanCard key={task.id} task={task} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}<button onClick={() => setIsCreateTaskModalOpen(true)} className="w-full py-2.5 mt-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 opacity-0 group-hover/column:opacity-100"><Plus className="w-4 h-4" /> Quick add</button></div>
                   </div>
                 );
               })}
@@ -225,17 +724,205 @@ export default function TasksPage() {
         )}
       </main>
 
-      {/* MODALS */}
-      <TaskDetailPanel task={selectedTask} onClose={() => setSelectedTask(null)} />
+      <TaskDetailPanel task={selectedTaskWithDetail} onClose={() => setSelectedTask(null)} />
       <CreateTaskModal
         isOpen={isCreateTaskModalOpen}
         onClose={() => setIsCreateTaskModalOpen(false)}
         projects={projectOptions}
         onCreateTask={handleCreateTask}
       />
+      <Modal isOpen={isTaskListModalOpen} onClose={() => setIsTaskListModalOpen(false)} className="max-w-2xl">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Manage Task Lists</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Create, reorder, rename, archive, and delete task lists by project.</p>
+          </div>
+        </div>
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Project</label>
+            <select
+              value={managedProjectId}
+              onChange={(event) => {
+                const nextProjectId = event.target.value;
+                setManagedProjectId(nextProjectId);
+                void loadTaskLists(nextProjectId);
+              }}
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 bg-white"
+            >
+              {projectOptions.map((project) => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">New Task List</label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                value={newTaskListName}
+                onChange={(event) => setNewTaskListName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void handleCreateTaskListInManager();
+                  }
+                }}
+                placeholder="e.g. Sprint Backlog"
+                className="flex-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 bg-white"
+              />
+              <button
+                type="button"
+                onClick={() => { void handleCreateTaskListInManager(); }}
+                disabled={isTaskListActionLoading}
+                className="px-3 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-60"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+
+          {isTaskListLoading ? (
+            <div className="text-sm text-slate-500">Loading task lists...</div>
+          ) : sortedTaskLists.length === 0 ? (
+            <div className="text-sm text-slate-500 border border-slate-200 rounded-md p-3">No task lists found for this project.</div>
+          ) : (
+            <div className="space-y-2">
+              {sortedTaskLists.map((taskList, index) => (
+                <div key={taskList.id} className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3 bg-white">
+                  <div className="min-w-0">
+                    {editingTaskListId === taskList.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={editingTaskListName}
+                          onChange={(event) => setEditingTaskListName(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              void handleRenameTaskList(taskList);
+                            }
+                            if (event.key === 'Escape') {
+                              event.preventDefault();
+                              cancelRenameTaskList();
+                            }
+                          }}
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { void handleRenameTaskList(taskList); }}
+                          className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50"
+                          title="Save"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelRenameTaskList}
+                          className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
+                          title="Cancel"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={cn('text-sm font-medium truncate', taskList.is_archived ? 'text-slate-400 line-through' : 'text-slate-800')}>
+                        {taskList.name}
+                      </div>
+                    )}
+                    <div className="text-xs text-slate-500">Position: {taskList.position} • {taskList.is_archived ? 'Archived' : 'Active'}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={isTaskListActionLoading || index === 0}
+                      onClick={() => { void handleMoveTaskList(taskList.id, 'up'); }}
+                      className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
+                      title="Move up"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isTaskListActionLoading || index === sortedTaskLists.length - 1}
+                      onClick={() => { void handleMoveTaskList(taskList.id, 'down'); }}
+                      className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
+                      title="Move down"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isTaskListActionLoading || editingTaskListId === taskList.id}
+                      onClick={() => { startRenameTaskList(taskList); }}
+                      className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
+                      title="Rename"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isTaskListActionLoading}
+                      onClick={() => { void handleArchiveToggleTaskList(taskList); }}
+                      className="p-2 rounded-md text-slate-500 hover:text-amber-600 hover:bg-amber-50 disabled:opacity-40"
+                      title={taskList.is_archived ? 'Restore' : 'Archive'}
+                    >
+                      {taskList.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isTaskListActionLoading}
+                      onClick={() => { requestDeleteTaskList(taskList); }}
+                      className="p-2 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 disabled:opacity-40"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {deleteTargetTaskList && (
+            <div className="border border-red-200 bg-red-50 rounded-lg p-4 space-y-3">
+              <div>
+                <div className="text-sm font-semibold text-red-700">Confirm delete</div>
+                <p className="text-xs text-red-600 mt-1">
+                  Delete task list "{deleteTargetTaskList.name}". Enable force delete if this list still contains tasks.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-red-700">
+                <input
+                  type="checkbox"
+                  checked={deleteForce}
+                  onChange={(event) => setDeleteForce(event.target.checked)}
+                />
+                Force delete (remove with remaining tasks)
+              </label>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={cancelDeleteTaskList}
+                  className="px-3 py-2 text-sm rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isTaskListActionLoading}
+                  onClick={() => { void confirmDeleteTaskList(); }}
+                  className="px-3 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  Delete task list
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
       <CsvImportModal isOpen={isCsvModalOpen} onClose={() => setIsCsvModalOpen(false)} onImportSuccess={(count) => { console.log(`Imported ${count}`); setIsCsvModalOpen(false); }} />
 
-      {/* BULK ACTION BAR */}
       <TaskBulkActionBar
         selectedCount={selectedTaskIds.size}
         isVisible={selectedTaskIds.size > 0}
@@ -244,13 +931,29 @@ export default function TasksPage() {
         onStatusChange={async (status) => {
           setIsBulkLoading(true);
           try {
-            await taskService.bulkUpdateTasks({
+            await bulkUpdateTasks({
               task_ids: Array.from(selectedTaskIds),
-              status: status.toLowerCase() as any,
+              status: toApiTaskStatus(status),
             });
             setSelectedTaskIds(new Set());
-          } catch (error) {
-            console.error('Failed to update tasks:', error);
+            toast.success('Bulk status updated.');
+          } catch (bulkError) {
+            toast.error(getErrorMessage(bulkError));
+          } finally {
+            setIsBulkLoading(false);
+          }
+        }}
+        onPriorityChange={async (priority) => {
+          setIsBulkLoading(true);
+          try {
+            await bulkUpdateTasks({
+              task_ids: Array.from(selectedTaskIds),
+              priority: toApiTaskPriority(priority),
+            });
+            setSelectedTaskIds(new Set());
+            toast.success('Bulk priority updated.');
+          } catch (bulkError) {
+            toast.error(getErrorMessage(bulkError));
           } finally {
             setIsBulkLoading(false);
           }
@@ -258,10 +961,11 @@ export default function TasksPage() {
         onDelete={async () => {
           setIsBulkLoading(true);
           try {
-            await taskService.bulkDeleteTasks(Array.from(selectedTaskIds));
+            await bulkDeleteTasks(Array.from(selectedTaskIds));
             setSelectedTaskIds(new Set());
-          } catch (error) {
-            console.error('Failed to delete tasks:', error);
+            toast.success('Selected tasks deleted.');
+          } catch (bulkError) {
+            toast.error(getErrorMessage(bulkError));
           } finally {
             setIsBulkLoading(false);
           }
