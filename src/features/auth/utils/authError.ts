@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios';
 
 interface ApiErrorPayload {
-  detail?: string;
+  detail?: string | Record<string, unknown> | Array<unknown>;
   message?: string;
   error?: string;
   code?: string;
@@ -73,16 +73,46 @@ export const isUnverifiedEmailError = (error: unknown): boolean => {
 
 export const getReadableMessage = (error: unknown, fallback: string): string => {
   const payload = getPayload(error);
-  const raw = payload.detail || payload.message || payload.error || fallback;
+  const raw = payload.detail ?? payload.message ?? payload.error ?? fallback;
   return sanitizeAuthErrorMessage(raw, fallback);
 };
 
-export const sanitizeAuthErrorMessage = (message: string, fallback: string): string => {
+export const sanitizeAuthErrorMessage = (message: unknown, fallback: string): string => {
   if (!message) {
     return fallback;
   }
 
-  const normalized = message.trim();
+  let normalized: string;
+  if (typeof message === 'string') {
+    normalized = message.trim();
+  } else if (Array.isArray(message)) {
+    normalized = message
+      .map((item) => {
+        if (typeof item === 'string') {
+          return item;
+        }
+
+        if (item && typeof item === 'object' && 'msg' in item) {
+          const msg = (item as { msg?: unknown }).msg;
+          return typeof msg === 'string' ? msg : '';
+        }
+
+        return '';
+      })
+      .filter(Boolean)
+      .join('; ')
+      .trim();
+  } else if (typeof message === 'object') {
+    const detail = (message as { detail?: unknown }).detail;
+    if (typeof detail === 'string') {
+      normalized = detail.trim();
+    } else {
+      normalized = JSON.stringify(message);
+    }
+  } else {
+    normalized = String(message).trim();
+  }
+
   const lower = normalized.toLowerCase();
 
   if (SENSITIVE_KEYWORDS.some((keyword) => lower.includes(keyword))) {
