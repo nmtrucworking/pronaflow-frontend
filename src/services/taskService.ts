@@ -50,6 +50,7 @@ export interface TaskResponse {
   dependencies?: string[];
   subtasks_count?: number;
   comments_count?: number;
+  is_milestone?: boolean;
   created_at: string;
   updated_at: string;
   subtasks?: SubtaskResponse[];
@@ -103,6 +104,7 @@ export interface CreateTaskDTO {
   assigned_to?: string;
   due_date?: string;
   estimated_hours?: number;
+  is_milestone?: boolean;
   tags?: string[];
   dependencies?: string[];
 }
@@ -112,7 +114,10 @@ export interface UpdateTaskDTO {
   description?: string;
   priority?: ApiTaskPriority;
   due_date?: string;
+  planned_start?: string;
+  planned_end?: string;
   estimated_hours?: number;
+  is_milestone?: boolean;
   progress?: number;
 }
 
@@ -178,6 +183,7 @@ interface BackendTaskResponse {
   dependencies?: string[];
   subtasks_count?: number;
   comments_count?: number;
+  is_milestone?: boolean;
   created_at: string;
   updated_at: string;
   subtasks?: SubtaskResponse[];
@@ -274,6 +280,7 @@ class TaskService {
     task_list_id?: string;
     status?: string;
     priority?: string;
+    is_milestone?: boolean;
     assigned_to?: string;
     due_date_from?: string;
     due_date_to?: string;
@@ -289,6 +296,7 @@ class TaskService {
       project_id: params?.project_id,
       task_list_id: params?.task_list_id,
       status: params?.status,
+      is_milestone: params?.is_milestone,
       assignee_id: params?.assigned_to,
       skip,
       limit: pageSize,

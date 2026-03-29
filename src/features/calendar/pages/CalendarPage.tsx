@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -19,6 +20,8 @@ import {
 } from 'lucide-react';
 import COLORS from '@/config/colors';
 import { CALENDAR_PRIORITY_COLORS } from '@/config/domainMappings';
+import { useTasks } from '@/features/tasks/hooks/useTaskQueries';
+import { useProjectStore } from '@/features/projects/store/projectStore';
 
 /**
  * PRONAFLOW CALENDAR & GANTT MODULE
@@ -37,6 +40,15 @@ interface TaskEntity {
 }
 
 const CalendarGanttPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const selectedProject = useProjectStore((state) => state.selectedProject);
+
+  const projectId = useMemo(() => {
+    const fromQuery = searchParams.get('project');
+    if (fromQuery && fromQuery.trim().length > 0) return fromQuery;
+    return selectedProject?.project_id || '';
+  }, [searchParams, selectedProject?.project_id]);
+
   const [currentView, setCurrentView] = useState<'calendar' | 'gantt'>('calendar');
   const [ganttMode, setGanttMode] = useState<ViewMode>(ViewMode.Day);
 
@@ -74,8 +86,55 @@ const CalendarGanttPage: React.FC = () => {
     }
   ];
 
+  const apiTaskQuery = useTasks(
+    projectId
+      ? {
+          project_id: projectId,
+          page: 1,
+          page_size: 100,
+          sort_by: 'due_date',
+        }
+      : undefined
+  );
+
+  const apiTasks = useMemo<TaskEntity[]>(() => {
+    const list = apiTaskQuery.data?.tasks || [];
+    return list
+      .map((task) => {
+        if (!task.due_date) return null;
+
+        return {
+          task_id: task.task_id,
+          project_id: task.project_id,
+          title: task.title,
+          planned_start: task.created_at,
+          planned_end: task.due_date,
+          progress: task.progress ?? 0,
+          priority_id:
+            task.priority === 'URGENT'
+              ? 'urgent'
+              : task.priority === 'HIGH'
+                ? 'high'
+                : task.priority === 'MEDIUM'
+                  ? 'medium'
+                  : 'low',
+          status_id:
+            task.status === 'DONE'
+              ? 'done'
+              : task.status === 'IN_PROGRESS'
+                ? 'in_progress'
+                : task.status === 'IN_REVIEW'
+                  ? 'review'
+                  : 'todo',
+        } as TaskEntity;
+      })
+      .filter((item): item is TaskEntity => item !== null);
+  }, [apiTaskQuery.data?.tasks]);
+
+  const resolvedTasks = apiTasks.length > 0 ? apiTasks : tasks;
+
   // Mapping dữ liệu cho FullCalendar
-  const calendarEvents = useMemo(() => tasks.map(t => ({
+  const calendarEvents = useMemo(() => resolvedTasks.map(t => ({
     id: t.task_id,
     title: t.title,
     start: t.planned_start,
@@ -83,10 +142,10 @@ const CalendarGanttPage: React.FC = () => {
     backgroundColor: CALENDAR_PRIORITY_COLORS[t.priority_id],
     borderColor: 'transparent',
     extendedProps: { ...t }
-  })), [tasks]);
+  })), [resolvedTasks]);
 
   // Mapping dữ liệu cho Gantt-task-react
-  const ganttTasks: GanttTask[] = useMemo(() => tasks.map(t => ({
+  const ganttTasks: GanttTask[] = useMemo(() => resolvedTasks.map(t => ({
     start: new Date(t.planned_start),
     end: new Date(t.planned_end),
     name: t.title,
@@ -98,7 +157,7 @@ const CalendarGanttPage: React.FC = () => {
       progressColor: CALENDAR_PRIORITY_COLORS[t.priority_id], 
       progressSelectedColor: COLORS.semantic.info[600]
     }
-  })), [tasks]);
+  })), [resolvedTasks]);
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950">
@@ -108,6 +167,13 @@ const CalendarGanttPage: React.FC = () => {
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white"> Temporal Hub </h1>
             <p className="text-xs text-slate-500"> Workspace: PronaFlow Dev </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {projectId
+                ? apiTasks.length > 0
+                  ? 'Nguồn dữ liệu: Task API'
+                  : 'Nguồn dữ liệu: Mock (API chưa có task phù hợp)'
+                : 'Chưa chọn project. Có thể thêm query ?project={project_id}.'}
+            </p>
           </div>
 
           {/* View Switcher Tabs */}

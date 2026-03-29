@@ -23,6 +23,11 @@ import taskService from './taskService';
 export { default as taskService } from './taskService';
 export * from './taskService';
 
+// Module 5: Temporal Planning and Scheduling
+import schedulingService from './schedulingService';
+export { default as schedulingService } from './schedulingService';
+export * from './schedulingService';
+
 // Module 6: Unified Collaboration Hub
 import { referenceService } from './referenceService';
 export { referenceService } from './referenceService';
@@ -80,6 +85,7 @@ export const services: Record<string, any> = {
   workspace: workspaceService,
   project: projectService,
   task: taskService,
+  scheduling: schedulingService,
   reference: referenceService,
   notification: notificationService,
   archive: archiveService,
