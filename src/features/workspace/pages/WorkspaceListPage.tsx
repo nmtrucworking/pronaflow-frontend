@@ -13,7 +13,7 @@ import { ROUTES } from '@/routes/paths';
 import { WorkspaceCard } from '../components/WorkspaceCard';
 import { CreateWorkspaceForm, InviteUserForm } from '@/features/workspace/forms/WorkspaceForms';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Workspace, CreateWorkspaceDTO, CreateInvitationDTO } from '@/types/workspace';
+import { Workspace, WorkspaceMember, WorkspaceRole, CreateWorkspaceDTO, CreateInvitationDTO } from '@/types/workspace';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +39,7 @@ type SortOrder = 'asc' | 'desc';
 interface WorkspaceCardWithDataProps {
   workspace: Workspace;
   currentUserId?: string;
-  onSelect?: (workspace: Workspace) => void;
+  onSelect?: (workspace: Workspace, role: WorkspaceRole) => void;
   onEdit?: (workspace: Workspace) => void;
   onDelete?: (workspaceId: string) => void;
   onInviteMember?: (workspaceId: string) => void;
@@ -65,9 +65,9 @@ const WorkspaceCardWithData: React.FC<WorkspaceCardWithDataProps> = ({
   const { data: invitationsData } = useInvitations(workspace.id, 0, 50);
 
   // Determine user role from members data
-  let userRole: 'owner' | 'admin' | 'member' | 'viewer' | 'guest' = 'member';
+  let userRole: WorkspaceRole = 'member';
   if (currentUserId && membersData) {
-    const userMember = (membersData as any[]).find((m) => m.user_id === currentUserId);
+    const userMember = membersData.find((m: WorkspaceMember) => m.user_id === currentUserId);
     if (userMember) {
       userRole = userMember.role;
     } else if (workspace.owner_id === currentUserId) {
@@ -84,7 +84,7 @@ const WorkspaceCardWithData: React.FC<WorkspaceCardWithDataProps> = ({
       workspace={workspace}
       role={userRole}
       invitationsCount={invitationsCount}
-      onSelect={onSelect}
+      onSelect={() => onSelect?.(workspace, userRole)}
       onEdit={onEdit}
       onDelete={onDelete}
       onInviteMember={onInviteMember}
@@ -221,8 +221,8 @@ export const WorkspaceListPage: React.FC = () => {
   // Store
   const setCurrentWorkspace = useWorkspaceStore((state) => state.setCurrentWorkspace);
 
-  const handleSelectWorkspace = async (workspace: Workspace) => {
-    setCurrentWorkspace(workspace, 'member'); // TODO: Get actual role from API
+  const handleSelectWorkspace = async (workspace: Workspace, role: WorkspaceRole) => {
+    setCurrentWorkspace(workspace, role);
     await logAccessMutation.mutateAsync(workspace.id);
     navigate(ROUTES.workspace.detail(workspace.id));
   };

@@ -28,6 +28,7 @@ import {
   useWorkspaceSettings,
 } from '@/hooks/useWorkspace';
 import { useWorkspaceStore } from '@/store/features/workspaceStore';
+import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/routes/paths';
 import { MemberCard } from '../components/MemberCard';
 import { InvitationCard } from '../components/InvitationCard';
@@ -69,6 +70,7 @@ export const WorkspaceDetailPage: React.FC = () => {
   const resendInvitationMutation = useResendInvitation(id);
   const updateSettingsMutation = useUpdateSettings(id);
   const { setCurrentWorkspace, currentUserRole } = useWorkspaceStore();
+  const { user } = useAuth();
 
   const members: WorkspaceMember[] = membersData || [];
   const invitations: WorkspaceInvitation[] = invitationsData || [];
@@ -149,9 +151,11 @@ export const WorkspaceDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (workspace) {
-      setCurrentWorkspace(workspace, 'member');
+      const resolvedRole = members.find((member) => member.user_id === user?.user_id)?.role
+        ?? (workspace.owner_id === user?.user_id ? 'owner' : 'member');
+      setCurrentWorkspace(workspace, resolvedRole);
     }
-  }, [workspace, setCurrentWorkspace]);
+  }, [workspace, members, user?.user_id, setCurrentWorkspace]);
 
   if (isLoading) {
     return (
