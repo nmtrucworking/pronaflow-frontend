@@ -42,6 +42,7 @@ import type {
 
 export const WorkspaceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const workspaceId = id ?? '';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('members');
   const [memberSearch, setMemberSearch] = useState('');
@@ -51,24 +52,16 @@ export const WorkspaceDetailPage: React.FC = () => {
   const [invitationFilter, setInvitationFilter] = useState<'all' | 'active' | 'expired'>('all');
   const [invitationSort, setInvitationSort] = useState<'created_at' | 'expires_at'>('created_at');
 
-  if (!id) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-red-600">Workspace ID is missing</p>
-      </div>
-    );
-  }
-
   // Hooks
-  const { data: workspace, isLoading } = useWorkspace(id);
-  const { data: membersData } = useWorkspaceMembers(id, 0, 50);
-  const { data: invitationsData } = useInvitations(id, 0, 50);
-  const { data: settings } = useWorkspaceSettings(id);
-  const updateMemberMutation = useUpdateMember(id, '');
-  const removeMemberMutation = useRemoveMember(id, '');
-  const cancelInvitationMutation = useCancelInvitation(id);
-  const resendInvitationMutation = useResendInvitation(id);
-  const updateSettingsMutation = useUpdateSettings(id);
+  const { data: workspace, isLoading } = useWorkspace(workspaceId);
+  const { data: membersData } = useWorkspaceMembers(workspaceId, 0, 50);
+  const { data: invitationsData } = useInvitations(workspaceId, 0, 50);
+  const { data: settings } = useWorkspaceSettings(workspaceId);
+  const updateMemberMutation = useUpdateMember(workspaceId, '');
+  const removeMemberMutation = useRemoveMember(workspaceId, '');
+  const cancelInvitationMutation = useCancelInvitation(workspaceId);
+  const resendInvitationMutation = useResendInvitation(workspaceId);
+  const updateSettingsMutation = useUpdateSettings(workspaceId);
   const { setCurrentWorkspace, currentUserRole } = useWorkspaceStore();
   const { user } = useAuth();
 
@@ -156,6 +149,14 @@ export const WorkspaceDetailPage: React.FC = () => {
       setCurrentWorkspace(workspace, resolvedRole);
     }
   }, [workspace, members, user?.user_id, setCurrentWorkspace]);
+
+  if (!id) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-600">Workspace ID is missing</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

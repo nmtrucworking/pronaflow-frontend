@@ -7,7 +7,6 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import {
   Workspace,
-  WorkspaceMember,
   WorkspaceRole,
   WorkspaceFilterOptions,
   MemberFilterOptions,

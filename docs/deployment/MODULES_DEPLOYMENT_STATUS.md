@@ -193,6 +193,6 @@ http://localhost:5173
 ## 📚 Documentation
 
 - [Module 1 README](./MODULE_1_README.md) - IAM implementation details
-- [Module 2 README](./MODULE_2_README.md) - Workspace details
+- [Module 2 Deployment Readiness](../modules/MODULE_2_DEPLOYMENT_READINESS.md) - Canonical release status
 - [Module 3 README](./MODULE_3_README.md) - Project lifecycle details
 - [Deployment Summary](./DEPLOYMENT_SUMMARY.md) - Original deployment info

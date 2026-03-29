@@ -538,7 +538,7 @@ npm run dev
 Tất cả các tài liệu chi tiết có sẵn:
 
 1. **[MODULE_1_README.md](./MODULE_1_README.md)** - IAM Implementation
-2. **[MODULE_2_README.md](./MODULE_2_README.md)** - Workspace Management
+2. **[MODULE_2_DEPLOYMENT_READINESS.md](../modules/MODULE_2_DEPLOYMENT_READINESS.md)** - Module 2 canonical release status
 3. **[MODULE_3_README.md](./MODULE_3_README.md)** - Project Lifecycle
 4. **[DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md)** - Original deployment info
 5. **[MODULES_DEPLOYMENT_STATUS.md](./MODULES_DEPLOYMENT_STATUS.md)** - Status overview

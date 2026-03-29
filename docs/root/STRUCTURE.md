@@ -39,9 +39,7 @@ docs/
 │   └── SIDEBAR_REFACTOR_SUMMARY.md
 ├── d��� modules/                          # Module documentation
 │   ├── MODULE_1_README.md
-│   ├── MODULE_2_README.md
-│   ├── MODULE_2_REFERENCE.md
-│   ├── MODULE_2_SUMMARY.md
+│   ├── MODULE_2_DEPLOYMENT_READINESS.md
 │   ├── MODULE_3_QUICKSTART.md
 │   ├── MODULE_3_README.md
 │   ├── MODULE_3_REFERENCE.md

@@ -17,7 +17,7 @@ Tài liệu về quá trình triển khai và cập nhật hệ thống:
 ### 2. Modules (`/modules`)
 Tài liệu chi tiết về từng module trong hệ thống:
 - `MODULE_1_README.md` - Module 1 documentation
-- `MODULE_2_README.md`, `MODULE_2_REFERENCE.md`, `MODULE_2_SUMMARY.md` - Module 2 
+- `MODULE_2_DEPLOYMENT_READINESS.md` - Module 2 canonical deployment readiness
 - `MODULE_3_QUICKSTART.md`, `MODULE_3_README.md`, `MODULE_3_REFERENCE.md`, `MODULE_3_SUMMARY.md` - Module 3
 - `MODULE_9_COMPLETION.md`, `MODULE_9_QUICKREF.md`, `MODULE_9_README.md` - Module 9
 - `MODULE_12_COMPLETION.md`, `MODULE_12_QUICKREF.md`, `MODULE_12_README.md` - Module 12

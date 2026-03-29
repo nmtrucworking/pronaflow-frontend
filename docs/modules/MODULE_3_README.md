@@ -941,7 +941,7 @@ describe('useProjects', () => {
 ## Support & Resources
 
 - **API Documentation**: See `/docs/API_DOCUMENTATION.md`
-- **Module 2 Reference**: See `/docs/MODULE_2_README.md`
+- **Module 2 Reference**: See `/docs/modules/MODULE_2_DEPLOYMENT_READINESS.md`
 - **React Query Docs**: https://tanstack.com/query/latest
 - **Zustand Docs**: https://github.com/pmndrs/zustand
 - **TypeScript Docs**: https://www.typescriptlang.org/docs/

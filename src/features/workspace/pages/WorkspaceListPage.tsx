@@ -27,7 +27,6 @@ import workspaceService from '@/services/workspaceService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceMembers, useInvitations, useCancelInvitation } from '@/hooks/useWorkspace';
-import { Mail } from 'lucide-react';
 
 type WorkspaceStatusFilter = 'all' | 'ACTIVE' | 'SOFT_DELETED';
 type WorkspaceSortField = 'name' | 'created_at' | 'updated_at';

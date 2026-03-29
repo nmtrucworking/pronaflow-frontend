@@ -415,7 +415,7 @@ src/
 ## 🎓 Tài Liệu
 
 - [MODULE_1_README.md](./MODULE_1_README.md) - Chi tiết Module 1
-- [MODULE_2_README.md](./MODULE_2_README.md) - Chi tiết Module 2
+- [MODULE_2_DEPLOYMENT_READINESS.md](../modules/MODULE_2_DEPLOYMENT_READINESS.md) - Trang thai trien khai Module 2
 - [MODULE_3_README.md](./MODULE_3_README.md) - Chi tiết Module 3
 - [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) - Bản tóm tắt triển khai
 

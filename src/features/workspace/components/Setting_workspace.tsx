@@ -11,7 +11,6 @@ import {
   Users, 
   CreditCard, 
   HardDrive, 
-  Settings, 
   Shield, 
   LogOut, 
   Camera, 
@@ -25,24 +24,18 @@ import {
   Mail,
   Plus,
   Download,
-  Image as ImageIcon,
   Upload,
-  Globe,
   Tag,
   Trash2,
   Edit2,
-  Briefcase,
-  Layers,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Palette,
   Pipette,
   UserCog,
   Ban,
   Send,
   X,
-  Grid,
   Link,
   Copy
 } from 'lucide-react';
@@ -264,8 +257,13 @@ const AdvancedColorPicker = ({ color, onChange }: { color: string, onChange: (c:
   );
 };
 
+interface WorkspaceUiMember {
+  name: string;
+  role: string;
+}
+
 // --- COMPONENT: Member Actions with Modals ---
-const MemberActions = ({ member }: { member: any }) => {
+const MemberActions = ({ member }: { member: WorkspaceUiMember }) => {
   const [editRoleOpen, setEditRoleOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(member.role);
@@ -770,7 +768,7 @@ const WorkspacePermissions = () => {
 };
 
 // --- COMPONENT: Tag Action Popover (New) ---
-const TagActionPopover = ({ tag, onEdit, onDelete }: { tag: any, onEdit: () => void, onDelete: () => void }) => {
+const TagActionPopover = ({ onEdit, onDelete }: { onEdit: () => void, onDelete: () => void }) => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
@@ -805,7 +803,7 @@ const TagActionPopover = ({ tag, onEdit, onDelete }: { tag: any, onEdit: () => v
  * Workspace Tags Management (Enhanced)
  */
 const WorkspaceTags = () => {
-  const [tags, setTags] = useState(MOCK_TAGS);
+  const [tags] = useState(MOCK_TAGS);
   const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'usage', direction: 'asc' | 'desc' } | null>(null);
   const [newTagColor, setNewTagColor] = useState<string>(COLORS.semantic.info[500]);
   // State for Edit/Delete actions in real app would go here
@@ -814,10 +812,10 @@ const WorkspaceTags = () => {
   const sortedTags = useMemo(() => {
     if (!sortConfig) return tags;
     return [...tags].sort((a, b) => {
-      // @ts-ignore - dynamic sorting
-      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-      // @ts-ignore
-      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+      const left = sortConfig.key === 'name' ? a.name : a.usage;
+      const right = sortConfig.key === 'name' ? b.name : b.usage;
+      if (left < right) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (left > right) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
   }, [tags, sortConfig]);
@@ -898,7 +896,6 @@ const WorkspaceTags = () => {
                   <td className="px-4 py-3 text-slate-500">{tag.usage} tasks</td>
                   <td className="px-4 py-3 text-right">
                     <TagActionPopover 
-                      tag={tag} 
                       onEdit={() => console.log('Edit', tag.id)} 
                       onDelete={() => console.log('Delete', tag.id)} 
                     />
