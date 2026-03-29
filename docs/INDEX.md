@@ -35,6 +35,18 @@ Báo cáo tổng quan và chi tiết dự án:
 - `PROJECTDETAILCOMPACT_DOCS.md` - Tài liệu chi tiết dự án (compact)
 - `PROJECTDETAILCOMPACT_QUICKREF.md` - Quick reference
 
+### 4.1. Features (`/features`)
+Tài liệu kỹ thuật theo từng feature (được tách khỏi `src/features` để dễ quản trị):
+- `dashboard/REFACTORING.md`
+- `inbox/REFACTORING.md`
+- `projects/REFACTORING.md`
+- `workspace/ARCHITECTURE.md`
+- `workspace/COMPLETION_SUMMARY.md`
+- `workspace/FILE_MANIFEST.md`
+- `workspace/IMPLEMENTATION_COMPLETE.md`
+- `workspace/INTEGRATION_CHECKLIST.md`
+- `workspace/PROJECT_SUMMARY.md`
+
 ### 5. Frontend (`/frontend`)
 Tài liệu kỹ thuật frontend chi tiết:
 - **README.md** - Hướng dẫn sử dụng frontend docs
