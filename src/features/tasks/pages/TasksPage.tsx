@@ -1,9 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   AlertCircle,
-  ArrowDown,
   ArrowRight,
-  ArrowUp,
   ArrowUpCircle,
   ArrowUpDown,
   Calendar as CalendarIcon,
@@ -11,6 +24,7 @@ import {
   Check,
   CheckCircle2,
   FilePlus,
+  Flag,
   Filter,
   Kanban as KanbanIcon,
   LayoutList,
@@ -20,6 +34,7 @@ import {
   Layers,
   Archive,
   ArchiveRestore,
+  GripVertical,
   Pencil,
   Trash2,
   X,
@@ -45,6 +60,8 @@ import { TaskListRow } from '../components/TaskListRow';
 import { TaskEmptyState } from '../components/TaskEmptyState';
 import { TaskBulkActionBar } from '../components/TaskBulkActionBar';
 import { TaskSkeletonLoader } from '../components/TaskSkeletonLoader';
+
+type MilestoneFilter = 'ALL' | 'MILESTONE_ONLY' | 'NON_MILESTONE_ONLY';
 
 interface TaskResponseWithRelations extends TaskResponse {
   task_number?: number;
@@ -160,11 +177,13 @@ function toTaskEntity(task: TaskResponseWithRelations, index: number, projectLoo
 
   return {
     id: task.task_id,
+    taskListId: task.task_list_id,
     key: task.key || `${project.key}-${task.task_number ?? index + 1}`,
     title: task.title,
     project,
     status: normalizeTaskStatus(task.status),
     priority: normalizeTaskPriority(task.priority),
+    isMilestone: Boolean(task.is_milestone),
     dueDate,
     estimatedHours: task.estimated_hours ?? 0,
     assignees,
@@ -185,12 +204,109 @@ function toTaskEntity(task: TaskResponseWithRelations, index: number, projectLoo
   };
 }
 
+function SortableTaskListRow({
+  task,
+  isSelected,
+  onSelect,
+  onViewDetails,
+  onOpenProject,
+}: {
+  task: TaskEntity;
+  isSelected: boolean;
+  onSelect: () => void;
+  onViewDetails: () => void;
+  onOpenProject: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn('relative', isDragging && 'opacity-60')}>
+      <button
+        type="button"
+        className="absolute left-1 top-1/2 -translate-y-1/2 z-10 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing"
+        aria-label="Drag to reorder task"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <div className="pl-5">
+        <TaskListRow
+          task={task}
+          isSelected={isSelected}
+          onSelect={onSelect}
+          onViewDetails={onViewDetails}
+          onOpenProject={onOpenProject}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SortableKanbanTaskCard({
+  task,
+  onViewDetails,
+  onOpenProject,
+}: {
+  task: TaskEntity;
+  onViewDetails: () => void;
+  onOpenProject: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-60 scale-[0.99]')}>
+      <div {...attributes} {...listeners}>
+        <TaskKanbanCard task={task} onViewDetails={onViewDetails} onOpenProject={onOpenProject} />
+      </div>
+    </div>
+  );
+}
+
+function SortableTaskListManagerItem({
+  taskList,
+  children,
+}: {
+  taskList: TaskListItem;
+  children: ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: taskList.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn('flex items-center gap-2', isDragging && 'opacity-60')}>
+      <button
+        type="button"
+        className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing"
+        aria-label="Drag to reorder task list"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+}
+
 export default function TasksPage() {
   const navigate = useNavigate();
 
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortOption, setSortOption] = useState<SortOption>('DUE_DATE_ASC');
+  const [sortOption, setSortOption] = useState<SortOption>('MANUAL');
+  const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>('ALL');
   const [selectedTask, setSelectedTask] = useState<TaskEntity | null>(null);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
@@ -214,6 +330,14 @@ export default function TasksPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [taskOrder, setTaskOrder] = useState<string[]>([]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    })
+  );
 
   const { data: projectsResponse } = useProjects(undefined, undefined, 1, 200);
   const { data: taskListResponse, isLoading, isError, error, refetch } = useTasks({
@@ -273,6 +397,33 @@ export default function TasksPage() {
     return rawTasks.map((task, index) => toTaskEntity(task, index, projectLookup));
   }, [rawTasks, projectLookup]);
 
+  const taskById = useMemo(() => {
+    return new Map(tasks.map((task) => [task.id, task]));
+  }, [tasks]);
+
+  useEffect(() => {
+    setTaskOrder((previous) => {
+      const availableIds = tasks.map((task) => task.id);
+      const previousSet = new Set(previous);
+      const kept = previous.filter((id) => availableIds.includes(id));
+      const appended = availableIds.filter((id) => !previousSet.has(id));
+      return [...kept, ...appended];
+    });
+  }, [tasks]);
+
+  const orderedTasks = useMemo(() => {
+    if (taskOrder.length === 0) {
+      return tasks;
+    }
+
+    const ordered = taskOrder
+      .map((taskId) => taskById.get(taskId))
+      .filter((task): task is TaskEntity => Boolean(task));
+
+    const missing = tasks.filter((task) => !taskOrder.includes(task.id));
+    return [...ordered, ...missing];
+  }, [taskById, taskOrder, tasks]);
+
   const selectedTaskWithDetail = useMemo(() => {
     if (!selectedTask) {
       return null;
@@ -312,21 +463,31 @@ export default function TasksPage() {
   };
 
   const filteredTasks = useMemo(() => {
-    const tasksToFilter = tasks.filter((task) =>
+    const tasksToFilter = orderedTasks.filter((task) =>
       task.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const milestoneFilteredTasks = tasksToFilter.filter((task) => {
+      if (milestoneFilter === 'MILESTONE_ONLY') {
+        return task.isMilestone;
+      }
+      if (milestoneFilter === 'NON_MILESTONE_ONLY') {
+        return !task.isMilestone;
+      }
+      return true;
+    });
+
     if (sortOption === 'DUE_DATE_ASC') {
-      tasksToFilter.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+      milestoneFilteredTasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
     } else if (sortOption === 'PRIORITY_DESC') {
       const priorityMap: Record<TaskPriority, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-      tasksToFilter.sort((a, b) => priorityMap[b.priority] - priorityMap[a.priority]);
+      milestoneFilteredTasks.sort((a, b) => priorityMap[b.priority] - priorityMap[a.priority]);
     } else if (sortOption === 'TITLE_ASC') {
-      tasksToFilter.sort((a, b) => a.title.localeCompare(b.title));
+      milestoneFilteredTasks.sort((a, b) => a.title.localeCompare(b.title));
     }
 
-    return tasksToFilter;
-  }, [tasks, searchQuery, sortOption]);
+    return milestoneFilteredTasks;
+  }, [orderedTasks, searchQuery, sortOption, milestoneFilter]);
 
   const groupedTasks = useMemo(() => {
     const today = new Date().toDateString();
@@ -373,6 +534,7 @@ export default function TasksPage() {
     title: string;
     projectId: string;
     priority: TaskPriority;
+    isMilestone: boolean;
     dueDate: string;
     assigneeId?: string;
     description?: string;
@@ -406,6 +568,7 @@ export default function TasksPage() {
       description: payload.description,
       status: 'TO_DO',
       priority: toApiTaskPriority(payload.priority),
+      is_milestone: payload.isMilestone,
       due_date: new Date(payload.dueDate).toISOString(),
       assigned_to: payload.assigneeId,
     };
@@ -577,21 +740,7 @@ export default function TasksPage() {
     }
   };
 
-  const handleMoveTaskList = async (taskListId: string, direction: 'up' | 'down') => {
-    const currentIndex = sortedTaskLists.findIndex((taskList) => taskList.id === taskListId);
-    if (currentIndex < 0) {
-      return;
-    }
-
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= sortedTaskLists.length) {
-      return;
-    }
-
-    const reordered = [...sortedTaskLists];
-    const [moved] = reordered.splice(currentIndex, 1);
-    reordered.splice(targetIndex, 0, moved);
-
+  const persistTaskListOrder = async (reordered: TaskListItem[]) => {
     const nextById = new Map(reordered.map((item, index) => [item.id, { ...item, position: index }]));
     const changed = reordered
       .map((item, index) => ({ id: item.id, position: index, previousPosition: item.position }))
@@ -618,6 +767,75 @@ export default function TasksPage() {
     }
   };
 
+  const handleTaskListDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = sortedTaskLists.findIndex((item) => item.id === String(active.id));
+    const newIndex = sortedTaskLists.findIndex((item) => item.id === String(over.id));
+
+    if (oldIndex < 0 || newIndex < 0) {
+      return;
+    }
+
+    const reordered = arrayMove(sortedTaskLists, oldIndex, newIndex);
+    await persistTaskListOrder(reordered);
+  };
+
+  const handleTaskDragEnd = async (event: DragEndEvent) => {
+    if (sortOption !== 'MANUAL') {
+      toast.info('Switch sort to Manual order to drag and reorder tasks.');
+      return;
+    }
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const currentOrder = taskOrder.length > 0 ? taskOrder : tasks.map((task) => task.id);
+    const oldIndex = currentOrder.findIndex((taskId) => taskId === String(active.id));
+    const newIndex = currentOrder.findIndex((taskId) => taskId === String(over.id));
+
+    if (oldIndex < 0 || newIndex < 0) {
+      return;
+    }
+
+    const nextTaskOrder = arrayMove(currentOrder, oldIndex, newIndex);
+
+    const activeTask = taskById.get(String(active.id));
+    const overTask = taskById.get(String(over.id));
+    if (!activeTask || !overTask) {
+      return;
+    }
+
+    const targetTaskListId = overTask.taskListId || activeTask.taskListId;
+    if (!targetTaskListId) {
+      toast.error('Task list id is missing. Cannot persist task order.');
+      return;
+    }
+
+    const reorderedEntities = nextTaskOrder
+      .map((id) => taskById.get(id))
+      .filter((task): task is TaskEntity => Boolean(task));
+    const targetListTasks = reorderedEntities.filter((task) => (task.taskListId || activeTask.taskListId) === targetTaskListId);
+    const nextPosition = targetListTasks.findIndex((task) => task.id === activeTask.id);
+
+    const previousOrder = currentOrder;
+    setTaskOrder(nextTaskOrder);
+
+    try {
+      await taskService.moveTask(activeTask.id, targetTaskListId, Math.max(0, nextPosition));
+      toast.success('Task order updated.');
+      await refetch();
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      setTaskOrder(previousOrder);
+    }
+  };
+
   return (
     <div className="legacy-dark-scope h-screen flex flex-col bg-slate-50/50 text-slate-900 font-sans overflow-hidden">
       <header className="px-6 py-5 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 flex-shrink-0">
@@ -639,9 +857,15 @@ export default function TasksPage() {
               content={
                 <div className="w-64 p-2">
                   <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Sort by</div>
+                  <button onClick={() => setSortOption('MANUAL')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'MANUAL' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><GripVertical className="w-4 h-4" /> Manual order</span>{sortOption === 'MANUAL' && <Check className="w-4 h-4" />}</button>
                   <button onClick={() => setSortOption('DUE_DATE_ASC')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'DUE_DATE_ASC' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><CalendarIcon className="w-4 h-4" /> Due date (asc)</span>{sortOption === 'DUE_DATE_ASC' && <Check className="w-4 h-4" />}</button>
                   <button onClick={() => setSortOption('PRIORITY_DESC')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'PRIORITY_DESC' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><ArrowUpCircle className="w-4 h-4" /> Priority (desc)</span>{sortOption === 'PRIORITY_DESC' && <Check className="w-4 h-4" />}</button>
                   <button onClick={() => setSortOption('TITLE_ASC')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', sortOption === 'TITLE_ASC' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> Title (A-Z)</span>{sortOption === 'TITLE_ASC' && <Check className="w-4 h-4" />}</button>
+                  <div className="my-1.5 h-px bg-slate-100" />
+                  <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Milestone</div>
+                  <button onClick={() => setMilestoneFilter('ALL')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', milestoneFilter === 'ALL' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><Flag className="w-4 h-4" /> All tasks</span>{milestoneFilter === 'ALL' && <Check className="w-4 h-4" />}</button>
+                  <button onClick={() => setMilestoneFilter('MILESTONE_ONLY')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', milestoneFilter === 'MILESTONE_ONLY' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><Flag className="w-4 h-4" /> Milestones only</span>{milestoneFilter === 'MILESTONE_ONLY' && <Check className="w-4 h-4" />}</button>
+                  <button onClick={() => setMilestoneFilter('NON_MILESTONE_ONLY')} className={cn('w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg transition-colors', milestoneFilter === 'NON_MILESTONE_ONLY' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-slate-700 hover:bg-slate-100')}><span className="flex items-center gap-2"><Flag className="w-4 h-4" /> Non-milestones</span>{milestoneFilter === 'NON_MILESTONE_ONLY' && <Check className="w-4 h-4" />}</button>
                 </div>
               }
             />
@@ -688,39 +912,152 @@ export default function TasksPage() {
         )}
 
         {!isLoading && !isError && viewMode === 'LIST' && (
-          <div className="flex-1 w-full max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-            {filteredTasks.length === 0 ? (
-              <TaskEmptyState
-                type={searchQuery ? 'no-results' : 'no-tasks'}
-                searchQuery={searchQuery}
-                onCreateTask={() => setIsCreateTaskModalOpen(true)}
-                onClearSearch={() => setSearchQuery('')}
-              />
-            ) : (
-              <>
-                {groupedTasks.overdue.length > 0 && <TaskGroupSection title="Overdue" icon={AlertCircle} count={groupedTasks.overdue.length} headerColorClass="text-red-600" borderColorClass="from-red-200 to-transparent" isCollapsed={collapsedSections.OVERDUE} onToggle={() => toggleSection('OVERDUE')}>{groupedTasks.overdue.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>}
-                <TaskGroupSection title="Today" icon={CalendarIcon} count={groupedTasks.today.length} headerColorClass="text-indigo-600" borderColorClass="from-indigo-200 to-transparent" isCollapsed={collapsedSections.TODAY} onToggle={() => toggleSection('TODAY')}>{groupedTasks.today.length > 0 ? groupedTasks.today.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />) : <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateTaskModalOpen(true)} />}</TaskGroupSection>
-                <TaskGroupSection title="Upcoming" icon={ArrowRight} count={groupedTasks.upcoming.length} headerColorClass="text-slate-500" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.UPCOMING} onToggle={() => toggleSection('UPCOMING')} className="opacity-90 hover:opacity-100">{groupedTasks.upcoming.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
-                <TaskGroupSection title="Done" icon={CheckCircle2} count={groupedTasks.done.length} headerColorClass="text-slate-400 line-through decoration-slate-300" borderColorClass="from-slate-200 to-transparent" isCollapsed={collapsedSections.DONE} onToggle={() => toggleSection('DONE')}>{groupedTasks.done.map((task) => <TaskListRow key={task.id} task={task} isSelected={selectedTaskIds.has(task.id)} onSelect={() => toggleTaskSelection(task.id)} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}</TaskGroupSection>
-              </>
-            )}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => { void handleTaskDragEnd(event); }}>
+            <div className="flex-1 w-full max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+              {filteredTasks.length === 0 ? (
+                <TaskEmptyState
+                  type={searchQuery ? 'no-results' : 'no-tasks'}
+                  searchQuery={searchQuery}
+                  onCreateTask={() => setIsCreateTaskModalOpen(true)}
+                  onClearSearch={() => setSearchQuery('')}
+                />
+              ) : (
+                <>
+                  {groupedTasks.overdue.length > 0 && (
+                    <TaskGroupSection
+                      title="Overdue"
+                      icon={AlertCircle}
+                      count={groupedTasks.overdue.length}
+                      headerColorClass="text-red-600"
+                      borderColorClass="from-red-200 to-transparent"
+                      isCollapsed={collapsedSections.OVERDUE}
+                      onToggle={() => toggleSection('OVERDUE')}
+                    >
+                      <SortableContext items={groupedTasks.overdue.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                        {groupedTasks.overdue.map((task) => (
+                          <SortableTaskListRow
+                            key={task.id}
+                            task={task}
+                            isSelected={selectedTaskIds.has(task.id)}
+                            onSelect={() => toggleTaskSelection(task.id)}
+                            onViewDetails={() => setSelectedTask(task)}
+                            onOpenProject={() => openProject(task.project)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </TaskGroupSection>
+                  )}
+                  <TaskGroupSection
+                    title="Today"
+                    icon={CalendarIcon}
+                    count={groupedTasks.today.length}
+                    headerColorClass="text-indigo-600"
+                    borderColorClass="from-indigo-200 to-transparent"
+                    isCollapsed={collapsedSections.TODAY}
+                    onToggle={() => toggleSection('TODAY')}
+                  >
+                    {groupedTasks.today.length > 0 ? (
+                      <SortableContext items={groupedTasks.today.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                        {groupedTasks.today.map((task) => (
+                          <SortableTaskListRow
+                            key={task.id}
+                            task={task}
+                            isSelected={selectedTaskIds.has(task.id)}
+                            onSelect={() => toggleTaskSelection(task.id)}
+                            onViewDetails={() => setSelectedTask(task)}
+                            onOpenProject={() => openProject(task.project)}
+                          />
+                        ))}
+                      </SortableContext>
+                    ) : (
+                      <TaskEmptyState type="no-filter-results" onCreateTask={() => setIsCreateTaskModalOpen(true)} />
+                    )}
+                  </TaskGroupSection>
+                  <TaskGroupSection
+                    title="Upcoming"
+                    icon={ArrowRight}
+                    count={groupedTasks.upcoming.length}
+                    headerColorClass="text-slate-500"
+                    borderColorClass="from-slate-200 to-transparent"
+                    isCollapsed={collapsedSections.UPCOMING}
+                    onToggle={() => toggleSection('UPCOMING')}
+                    className="opacity-90 hover:opacity-100"
+                  >
+                    <SortableContext items={groupedTasks.upcoming.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                      {groupedTasks.upcoming.map((task) => (
+                        <SortableTaskListRow
+                          key={task.id}
+                          task={task}
+                          isSelected={selectedTaskIds.has(task.id)}
+                          onSelect={() => toggleTaskSelection(task.id)}
+                          onViewDetails={() => setSelectedTask(task)}
+                          onOpenProject={() => openProject(task.project)}
+                        />
+                      ))}
+                    </SortableContext>
+                  </TaskGroupSection>
+                  <TaskGroupSection
+                    title="Done"
+                    icon={CheckCircle2}
+                    count={groupedTasks.done.length}
+                    headerColorClass="text-slate-400 line-through decoration-slate-300"
+                    borderColorClass="from-slate-200 to-transparent"
+                    isCollapsed={collapsedSections.DONE}
+                    onToggle={() => toggleSection('DONE')}
+                  >
+                    <SortableContext items={groupedTasks.done.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                      {groupedTasks.done.map((task) => (
+                        <SortableTaskListRow
+                          key={task.id}
+                          task={task}
+                          isSelected={selectedTaskIds.has(task.id)}
+                          onSelect={() => toggleTaskSelection(task.id)}
+                          onViewDetails={() => setSelectedTask(task)}
+                          onOpenProject={() => openProject(task.project)}
+                        />
+                      ))}
+                    </SortableContext>
+                  </TaskGroupSection>
+                </>
+              )}
+            </div>
+          </DndContext>
         )}
 
         {!isLoading && !isError && viewMode === 'KANBAN' && (
-          <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 custom-scrollbar">
-            <div className="h-full flex gap-6 min-w-max">
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-                const columnTasks = kanbanColumns[key as TaskStatus];
-                return (
-                  <div key={key} className="flex-shrink-0 w-80 flex flex-col h-full group/column">
-                    <div className={cn('flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl border transition-colors duration-300 flex-shrink-0', config.bg)}><div className="flex items-center gap-2 font-bold text-sm text-slate-700"><config.icon className={cn('w-4 h-4', config.color)} />{config.label}</div><span className="bg-white/60 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{columnTasks.length}</span></div>
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar p-1 pb-4">{columnTasks.map((task) => <TaskKanbanCard key={task.id} task={task} onViewDetails={() => setSelectedTask(task)} onOpenProject={() => openProject(task.project)} />)}<button onClick={() => setIsCreateTaskModalOpen(true)} className="w-full py-2.5 mt-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 opacity-0 group-hover/column:opacity-100"><Plus className="w-4 h-4" /> Quick add</button></div>
-                  </div>
-                );
-              })}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => { void handleTaskDragEnd(event); }}>
+            <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 custom-scrollbar">
+              <div className="h-full flex gap-6 min-w-max">
+                {Object.entries(STATUS_CONFIG).map(([key, config]) => {
+                  const columnTasks = kanbanColumns[key as TaskStatus];
+                  return (
+                    <div key={key} className="flex-shrink-0 w-80 flex flex-col h-full group/column">
+                      <div className={cn('flex items-center justify-between mb-3 px-3 py-2.5 rounded-xl border transition-colors duration-300 flex-shrink-0', config.bg)}>
+                        <div className="flex items-center gap-2 font-bold text-sm text-slate-700">
+                          <config.icon className={cn('w-4 h-4', config.color)} />
+                          {config.label}
+                        </div>
+                        <span className="bg-white/60 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{columnTasks.length}</span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar p-1 pb-4">
+                        <SortableContext items={columnTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                          {columnTasks.map((task) => (
+                            <SortableKanbanTaskCard
+                              key={task.id}
+                              task={task}
+                              onViewDetails={() => setSelectedTask(task)}
+                              onOpenProject={() => openProject(task.project)}
+                            />
+                          ))}
+                        </SortableContext>
+                        <button onClick={() => setIsCreateTaskModalOpen(true)} className="w-full py-2.5 mt-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 opacity-0 group-hover/column:opacity-100"><Plus className="w-4 h-4" /> Quick add</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </DndContext>
         )}
       </main>
 
@@ -787,101 +1124,89 @@ export default function TasksPage() {
           ) : sortedTaskLists.length === 0 ? (
             <div className="text-sm text-slate-500 border border-slate-200 rounded-md p-3">No task lists found for this project.</div>
           ) : (
-            <div className="space-y-2">
-              {sortedTaskLists.map((taskList, index) => (
-                <div key={taskList.id} className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3 bg-white">
-                  <div className="min-w-0">
-                    {editingTaskListId === taskList.id ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          value={editingTaskListName}
-                          onChange={(event) => setEditingTaskListName(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                              event.preventDefault();
-                              void handleRenameTaskList(taskList);
-                            }
-                            if (event.key === 'Escape') {
-                              event.preventDefault();
-                              cancelRenameTaskList();
-                            }
-                          }}
-                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => { void handleRenameTaskList(taskList); }}
-                          className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50"
-                          title="Save"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelRenameTaskList}
-                          className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
-                          title="Cancel"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => { void handleTaskListDragEnd(event); }}>
+              <SortableContext items={sortedTaskLists.map((taskList) => taskList.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {sortedTaskLists.map((taskList) => (
+                    <SortableTaskListManagerItem key={taskList.id} taskList={taskList}>
+                      <div className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3 bg-white">
+                        <div className="min-w-0">
+                          {editingTaskListId === taskList.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={editingTaskListName}
+                                onChange={(event) => setEditingTaskListName(event.target.value)}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    void handleRenameTaskList(taskList);
+                                  }
+                                  if (event.key === 'Escape') {
+                                    event.preventDefault();
+                                    cancelRenameTaskList();
+                                  }
+                                }}
+                                className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => { void handleRenameTaskList(taskList); }}
+                                className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50"
+                                title="Save"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelRenameTaskList}
+                                className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
+                                title="Cancel"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className={cn('text-sm font-medium truncate', taskList.is_archived ? 'text-slate-400 line-through' : 'text-slate-800')}>
+                              {taskList.name}
+                            </div>
+                          )}
+                          <div className="text-xs text-slate-500">Position: {taskList.position} • {taskList.is_archived ? 'Archived' : 'Active'}</div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            disabled={isTaskListActionLoading || editingTaskListId === taskList.id}
+                            onClick={() => { startRenameTaskList(taskList); }}
+                            className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
+                            title="Rename"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isTaskListActionLoading}
+                            onClick={() => { void handleArchiveToggleTaskList(taskList); }}
+                            className="p-2 rounded-md text-slate-500 hover:text-amber-600 hover:bg-amber-50 disabled:opacity-40"
+                            title={taskList.is_archived ? 'Restore' : 'Archive'}
+                          >
+                            {taskList.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isTaskListActionLoading}
+                            onClick={() => { requestDeleteTaskList(taskList); }}
+                            className="p-2 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 disabled:opacity-40"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    ) : (
-                      <div className={cn('text-sm font-medium truncate', taskList.is_archived ? 'text-slate-400 line-through' : 'text-slate-800')}>
-                        {taskList.name}
-                      </div>
-                    )}
-                    <div className="text-xs text-slate-500">Position: {taskList.position} • {taskList.is_archived ? 'Archived' : 'Active'}</div>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={isTaskListActionLoading || index === 0}
-                      onClick={() => { void handleMoveTaskList(taskList.id, 'up'); }}
-                      className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
-                      title="Move up"
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isTaskListActionLoading || index === sortedTaskLists.length - 1}
-                      onClick={() => { void handleMoveTaskList(taskList.id, 'down'); }}
-                      className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
-                      title="Move down"
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isTaskListActionLoading || editingTaskListId === taskList.id}
-                      onClick={() => { startRenameTaskList(taskList); }}
-                      className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40"
-                      title="Rename"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isTaskListActionLoading}
-                      onClick={() => { void handleArchiveToggleTaskList(taskList); }}
-                      className="p-2 rounded-md text-slate-500 hover:text-amber-600 hover:bg-amber-50 disabled:opacity-40"
-                      title={taskList.is_archived ? 'Restore' : 'Archive'}
-                    >
-                      {taskList.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isTaskListActionLoading}
-                      onClick={() => { requestDeleteTaskList(taskList); }}
-                      className="p-2 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 disabled:opacity-40"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                    </SortableTaskListManagerItem>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
 
           {deleteTargetTaskList && (

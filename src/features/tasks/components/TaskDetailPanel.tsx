@@ -1,8 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   AlertCircle,
   AlertTriangle,
-  ArrowDown,
   ArrowRight,
   CalendarDays,
   Check,
@@ -11,11 +25,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
-  History,
+  Flag,
   Layers,
   Link as LinkIcon,
   Plus,
-  SendHorizontal,
+  GripVertical,
   Trash2,
   User as UserIcon,
   Workflow,
@@ -29,31 +43,108 @@ import { cn } from '../utils';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { TaskCommentSection } from './TaskCommentSection';
 
+function SortableSubtaskItem({
+  subtask,
+  onToggle,
+  onDelete,
+}: {
+  subtask: TaskSubtask;
+  onToggle: (subtask: TaskSubtask) => void;
+  onDelete: (subtaskId: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: subtask.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn('flex items-center gap-3 group p-2 rounded-md hover:bg-slate-50 transition-colors', isDragging && 'opacity-60')}
+    >
+      <button
+        type="button"
+        className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing"
+        aria-label="Drag to reorder subtask"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <input
+        type="checkbox"
+        checked={subtask.is_completed}
+        onChange={() => onToggle(subtask)}
+        className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+      />
+      <span className={cn('text-sm', subtask.is_completed ? 'text-slate-400 line-through decoration-slate-400' : 'text-slate-700')}>
+        {subtask.title}
+      </span>
+      <button
+        type="button"
+        onClick={() => onDelete(subtask.id)}
+        className="opacity-0 group-hover:opacity-100 ml-auto text-slate-300 hover:text-red-500 transition-opacity"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, onClose: () => void }) => {
   const [activePopover, setActivePopover] = useState<'status' | 'priority' | 'assignee' | 'deadline' | null>(null);
   const [currentStatus, setCurrentStatus] = useState<TaskStatus>('NOT_STARTED');
   const [currentPriority, setCurrentPriority] = useState<TaskPriority>('MEDIUM');
+  const [isMilestone, setIsMilestone] = useState(false);
   const [subtasks, setSubtasks] = useState<TaskSubtask[]>([]);
   const [dependencies, setDependencies] = useState<TaskDependency[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
   const [isSavingSubtask, setIsSavingSubtask] = useState(false);
   const [isSavingDependency, setIsSavingDependency] = useState(false);
+  const subtaskPersistTimerRef = useRef<number | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    })
+  );
   useClickOutside(popoverRef, () => setActivePopover(null));
 
-  if (!task) return null;
+  useEffect(() => {
+    return () => {
+      if (subtaskPersistTimerRef.current) {
+        window.clearTimeout(subtaskPersistTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
+    if (!task) {
+      return;
+    }
+
     setCurrentStatus(task.status);
     setCurrentPriority(task.priority);
+    setIsMilestone(Boolean(task.isMilestone));
     setSubtasks(task.subtasks ?? []);
     setDependencies(task.dependencies ?? []);
     setNewSubtaskTitle('');
     setNewDependencyTaskId('');
-  }, [task.id, task.priority, task.status, task.subtasks, task.dependencies]);
+  }, [task]);
 
   useEffect(() => {
+    if (!task) {
+      return;
+    }
+
     const loadTaskRelations = async () => {
       try {
         const [subtaskList, dependencyList] = await Promise.all([
@@ -79,13 +170,13 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
             dependency_type: dependency.dependency_type,
           }))
         );
-      } catch (error) {
+      } catch {
         // Keep fallback data from parent task payload
       }
     };
 
     void loadTaskRelations();
-  }, [task.id]);
+  }, [task]);
 
   const statusOptions: TaskStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
   const priorityOptions: TaskPriority[] = ['URGENT', 'HIGH', 'MEDIUM', 'LOW'];
@@ -111,11 +202,15 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
   };
 
   const handleStatusChange = async (nextStatus: TaskStatus) => {
+    if (!task) {
+      return;
+    }
+
     try {
       await taskService.updateTaskStatus(task.id, toApiStatus(nextStatus));
       setCurrentStatus(nextStatus);
       toast.success('Status updated.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update status.');
     } finally {
       setActivePopover(null);
@@ -123,16 +218,37 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
   };
 
   const handlePriorityChange = async (nextPriority: TaskPriority) => {
+    if (!task) {
+      return;
+    }
+
     try {
       await taskService.updateTask(task.id, {
         priority: toApiPriority(nextPriority),
       });
       setCurrentPriority(nextPriority);
       toast.success('Priority updated.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update priority.');
     } finally {
       setActivePopover(null);
+    }
+  };
+
+  const handleMilestoneToggle = async () => {
+    if (!task) {
+      return;
+    }
+
+    const nextValue = !isMilestone;
+    try {
+      await taskService.updateTask(task.id, {
+        is_milestone: nextValue,
+      });
+      setIsMilestone(nextValue);
+      toast.success(nextValue ? 'Marked as milestone.' : 'Removed milestone mark.');
+    } catch {
+      toast.error('Failed to update milestone flag.');
     }
   };
 
@@ -140,6 +256,10 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
   const completionPercentage = subtasks.length > 0 ? Math.round((completedSubtaskCount / subtasks.length) * 100) : 0;
 
   const handleAddSubtask = async () => {
+    if (!task) {
+      return;
+    }
+
     const title = newSubtaskTitle.trim();
     if (!title) {
       return;
@@ -164,7 +284,7 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
       ]);
       setNewSubtaskTitle('');
       toast.success('Subtask created.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create subtask.');
     } finally {
       setIsSavingSubtask(false);
@@ -172,6 +292,10 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
   };
 
   const handleToggleSubtask = async (subtask: TaskSubtask) => {
+    if (!task) {
+      return;
+    }
+
     try {
       const updatedSubtask = await taskService.updateSubtask(task.id, subtask.id, {
         is_completed: !subtask.is_completed,
@@ -187,22 +311,96 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
             : item
         )
       );
-    } catch (error) {
+    } catch {
       toast.error('Failed to update subtask.');
     }
   };
 
   const handleDeleteSubtask = async (subtaskId: string) => {
+    if (!task) {
+      return;
+    }
+
     try {
       await taskService.deleteSubtask(task.id, subtaskId);
       setSubtasks((prev) => prev.filter((item) => item.id !== subtaskId));
       toast.success('Subtask deleted.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete subtask.');
     }
   };
 
+  const handleSubtaskDragEnd = async (event: DragEndEvent) => {
+    if (!task) {
+      return;
+    }
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = subtasks.findIndex((item) => item.id === String(active.id));
+    const newIndex = subtasks.findIndex((item) => item.id === String(over.id));
+
+    if (oldIndex < 0 || newIndex < 0) {
+      return;
+    }
+
+    const reordered = arrayMove(subtasks, oldIndex, newIndex).map((item, index) => ({
+      ...item,
+      position: index,
+    }));
+
+    const previousById = new Map(subtasks.map((item) => [item.id, item.position]));
+    const changed = reordered.filter((item) => previousById.get(item.id) !== item.position);
+    if (changed.length === 0) {
+      return;
+    }
+
+    setSubtasks(reordered);
+
+    if (subtaskPersistTimerRef.current) {
+      window.clearTimeout(subtaskPersistTimerRef.current);
+    }
+
+    subtaskPersistTimerRef.current = window.setTimeout(() => {
+      void (async () => {
+        try {
+          await Promise.all(
+            changed.map((item) =>
+              taskService.updateSubtask(task.id, item.id, {
+                position: item.position,
+              })
+            )
+          );
+          toast.success('Subtask order updated.');
+        } catch {
+          toast.error('Failed to update subtask order.');
+          try {
+            const subtaskList = await taskService.getSubtasks(task.id);
+            setSubtasks(
+              subtaskList.map((subtask, index) => ({
+                id: subtask.id,
+                title: subtask.title,
+                is_completed: subtask.is_done,
+                assignee_id: subtask.assignee_id,
+                position: subtask.position ?? index,
+              }))
+            );
+          } catch {
+            // Keep optimistic UI order if fallback fetch fails
+          }
+        }
+      })();
+    }, 280);
+  };
+
   const handleAddDependency = async () => {
+    if (!task) {
+      return;
+    }
+
     const dependsOnTaskId = newDependencyTaskId.trim();
     if (!dependsOnTaskId) {
       return;
@@ -226,7 +424,7 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
       ]);
       setNewDependencyTaskId('');
       toast.success('Dependency created.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create dependency.');
     } finally {
       setIsSavingDependency(false);
@@ -238,10 +436,14 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
       await taskService.deleteDependency(dependencyId);
       setDependencies((prev) => prev.filter((item) => item.id !== dependencyId));
       toast.success('Dependency removed.');
-    } catch (error) {
+    } catch {
       toast.error('Failed to remove dependency.');
     }
   };
+
+  if (!task) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-[100]">
@@ -406,6 +608,28 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                 )}
               </div>
 
+              {/* Milestone */}
+              <div className="flex items-center justify-between relative">
+                <span className="text-xs font-medium text-slate-500 flex items-center gap-2">
+                  <Flag className="w-4 h-4 text-slate-400" /> Milestone
+                </span>
+
+                <button
+                  onClick={() => {
+                    void handleMilestoneToggle();
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border shadow-sm transition-all min-w-[120px] justify-center',
+                    isMilestone
+                      ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
+                  )}
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                  {isMilestone ? 'Milestone' : 'Normal'}
+                </button>
+              </div>
+
               {/* Deadline */}
               <div className="flex items-center justify-between relative">
                 <span className="text-xs font-medium text-slate-500 flex items-center gap-2">
@@ -532,26 +756,20 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                   </div>
                 )}
 
-                {subtasks.map((subtask) => (
-                  <div key={subtask.id} className="flex items-center gap-3 group p-2 rounded-md hover:bg-slate-50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={subtask.is_completed}
-                      onChange={() => handleToggleSubtask(subtask)}
-                      className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
-                    />
-                    <span className={cn('text-sm', subtask.is_completed ? 'text-slate-400 line-through decoration-slate-400' : 'text-slate-700')}>
-                      {subtask.title}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSubtask(subtask.id)}
-                      className="opacity-0 group-hover:opacity-100 ml-auto text-slate-300 hover:text-red-500 transition-opacity"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                {subtasks.length > 0 && (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => { void handleSubtaskDragEnd(event); }}>
+                    <SortableContext items={subtasks.map((subtask) => subtask.id)} strategy={verticalListSortingStrategy}>
+                      {subtasks.map((subtask) => (
+                        <SortableSubtaskItem
+                          key={subtask.id}
+                          subtask={subtask}
+                          onToggle={handleToggleSubtask}
+                          onDelete={handleDeleteSubtask}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
 
                 <div className="flex items-center gap-3 mt-2 px-2 py-1.5">
                   <Plus className="w-4 h-4 text-slate-400" />
