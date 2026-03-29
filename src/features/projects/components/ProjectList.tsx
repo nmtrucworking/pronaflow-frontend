@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ProjectCard } from './ProjectCard';
 import { ProjectRow } from './ProjectRow';
 import { KanbanColumn } from './KanbanColumn';
@@ -14,9 +13,9 @@ interface ProjectListProps {
   onProjectClick: (project: Project) => void;
   isLoading?: boolean;
   isEmpty?: boolean;
-  sortColumn?: string;
+  sortColumn?: 'name' | 'status' | 'progress' | 'date';
   sortDirection?: 'asc' | 'desc';
-  onColumnSort?: (column: string) => void;
+  onColumnSort?: (column: 'name' | 'status' | 'progress' | 'date') => void;
   onStatusChange?: (projectId: string, newStatus: ProjectStatus) => void;
 }
 
@@ -40,7 +39,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       : <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />;
   };
 
-  const SortableHeader = ({ column, children, className = "" }: { column: string; children: React.ReactNode; className?: string }) => (
+  const SortableHeader = ({ column, children, className = "" }: { column: 'name' | 'status' | 'progress' | 'date'; children: React.ReactNode; className?: string }) => (
     <button
       onClick={() => onColumnSort?.(column)}
       className={cn(
@@ -86,7 +85,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 animate-in fade-in duration-500 auto-rows-max">
             {projects.map((project, index) => (
               <div 
-                key={project.id} 
+                key={project.project_id} 
                 className="animate-in fade-in slide-in-from-bottom-4 duration-500"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -119,17 +118,17 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 <SortableHeader column="progress">Tiến độ</SortableHeader>
               </div>
               <div className="col-span-2">
-                <SortableHeader column="members">Thành viên</SortableHeader>
+                <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Thành viên</span>
               </div>
               <div className="col-span-2">
-                <SortableHeader column="endDate" className="justify-end">Ngày kết thúc</SortableHeader>
+                <SortableHeader column="date" className="justify-end">Ngày kết thúc</SortableHeader>
               </div>
             </div>
 
             {/* List Items */}
             {projects.map((project, index) => (
               <div 
-                key={project.id}
+                key={project.project_id}
                 className="animate-in fade-in duration-500"
                 style={{ animationDelay: `${index * 30}ms` }}
               >
@@ -147,8 +146,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         <div className="p-6">
           <div className="flex gap-4 overflow-x-auto pb-4">
             <KanbanColumn
-              status="PLANNING"
-              projects={projects.filter(p => p.status === 'PLANNING')}
+              status="NOT_STARTED"
+              projects={projects.filter(p => p.status === 'NOT_STARTED')}
               onProjectClick={onProjectClick}
               onStatusChange={onStatusChange}
             />
@@ -165,8 +164,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
               onStatusChange={onStatusChange}
             />
             <KanbanColumn
-              status="COMPLETED"
-              projects={projects.filter(p => p.status === 'COMPLETED')}
+              status="DONE"
+              projects={projects.filter(p => p.status === 'DONE')}
               onProjectClick={onProjectClick}
               onStatusChange={onStatusChange}
             />

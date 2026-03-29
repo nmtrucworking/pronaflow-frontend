@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import { Zap, Layers, ArrowUpRight, MoreHorizontal, Copy, Edit2, Trash2, ArchiveIcon } from 'lucide-react';
 import { cn } from '../../../lib/utils';
@@ -193,7 +192,7 @@ export const ProjectCard = ({ project, onProjectClick, onDoubleClick, compact = 
             <StatusBadge status={project.status} size={compact ? "sm" : "default"} />
           </div>
           <div className="flex items-center gap-2">
-            <AvatarStack users={project.members} maxVisible={compact ? 2 : 3} size={compact ? "sm" : "default"} />
+            <AvatarStack users={project.members?.map(m => m.user || { user_id: m.user_id, id: m.user_id }) ?? []} maxVisible={compact ? 2 : 3} size={compact ? "sm" : "default"} />
             {!compact && (
               <button className="opacity-0 group-hover:opacity-100 transition-opacity -ml-1 p-1.5 hover:bg-slate-100 rounded-lg">
                 <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
