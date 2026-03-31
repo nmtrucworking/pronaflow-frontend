@@ -51,13 +51,27 @@ const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({ userId = 'curre
       key === 'screenReaderOptimized' ? 'screen_reader_enabled' :
       key === 'density' ? 'density' : key;
     
-    updateSettings.mutate({
+    const nextPayload: any = {
       accessibility: {
         ...accessibility,
         [apiKey]: value,
         [key]: value, // Keep both for UI consistency
       },
-    });
+    };
+
+    if (key === 'fontFamily') {
+      nextPayload.font_family = value;
+    }
+
+    if (key === 'fontSize') {
+      nextPayload.base_font_size = value;
+    }
+
+    if (key === 'density') {
+      nextPayload.density_mode = value;
+    }
+
+    updateSettings.mutate(nextPayload);
   };
 
   return (

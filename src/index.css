@@ -3,6 +3,28 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
 @import './styles/color-tokens.css';
 
+@font-face {
+  font-family: 'OpenDyslexic';
+  src:
+    local('OpenDyslexic Regular'),
+    local('OpenDyslexic-Regular'),
+    url('https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/web/OpenDyslexic-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src:
+    local('OpenDyslexic Bold'),
+    local('OpenDyslexic-Bold'),
+    url('https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/web/OpenDyslexic-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,6 +114,24 @@
   --font-size-4xl: 2.25rem;         /* 36px */
   --font-size-5xl: 3rem;            /* 48px */
   --font-size-6xl: 3.75rem;         /* 60px */
+
+  --app-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --app-font-letter-spacing: 0;
+}
+
+:root[data-font-family='system'] {
+  --app-font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --app-font-letter-spacing: 0;
+}
+
+:root[data-font-family='monospace'] {
+  --app-font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+  --app-font-letter-spacing: 0;
+}
+
+:root[data-font-family='dyslexic'] {
+  --app-font-family: 'OpenDyslexic', 'Lexend', Arial, sans-serif;
+  --app-font-letter-spacing: 0.0125em;
 }
 
 /* Dark Mode Color Overrides */
@@ -125,10 +165,12 @@
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans text-base leading-6;
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 text-base leading-6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-family: var(--app-font-family);
+    letter-spacing: var(--app-font-letter-spacing);
   }
 
   /* Typography Reset */

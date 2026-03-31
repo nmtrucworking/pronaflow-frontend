@@ -16,6 +16,7 @@ import type {
   KeyboardShortcut,
   NotificationPreference,
   Widget,
+  FontFamily,
 } from '@/types/personalization';
 
 interface DashboardLayoutApiResponse {
@@ -227,12 +228,42 @@ class PersonalizationService {
   // Save font size to localStorage
   saveFontSizeToLocal(fontSize: number): void {
     localStorage.setItem('pronaflow-font-size', fontSize.toString());
-    document.documentElement.style.fontSize = `${fontSize}px`;
+    const percent = Math.max(75, Math.min(150, (fontSize / 16) * 100));
+    document.documentElement.style.fontSize = `${percent}%`;
   }
 
   getFontSizeFromLocal(): number {
     const stored = localStorage.getItem('pronaflow-font-size');
     return stored ? parseInt(stored, 10) : 14;
+  }
+
+  saveFontFamilyToLocal(fontFamily: FontFamily): void {
+    localStorage.setItem('pronaflow-font-family', fontFamily);
+    document.documentElement.setAttribute('data-font-family', fontFamily);
+  }
+
+  getFontFamilyFromLocal(): FontFamily {
+    const stored = localStorage.getItem('pronaflow-font-family');
+    if (stored === 'dyslexic' || stored === 'monospace' || stored === 'system') {
+      return stored;
+    }
+    return 'system';
+  }
+
+  applyLocalSettingsBootstrap(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    this.saveFontFamilyToLocal(this.getFontFamilyFromLocal());
+
+    const storedFontSize = localStorage.getItem('pronaflow-font-size');
+    if (storedFontSize) {
+      const fontSize = parseInt(storedFontSize, 10);
+      if (!Number.isNaN(fontSize)) {
+        this.saveFontSizeToLocal(fontSize);
+      }
+    }
   }
 
   // Apply settings immediately to document
@@ -253,8 +284,19 @@ class PersonalizationService {
       this.saveLanguageToLocal(settings.language);
     }
 
+    const accessibilityFontSize = (settings.accessibility as { fontSize?: number } | undefined)?.fontSize;
     if (settings.base_font_size) {
       this.saveFontSizeToLocal(settings.base_font_size);
+    } else if (accessibilityFontSize) {
+      this.saveFontSizeToLocal(accessibilityFontSize);
+    }
+
+    const accessibilitySettings = settings.accessibility as { font_family?: FontFamily; fontFamily?: FontFamily } | undefined;
+    const accessibilityFontFamily = accessibilitySettings?.font_family || accessibilitySettings?.fontFamily;
+    const explicitFontFamily = settings.font_family;
+    const resolvedFontFamily = (explicitFontFamily || accessibilityFontFamily) as FontFamily | undefined;
+    if (resolvedFontFamily === 'system' || resolvedFontFamily === 'dyslexic' || resolvedFontFamily === 'monospace') {
+      this.saveFontFamilyToLocal(resolvedFontFamily);
     }
 
     if (settings.color_blind_mode) {

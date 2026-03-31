@@ -8,6 +8,7 @@ import App from './App.tsx'
 import store from './store'
 import './index.css'
 import './lib/i18n'
+import { personalizationService } from './services/personalizationService'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -18,6 +19,8 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+personalizationService.applyLocalSettingsBootstrap()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

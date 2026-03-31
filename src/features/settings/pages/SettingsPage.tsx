@@ -491,6 +491,7 @@ const PreferenceSettings = () => {
   const { preference, setTheme } = useTheme();
   const [theme, setThemeSelection] = useState<'light' | 'dark' | 'system'>(preference);
   const [colorMode, setColorMode] = useState('default');
+  const [fontFamily, setFontFamily] = useState<'system' | 'dyslexic' | 'monospace'>('system');
   const [fontScale, setFontScale] = useState(100);
   const [language, setLanguage] = useState('vi-VN');
   const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
@@ -550,6 +551,7 @@ const PreferenceSettings = () => {
     try {
       const parsed = JSON.parse(stored);
       setColorMode(parsed.colorMode ?? 'default');
+      setFontFamily(parsed.fontFamily === 'dyslexic' || parsed.fontFamily === 'monospace' ? parsed.fontFamily : 'system');
       setFontScale(parsed.fontScale ?? 100);
       setLanguage(parsed.language ?? 'vi-VN');
       setTimezone(parsed.timezone ?? 'Asia/Ho_Chi_Minh');
@@ -595,13 +597,14 @@ const PreferenceSettings = () => {
     if (typeof document === 'undefined') return;
 
     const root = document.documentElement;
+    root.setAttribute('data-font-family', fontFamily);
     const previousFontSize = root.style.fontSize;
     root.style.fontSize = `${fontScale}%`;
 
     return () => {
       root.style.fontSize = previousFontSize;
     };
-  }, [fontScale]);
+  }, [fontFamily, fontScale]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -619,10 +622,11 @@ const PreferenceSettings = () => {
         dateFormat,
         timeFormat,
         startWeek,
+        fontFamily,
         fontScale,
       },
     }));
-  }, [density, sidebarAutoCollapse, language, timezone, dateFormat, timeFormat, startWeek, fontScale]);
+  }, [density, sidebarAutoCollapse, language, timezone, dateFormat, timeFormat, startWeek, fontFamily, fontScale]);
 
   const previewDateTime = useMemo(() => {
     const sampleDate = new Date('2026-03-01T14:35:00.000Z');
@@ -662,6 +666,7 @@ const PreferenceSettings = () => {
     const payload = {
       theme,
       colorMode,
+      fontFamily,
       fontScale,
       language,
       timezone,
@@ -842,6 +847,35 @@ const PreferenceSettings = () => {
               <p className="text-[11px] text-slate-500 dark:text-slate-400">Preview: văn bản toàn hệ thống đang hiển thị theo {fontScale}%.</p>
             </div>
           </div>
+
+          <InputGroup
+            label="Họ chữ ưu tiên"
+            id="font_family"
+            helpText="Dyslexic giúp tăng khả năng đọc cho người dùng cần hỗ trợ; Monospace phù hợp nội dung kỹ thuật."
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {([
+                { value: 'system', label: 'System', hint: 'Mặc định' },
+                { value: 'dyslexic', label: 'Dyslexic', hint: 'OpenDyslexic' },
+                { value: 'monospace', label: 'Monospace', hint: 'JetBrains Mono' },
+              ] as const).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFontFamily(option.value)}
+                  className={cn(
+                    'px-3 py-2 rounded-lg border text-left transition-colors',
+                    fontFamily === option.value
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  )}
+                >
+                  <p className="text-sm font-medium">{option.label}</p>
+                  <p className="text-[11px] opacity-80">{option.hint}</p>
+                </button>
+              ))}
+            </div>
+          </InputGroup>
         </div>
 
         {/* Language & Localization */}
