@@ -44,7 +44,8 @@ import {
   Slack,
   Building, // Added missing import
   LayoutGrid,
-  Keyboard
+  Keyboard,
+  FileDown
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -52,6 +53,8 @@ import { twMerge } from 'tailwind-merge';
 // Import Module 9 Components
 import AccessibilityPanel from '@/features/personalization/components/AccessibilityPanel';
 import DashboardCustomizer from '@/features/personalization/components/DashboardCustomizer';
+import ExportDataPanel from '@/features/settings/components/ExportDataPanel';
+import { useCurrentWorkspaceId } from '@/store/features/workspaceStore';
 import { useTheme } from '@/themes/ThemeProvider';
 import { MOCK_CURRENT_USER } from '@/mocks';
 import {
@@ -62,7 +65,7 @@ import {
   useUpdateUserSettings,
 } from '@/hooks/usePersonalization';
 
-const SETTINGS_TAB_IDS = ['profile', 'security', 'preferences', 'notifications', 'accessibility', 'dashboard', 'shortcuts'] as const;
+const SETTINGS_TAB_IDS = ['profile', 'security', 'preferences', 'notifications', 'accessibility', 'dashboard', 'shortcuts', 'data-export'] as const;
 type SettingsTabId = (typeof SETTINGS_TAB_IDS)[number];
 
 // --- UTILS ---
@@ -1675,6 +1678,13 @@ const NotificationSettings = () => {
 export default function GeneralSettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTabId>('profile');
   const [searchParams, setSearchParams] = useSearchParams();
+  const currentWorkspaceId = useCurrentWorkspaceId();
+  const workspaceIdFromQuery =
+    searchParams.get('workspaceId') ||
+    searchParams.get('workspace_id') ||
+    searchParams.get('ws') ||
+    undefined;
+  const resolvedWorkspaceId = currentWorkspaceId ?? workspaceIdFromQuery;
 
   // Navigation Items
   const navItems = [
@@ -1682,6 +1692,7 @@ export default function GeneralSettingsPage() {
     { id: 'security', label: 'Bảo mật & Đăng nhập', icon: Lock, category: 'Tài khoản' },
     { id: 'preferences', label: 'Giao diện & Ứng dụng', icon: Palette, category: 'Tài khoản' },
     { id: 'notifications', label: 'Thông báo', icon: Bell, category: 'Tài khoản' },
+    { id: 'data-export', label: 'Xuất dữ liệu', icon: FileDown, category: 'Tài khoản' },
     { id: 'accessibility', label: 'Khả năng tiếp cận', icon: Eye, category: 'Cá nhân hóa' },
     { id: 'dashboard', label: 'Tùy chỉnh Dashboard', icon: LayoutGrid, category: 'Cá nhân hóa' },
     { id: 'shortcuts', label: 'Phím tắt', icon: Keyboard, category: 'Cá nhân hóa' },
@@ -1877,6 +1888,10 @@ export default function GeneralSettingsPage() {
                     </p>
                   </div>
                 </div>
+              </Tabs.Content>
+
+              <Tabs.Content value="data-export" className="outline-none">
+                <ExportDataPanel workspaceId={resolvedWorkspaceId} />
               </Tabs.Content>
             </div>
           </Tabs.Root>
