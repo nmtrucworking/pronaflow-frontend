@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import type { ArchiveItem } from '../types';
+import archiveService from '@/services/archiveService';
 import ArchiveHeader from '../components/ArchiveHeader';
 import ArchiveStats from '../components/ArchiveStats';
 import ArchiveTable from '../components/ArchiveTable';
@@ -14,6 +17,7 @@ import ArchiveDetailModal from '../components/ArchiveDetailModal';
  */
 
 const ArchivedStorePage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,42 +29,81 @@ const ArchivedStorePage: React.FC = () => {
     direction: 'desc',
   });
 
-  // Mock Data
-  const archiveData: ArchiveItem[] = useMemo(() => [
-    {
-      id: 'ARC-001',
-      name: 'Chiến dịch Marketing Mùa Đông 2023',
-      type: 'Project',
-      archived_at: '2024-12-20',
-      expiry_date: '2026-12-20',
-      size: '1.2 GB',
-      archived_by: 'Trần Thế Tường',
-      reason: 'Dự án đã hoàn thành và nghiệm thu đầy đủ các hạng mục.',
-      status: 'Safe'
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const message = (error as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.detail
+        || (error as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.message;
+      if (message) {
+        return message;
+      }
+    }
+    return fallback;
+  };
+
+  const mapArchivedType = (resourceType: 'project' | 'task' | 'workspace') => {
+    if (resourceType === 'project') {
+      return 'Project';
+    }
+    if (resourceType === 'task') {
+      return 'Task';
+    }
+    return 'Workspace';
+  };
+
+  const getArchiveStatus = (expiryDate?: string): ArchiveItem['status'] => {
+    if (!expiryDate) {
+      return 'Safe';
+    }
+
+    const expiryTime = new Date(expiryDate).getTime();
+    if (Number.isNaN(expiryTime)) {
+      return 'Safe';
+    }
+
+    const daysLeft = Math.ceil((expiryTime - Date.now()) / (1000 * 60 * 60 * 24));
+    if (daysLeft <= 30) {
+      return 'Expiring';
+    }
+    return 'Safe';
+  };
+
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['archived-items'],
+    queryFn: () => archiveService.getArchivedItems({ resource_type: 'project' }),
+    staleTime: 60 * 1000,
+  });
+
+  const { mutate: restoreProject, isPending: isRestoring } = useMutation({
+    mutationFn: (projectId: string) => archiveService.restoreProject(projectId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['archived-items'] });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await refetch();
+      toast.success('Dự án đã được khôi phục');
     },
-    {
-      id: 'ARC-002',
-      name: 'Tài liệu API Version 1.0 (Deprecated)',
-      type: 'Document',
-      archived_at: '2025-01-05',
-      expiry_date: '2025-06-05',
-      size: '45 MB',
-      archived_by: 'Lê Minh Hạnh',
-      reason: 'Thay thế bằng phiên bản 2.0 ổn định hơn.',
-      status: 'Expiring'
+    onError: (mutationError) => {
+      toast.error(getErrorMessage(mutationError, 'Không thể khôi phục dự án'));
     },
-    ...Array.from({ length: 25 }, (_, i) => ({
-      id: `ARC-0${i+3}`,
-      name: `Bản sao lưu hệ thống định kỳ ${i+3}`,
-      type: (i % 3 === 0 ? 'Task' : i % 3 === 1 ? 'Document' : 'Project') as any,
-      archived_at: '2024-11-15',
-      expiry_date: '2027-01-01',
-      size: '120 KB',
-      archived_by: 'System Bot',
-      reason: 'Lưu trữ tự động theo chính sách hàng tháng.',
-      status: 'Safe' as any
-    }))
-  ], []);
+  });
+
+  const archiveData: ArchiveItem[] = useMemo(() => {
+    const rawItems = data?.data?.items ?? [];
+    return rawItems.map((item) => {
+      const metadata = (item.metadata ?? {}) as { expiry_date?: string; size?: string; status?: ArchiveItem['status'] };
+      const expiryDate = metadata.expiry_date ?? '-';
+      return {
+        id: item.archive_id,
+        name: item.resource_name,
+        type: mapArchivedType(item.resource_type),
+        archived_at: item.archived_at,
+        expiry_date: expiryDate,
+        size: metadata.size ?? '--',
+        archived_by: item.archived_by,
+        reason: item.reason || 'Không có lý do chi tiết.',
+        status: metadata.status ?? getArchiveStatus(metadata.expiry_date),
+      };
+    });
+  }, [data]);
 
   // Selection Logic
   const handleToggleSelect = (id: string) => {
@@ -104,6 +147,54 @@ const ArchivedStorePage: React.FC = () => {
     }));
   };
 
+  const handleRestoreItem = (item: ArchiveItem) => {
+    const rawItem = (data?.data?.items ?? []).find((entry) => entry.archive_id === item.id);
+    if (!rawItem) {
+      toast.error('Không tìm thấy dữ liệu lưu trữ tương ứng để khôi phục.');
+      return;
+    }
+
+    if (rawItem.resource_type !== 'project') {
+      toast.info('Hiện chỉ hỗ trợ khôi phục project từ kho lưu trữ.');
+      return;
+    }
+
+    restoreProject(rawItem.resource_id, {
+      onSuccess: () => {
+        if (selectedItem?.id === item.id) {
+          setSelectedItem(null);
+        }
+      },
+    });
+  };
+
+  const handleRestoreSelected = (ids: string[]) => {
+    ids.forEach((id) => {
+      const item = archiveData.find((entry) => entry.id === id);
+      if (item) {
+        handleRestoreItem(item);
+      }
+    });
+    setSelectedIds([]);
+  };
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50 p-8">
+        <div className="bg-white border border-red-200 rounded-xl p-6 max-w-lg w-full">
+          <h2 className="text-lg font-semibold text-red-700">Không thể tải dữ liệu lưu trữ</h2>
+          <p className="text-sm text-slate-600 mt-2">{getErrorMessage(error, 'Đã có lỗi khi tải dữ liệu lưu trữ.')}</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen max-h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans select-none transition-all duration-500">
       <ArchiveHeader
@@ -114,6 +205,12 @@ const ArchivedStorePage: React.FC = () => {
       />
 
       <main className="flex-1 overflow-hidden flex flex-col p-6 gap-6">
+        {(isLoading || isRestoring) && (
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+            {isLoading ? 'Đang tải dữ liệu lưu trữ...' : 'Đang khôi phục dữ liệu...'}
+          </div>
+        )}
+
         <ArchiveStats archiveCount={archiveData.length} />
 
         <ArchiveTable
@@ -123,6 +220,8 @@ const ArchivedStorePage: React.FC = () => {
           onSelectAll={handleSelectAll}
           onClearSelection={() => setSelectedIds([])}
           onSelectItem={setSelectedItem}
+          onRestoreItem={handleRestoreItem}
+          onRestoreSelected={handleRestoreSelected}
           sortConfig={sortConfig}
           onSort={handleSort}
           currentPage={currentPage}
@@ -131,7 +230,11 @@ const ArchivedStorePage: React.FC = () => {
         />
       </main>
 
-      <ArchiveDetailModal selectedItem={selectedItem} onClose={() => setSelectedItem(null)} />
+      <ArchiveDetailModal
+        selectedItem={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onRestore={handleRestoreItem}
+      />
 
       <style>{`
         .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }

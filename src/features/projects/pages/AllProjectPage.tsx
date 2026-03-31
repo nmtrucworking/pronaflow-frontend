@@ -14,12 +14,7 @@ import { useDensityPreference } from '@/hooks/useDensityPreference';
 export const AllProjectsPage: React.FC = () => {
   const densityPreference = useDensityPreference();
   const isCompact = densityPreference === 'compact';
-  // Data fetching
-  const { data: projectsResponse, isLoading, error } = useProjects();
-  const projects = projectsResponse?.projects ?? [];
-  const { mutate: createProject, isPending: isCreating } = useCreateProject();
-  const { mutate: updateStatus } = useUpdateProjectStatus();
-  const { mutate: deleteProject } = useDeleteProject();
+  const [includeArchived, setIncludeArchived] = useState(false);
   
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -31,6 +26,20 @@ export const AllProjectsPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<ProjectPriority | 'ALL'>('ALL');
   const [sortOption, setSortOption] = useState<SortOption>('NAME_ASC');
   const [showFilterPopover, setShowFilterPopover] = useState(false);
+
+  // Data fetching
+  const { data: projectsResponse, isLoading, error } = useProjects(
+    undefined,
+    statusFilter === 'ALL' ? undefined : statusFilter,
+    1,
+    20,
+    'created_at',
+    includeArchived
+  );
+  const projects = projectsResponse?.projects ?? [];
+  const { mutate: createProject, isPending: isCreating } = useCreateProject();
+  const { mutate: updateStatus } = useUpdateProjectStatus();
+  const { mutate: deleteProject } = useDeleteProject();
   
   // Column sorting
   const [sortColumn, setSortColumn] = useState<'name' | 'status' | 'progress' | 'date'>('name');
@@ -80,7 +89,8 @@ export const AllProjectsPage: React.FC = () => {
                            project.key.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || project.status === statusFilter;
       const matchesPriority = priorityFilter === 'ALL' || project.priority === priorityFilter;
-      return matchesSearch && matchesStatus && matchesPriority;
+      const matchesArchive = includeArchived || (!project.is_archived && project.status !== 'ARCHIVED');
+      return matchesSearch && matchesStatus && matchesPriority && matchesArchive;
     });
 
     // Apply column sorting
@@ -104,7 +114,7 @@ export const AllProjectsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [projects, searchQuery, statusFilter, priorityFilter, sortColumn, sortDirection]);
+  }, [projects, searchQuery, statusFilter, priorityFilter, includeArchived, sortColumn, sortDirection]);
 
   // Project statistics
   const stats = useMemo(() => ({
@@ -188,6 +198,18 @@ export const AllProjectsPage: React.FC = () => {
             onPriorityFilterChange={setPriorityFilter}
             onCreateClick={() => setShowCreateModal(true)}
           />
+
+          <div className="px-6 py-3 bg-white border-b border-slate-200 flex-shrink-0">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={includeArchived}
+                onChange={(event) => setIncludeArchived(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              Hiển thị dự án đã lưu trữ
+            </label>
+          </div>
 
           {/* Quick Stats Bar */}
           <div className="hidden md:flex gap-8 px-6 py-4 bg-white border-b border-slate-200 flex-shrink-0">

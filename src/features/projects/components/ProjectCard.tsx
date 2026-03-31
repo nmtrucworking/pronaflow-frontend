@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Zap, Layers, ArrowUpRight, MoreHorizontal, Copy, Edit2, Trash2, ArchiveIcon } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import archiveService from '@/services/archiveService';
 import { cn } from '../../../lib/utils';
 import type { Project } from '../../../types/project';
 
@@ -19,9 +22,48 @@ interface ProjectCardProps {
 export const ProjectCard = ({ project, onProjectClick, onDoubleClick, compact = false, isDraggable = false }: ProjectCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const queryClient = useQueryClient();
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const doubleClickTimer = useRef<NodeJS.Timeout | null>(null);
   const [clickCount, setClickCount] = useState(0);
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const message = (error as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.detail
+        || (error as { response?: { data?: { detail?: string; message?: string } } }).response?.data?.message;
+      if (message) {
+        return message;
+      }
+    }
+    return fallback;
+  };
+
+  const { mutate: archiveProject, isPending: isArchiving } = useMutation({
+    mutationFn: () => archiveService.archiveProject(project.project_id),
+    onSuccess: () => {
+      toast.success('Dự án đã được lưu trữ');
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setShowContextMenu(false);
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Không thể lưu trữ dự án'));
+    },
+  });
+
+  const { mutate: moveProjectToTrash, isPending: isDeleting } = useMutation({
+    mutationFn: () => archiveService.moveToTrash({
+      resource_type: 'project',
+      resource_id: project.project_id,
+    }),
+    onSuccess: () => {
+      toast.success('Dự án đã được chuyển vào thùng rác');
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setShowContextMenu(false);
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Không thể xóa dự án'));
+    },
+  });
 
   const handleClick = () => {
     setClickCount(prev => prev + 1);
@@ -98,12 +140,20 @@ export const ProjectCard = ({ project, onProjectClick, onDoubleClick, compact = 
               <Copy className="w-4 h-4 text-slate-500 group-hover/item:text-indigo-600" />
               <span>Nhân bản</span>
             </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 text-sm hover:bg-slate-100 transition-colors group/item">
+            <button
+              onClick={() => archiveProject()}
+              disabled={isArchiving || isDeleting}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 text-sm hover:bg-slate-100 transition-colors group/item disabled:opacity-50"
+            >
               <ArchiveIcon className="w-4 h-4 text-slate-500 group-hover/item:text-amber-600" />
               <span>Lưu trữ</span>
             </button>
             <div className="border-t border-slate-100 my-1" />
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 text-sm hover:bg-red-50 transition-colors group/item">
+            <button
+              onClick={() => moveProjectToTrash()}
+              disabled={isArchiving || isDeleting}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 text-sm hover:bg-red-50 transition-colors group/item disabled:opacity-50"
+            >
               <Trash2 className="w-4 h-4" />
               <span>Xóa</span>
             </button>

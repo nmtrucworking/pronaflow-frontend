@@ -90,7 +90,8 @@ class ProjectService {
     status?: string,
     page: number = 1,
     pageSize: number = 20,
-    sortBy: string = 'created_at'
+    sortBy: string = 'created_at',
+    includeArchived: boolean = false
   ): Promise<ProjectListResponse> {
     const response = await this.api.get<ProjectListResponse>('/projects', {
       params: {
@@ -99,6 +100,7 @@ class ProjectService {
         page,
         page_size: pageSize,
         sort_by: sortBy,
+        include_archived: includeArchived,
       },
     });
     return response.data;

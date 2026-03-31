@@ -22,6 +22,8 @@ interface ArchiveTableProps {
   onSelectAll: () => void;
   onClearSelection: () => void;
   onSelectItem: (item: ArchiveItem) => void;
+  onRestoreItem?: (item: ArchiveItem) => void;
+  onRestoreSelected?: (ids: string[]) => void;
   sortConfig: { key: keyof ArchiveItem; direction: 'asc' | 'desc' };
   onSort: (key: keyof ArchiveItem) => void;
   currentPage: number;
@@ -36,6 +38,8 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
   onSelectAll,
   onClearSelection,
   onSelectItem,
+  onRestoreItem,
+  onRestoreSelected,
   sortConfig,
   onSort,
   currentPage,
@@ -120,7 +124,7 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content className="w-48 bg-white dark:bg-slate-900 rounded-xl p-1.5 shadow-2xl border border-slate-100 dark:border-slate-800 z-50 animate-in fade-in zoom-in-95 duration-200 outline-none">
-                    <DropdownMenuItem icon={RotateCcw} label="Khôi phục" color="text-blue-600" />
+                    <DropdownMenuItem icon={RotateCcw} label="Khôi phục" color="text-blue-600" onClick={() => onRestoreItem?.(item)} />
                     <DropdownMenuItem icon={Info} label="Xem thông số kỹ thuật" onClick={() => onSelectItem(item)} />
                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-1" />
                     <DropdownMenuItem icon={Trash2} label="Tiêu hủy vĩnh viễn" color="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" />
@@ -149,7 +153,10 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
               <span className="text-[10px] font-black text-slate-500 uppercase">Đã chọn</span>
             </div>
             <div className="flex items-center gap-1">
-              <button className="flex items-center gap-1.5 px-2.5 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-black text-blue-600 rounded-md transition-all uppercase">
+              <button
+                onClick={() => onRestoreSelected?.(selectedIds)}
+                className="flex items-center gap-1.5 px-2.5 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-[10px] font-black text-blue-600 rounded-md transition-all uppercase"
+              >
                 <RotateCcw size={12} /> Khôi phục
               </button>
               <button className="flex items-center gap-1.5 px-2.5 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-[10px] font-black text-red-500 rounded-md transition-all uppercase">

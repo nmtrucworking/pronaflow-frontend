@@ -52,12 +52,13 @@ export function useProjects(
   page: number = 1,
   pageSize: number = 20,
   sortBy: string = 'created_at',
+  includeArchived: boolean = false,
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: projectQueryKeys.list({ workspaceId, status, page, pageSize, sortBy }),
+    queryKey: projectQueryKeys.list({ workspaceId, status, page, pageSize, sortBy, includeArchived }),
     queryFn: () =>
-      projectService.listProjects(workspaceId, status, page, pageSize, sortBy),
+      projectService.listProjects(workspaceId, status, page, pageSize, sortBy, includeArchived),
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes

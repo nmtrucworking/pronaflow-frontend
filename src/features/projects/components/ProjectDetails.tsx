@@ -804,6 +804,8 @@ export default function ProjectDetails({
 }: ProjectDetailsProps) {
     const [currentProject, setCurrentProject] = useState<Project>(initialProject || MOCK_PROJECTS[0]);
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'GANTT' | 'LIST' | 'NOTES' | 'DOCS' | 'SETTINGS'>(externalActiveTab || 'OVERVIEW');
+    const mainContentRef = useRef<HTMLElement | null>(null);
+    const isReadOnly = currentProject?.is_archived === true || currentProject?.status === 'ARCHIVED';
 
     // Update currentProject when initialProject identity changes
     useEffect(() => {
@@ -818,6 +820,32 @@ export default function ProjectDetails({
             setActiveTab(externalActiveTab);
         }
     }, [externalActiveTab]);
+
+    useEffect(() => {
+        const root = mainContentRef.current;
+        if (!root) {
+            return;
+        }
+
+        const controls = root.querySelectorAll('input, textarea, select, button');
+        controls.forEach((element) => {
+            const control = element as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement;
+            if (isReadOnly) {
+                if (!control.dataset.prevDisabled) {
+                    control.dataset.prevDisabled = String(control.disabled);
+                }
+                control.disabled = true;
+                control.classList.add('cursor-not-allowed', 'opacity-60');
+                return;
+            }
+
+            if (control.dataset.prevDisabled) {
+                control.disabled = control.dataset.prevDisabled === 'true';
+                delete control.dataset.prevDisabled;
+            }
+            control.classList.remove('cursor-not-allowed', 'opacity-60');
+        });
+    }, [isReadOnly, activeTab]);
 
     const handleTabChange = (tab: 'OVERVIEW' | 'GANTT' | 'LIST' | 'NOTES' | 'DOCS' | 'SETTINGS') => {
         setActiveTab(tab);
@@ -1003,7 +1031,12 @@ export default function ProjectDetails({
                 </header>
             )}
 
-            <main className="flex-1 overflow-y-auto bg-white p-8 scroll-smooth custom-scrollbar">
+            <main ref={mainContentRef} className="flex-1 overflow-y-auto bg-white p-8 scroll-smooth custom-scrollbar">
+                {isReadOnly && (
+                    <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        Project này đang ở trạng thái lưu trữ và đã chuyển sang chế độ chỉ đọc.
+                    </div>
+                )}
                 <div className="max-w-7xl mx-auto h-full">
                     {activeTab === 'OVERVIEW' && <ProjectOverview project={currentProject} />}
                     {activeTab === 'GANTT' && <div className="h-full flex flex-col"><GanttChart tasks={MOCK_TASKS} /></div>}

@@ -7,9 +7,10 @@ import { TYPE_CONFIG } from '../constants';
 interface ArchiveDetailModalProps {
   selectedItem: ArchiveItem | null;
   onClose: () => void;
+  onRestore?: (item: ArchiveItem) => void;
 }
 
-const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({ selectedItem, onClose }) => (
+const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({ selectedItem, onClose, onRestore }) => (
   <Dialog.Root open={!!selectedItem} onOpenChange={(open) => !open && onClose()}>
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] animate-in fade-in duration-300" />
@@ -66,7 +67,10 @@ const ArchiveDetailModal: React.FC<ArchiveDetailModalProps> = ({ selectedItem, o
             </div>
 
             <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex flex-col sm:flex-row gap-3">
-              <button className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-[11px] font-black shadow-lg hover:opacity-95 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2">
+              <button
+                onClick={() => selectedItem && onRestore?.(selectedItem)}
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-[11px] font-black shadow-lg hover:opacity-95 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+              >
                 <RotateCcw size={14} strokeWidth={3} /> Khôi phục dữ liệu
               </button>
               <button className="flex-1 py-2.5 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/40 text-red-500 rounded-xl text-[11px] font-black hover:bg-red-50 dark:hover:bg-red-900/20 transition-all uppercase tracking-widest flex items-center justify-center gap-2">

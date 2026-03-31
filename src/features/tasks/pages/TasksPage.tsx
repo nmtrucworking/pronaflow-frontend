@@ -417,6 +417,23 @@ export default function TasksPage() {
     return Array.from(uniqueProjects.values());
   }, [projectsResponse, rawTasks]);
 
+  const archivedProjectIds = useMemo(() => {
+    const ids = new Set<string>();
+    (projectsResponse?.projects ?? []).forEach((project) => {
+      if (project.is_archived || project.status === 'ARCHIVED') {
+        ids.add(project.project_id);
+      }
+    });
+    return ids;
+  }, [projectsResponse]);
+
+  const isProjectReadOnly = (projectId?: string | null) => {
+    if (!projectId) {
+      return false;
+    }
+    return archivedProjectIds.has(projectId);
+  };
+
   const projectLookup = useMemo(() => {
     return new Map(projectOptions.map((project) => [project.id, project]));
   }, [projectOptions]);
@@ -523,6 +540,14 @@ export default function TasksPage() {
     return milestoneFilteredTasks;
   }, [orderedTasks, searchQuery, sortOption, milestoneFilter]);
 
+  const containsArchivedProjectTasks = useMemo(() => {
+    return filteredTasks.some((task) => archivedProjectIds.has(task.project.id));
+  }, [archivedProjectIds, filteredTasks]);
+
+  const managedProjectIsArchived = useMemo(() => {
+    return isProjectReadOnly(managedProjectId || null);
+  }, [managedProjectId, archivedProjectIds]);
+
   const groupedTasks = useMemo(() => {
     const today = new Date().toDateString();
     const now = new Date();
@@ -573,6 +598,11 @@ export default function TasksPage() {
     assigneeId?: string;
     description?: string;
   }) => {
+    if (isProjectReadOnly(payload.projectId)) {
+      toast.error('Project archived is in read-only mode. Cannot create tasks.');
+      return;
+    }
+
     let taskListId = taskListByProject.get(payload.projectId);
 
     if (!taskListId) {
@@ -624,6 +654,11 @@ export default function TasksPage() {
     }
 
     const projectId = managedProjectId || projectOptions[0].id;
+    if (isProjectReadOnly(projectId)) {
+      toast.error('Project archived is in read-only mode. Cannot create task lists.');
+      return;
+    }
+
     setManagedProjectId(projectId);
     setIsTaskListModalOpen(true);
     setDeleteTargetTaskListId(null);
@@ -657,6 +692,11 @@ export default function TasksPage() {
     }
 
     const projectId = managedProjectId || projectOptions[0].id;
+    if (isProjectReadOnly(projectId)) {
+      toast.error('Project archived is in read-only mode. Task list manager is disabled.');
+      return;
+    }
+
     setManagedProjectId(projectId);
     setDeleteTargetTaskListId(null);
     setDeleteForce(false);
@@ -675,6 +715,11 @@ export default function TasksPage() {
 
     if (!name) {
       toast.error('Task list name is required.');
+      return;
+    }
+
+    if (isProjectReadOnly(managedProjectId)) {
+      toast.error('Project archived is in read-only mode. Cannot create task lists.');
       return;
     }
 
@@ -713,6 +758,11 @@ export default function TasksPage() {
       return;
     }
 
+    if (isProjectReadOnly(taskList.project_id)) {
+      toast.error('Project archived is in read-only mode. Cannot rename task list.');
+      return;
+    }
+
     try {
       setIsTaskListActionLoading(true);
       await taskService.updateTaskList(taskList.id, { name: nextName });
@@ -728,6 +778,11 @@ export default function TasksPage() {
   };
 
   const handleArchiveToggleTaskList = async (taskList: TaskListItem) => {
+    if (isProjectReadOnly(taskList.project_id)) {
+      toast.error('Project archived is in read-only mode. Cannot modify task list state.');
+      return;
+    }
+
     try {
       setIsTaskListActionLoading(true);
       await taskService.updateTaskList(taskList.id, { is_archived: !taskList.is_archived });
@@ -746,6 +801,11 @@ export default function TasksPage() {
   };
 
   const requestDeleteTaskList = (taskList: TaskListItem) => {
+    if (isProjectReadOnly(taskList.project_id)) {
+      toast.error('Project archived is in read-only mode. Cannot delete task list.');
+      return;
+    }
+
     setDeleteTargetTaskListId(taskList.id);
     setDeleteForce(false);
   };
@@ -757,6 +817,11 @@ export default function TasksPage() {
 
   const confirmDeleteTaskList = async () => {
     if (!deleteTargetTaskList) {
+      return;
+    }
+
+    if (isProjectReadOnly(deleteTargetTaskList.project_id)) {
+      toast.error('Project archived is in read-only mode. Cannot delete task list.');
       return;
     }
 
@@ -775,6 +840,11 @@ export default function TasksPage() {
   };
 
   const persistTaskListOrder = async (reordered: TaskListItem[]) => {
+    if (isProjectReadOnly(managedProjectId)) {
+      toast.error('Project archived is in read-only mode. Cannot reorder task lists.');
+      return;
+    }
+
     const nextById = new Map(reordered.map((item, index) => [item.id, { ...item, position: index }]));
     const changed = reordered
       .map((item, index) => ({ id: item.id, position: index, previousPosition: item.position }))
@@ -842,6 +912,11 @@ export default function TasksPage() {
     const activeTask = taskById.get(String(active.id));
     const overTask = taskById.get(String(over.id));
     if (!activeTask || !overTask) {
+      return;
+    }
+
+    if (isProjectReadOnly(activeTask.project.id) || isProjectReadOnly(overTask.project.id)) {
+      toast.error('Project archived is in read-only mode. Cannot reorder tasks.');
       return;
     }
 
@@ -929,6 +1004,12 @@ export default function TasksPage() {
       </header>
 
       <main className={cn('flex-1 flex flex-col relative', viewMode === 'LIST' ? 'overflow-y-auto' : 'overflow-hidden')}>
+        {(containsArchivedProjectTasks || managedProjectIsArchived) && (
+          <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Một hoặc nhiều project đang ở trạng thái lưu trữ. Các thao tác chỉnh sửa task/task list trong project lưu trữ đã bị khóa.
+          </div>
+        )}
+
         {isLoading && (
           <div className="p-6 w-full max-w-5xl mx-auto">
             <TaskSkeletonLoader count={4} variant={viewMode === 'LIST' ? 'list' : 'kanban'} />

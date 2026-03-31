@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { MoreHorizontal, Edit, Archive, Trash2 } from 'lucide-react';
 import { Popover } from '@/components/ui/Popover'; // Base UI component
 
-export const ProjectActionsMenu = () => {
+interface ProjectActionsMenuProps {
+  onEdit?: () => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
+}
+
+export const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({ onEdit, onArchive, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleMenuClick = (e: React.MouseEvent) => {
@@ -10,9 +16,9 @@ export const ProjectActionsMenu = () => {
   };
 
   const menuItems = [
-    { label: 'Chỉnh sửa', icon: Edit, onClick: () => {}, color: 'text-slate-700' },
-    { label: 'Lưu trữ', icon: Archive, onClick: () => {}, color: 'text-slate-700' },
-    { label: 'Xóa dự án', icon: Trash2, onClick: () => {}, color: 'text-red-600', isDanger: true },
+    { label: 'Chỉnh sửa', icon: Edit, onClick: onEdit, color: 'text-slate-700' },
+    { label: 'Lưu trữ', icon: Archive, onClick: onArchive, color: 'text-slate-700' },
+    { label: 'Xóa dự án', icon: Trash2, onClick: onDelete, color: 'text-red-600', isDanger: true },
   ];
 
   return (
@@ -31,7 +37,13 @@ export const ProjectActionsMenu = () => {
             {menuItems.map((item, idx) => (
               <React.Fragment key={item.label}>
                 {item.isDanger && <div className="h-px bg-slate-100 my-1" />}
-                <button className={`w-full text-left px-2 py-2 text-sm rounded transition-colors flex items-center gap-2 hover:bg-indigo-50 ${item.color}`}>
+                <button
+                  onClick={() => {
+                    item.onClick?.();
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-2 py-2 text-sm rounded transition-colors flex items-center gap-2 hover:bg-indigo-50 ${item.color}`}
+                >
                   <item.icon className="w-3.5 h-3.5" />
                   {item.label}
                 </button>
