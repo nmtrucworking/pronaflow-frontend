@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui';
+import { formatDate } from '@/lib/localeFormatters';
 
 interface InvitationCardProps {
   invitation: WorkspaceInvitation;
@@ -114,7 +115,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
             </span>
           </Tooltip>
           <span className="text-xs text-gray-500">
-            Invited {new Date(invitation.created_at).toLocaleDateString()}
+            Invited {formatDate(invitation.created_at)}
           </span>
         </div>
       </CardContent>

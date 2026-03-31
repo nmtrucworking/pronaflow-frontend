@@ -23,9 +23,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Building2, Users, Settings, MoreVertical, Trash2, Edit2, UserPlus, LogOut, Mail } from 'lucide-react';
 import { Tooltip } from '@/components/ui';
+import { formatDate, formatDateTime } from '@/lib/localeFormatters';
 
 interface WorkspaceCardProps {
   workspace: Workspace;
+  compact?: boolean;
   role?: WorkspaceRole;
   invitationsCount?: number;
   onSelect?: (workspace: Workspace) => void;
@@ -40,6 +42,7 @@ interface WorkspaceCardProps {
 
 export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
   workspace,
+  compact = false,
   role = 'member',
   invitationsCount = 0,
   onSelect,
@@ -56,10 +59,10 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
 
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onSelect?.(workspace)}>
-      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+      <CardHeader className={compact ? 'flex flex-row items-start justify-between space-y-0 pb-2' : 'flex flex-row items-start justify-between space-y-0'}>
         <div className="flex-1">
           <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-blue-500" />
+            <Building2 className={compact ? 'w-4 h-4 text-blue-500' : 'w-5 h-5 text-blue-500'} />
             {workspace.name}
           </CardTitle>
           <CardDescription className="text-xs">
@@ -144,13 +147,13 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
         )}
       </CardHeader>
 
-      <CardContent>
+      <CardContent className={compact ? 'pt-0' : undefined}>
         {workspace.description && (
-          <p className="text-sm text-gray-600 mb-4">{workspace.description}</p>
+          <p className={compact ? 'text-xs text-gray-600 mb-3 line-clamp-2' : 'text-sm text-gray-600 mb-4'}>{workspace.description}</p>
         )}
-        <div className="flex gap-2 text-xs text-gray-500">
-          <Tooltip content={`Updated: ${new Date(workspace.updated_at).toLocaleString()}`} placement="top" delay={150}>
-            <span>Created: {new Date(workspace.created_at).toLocaleDateString()}</span>
+        <div className={compact ? 'flex gap-2 text-[11px] text-gray-500' : 'flex gap-2 text-xs text-gray-500'}>
+          <Tooltip content={`Updated: ${formatDateTime(workspace.updated_at)}`} placement="top" delay={150}>
+            <span>Created: {formatDate(workspace.created_at)}</span>
           </Tooltip>
         </div>
       </CardContent>

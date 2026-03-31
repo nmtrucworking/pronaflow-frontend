@@ -27,6 +27,7 @@ import {
 } from '@/hooks/useIntegrations';
 import type { Plugin } from '@/types/integration';
 import { toast } from 'sonner';
+import { formatNumber } from '@/lib/localeFormatters';
 
 const CATEGORIES = [
   'All',
@@ -156,7 +157,7 @@ const PluginMarketplacePage: React.FC = () => {
           <div className="flex items-center gap-4 mb-4 text-sm text-slate-600 dark:text-slate-400">
             <div className="flex items-center gap-1">
               <Download className="w-4 h-4" />
-              {plugin.download_count.toLocaleString()}
+              {formatNumber(plugin.download_count)}
             </div>
             {plugin.rating && (
               <div className="flex items-center gap-1">

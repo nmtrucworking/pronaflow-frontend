@@ -24,6 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MoreVertical, Trash2, UserCog, Shield, UserCheck } from 'lucide-react';
 import { Tooltip } from '@/components/ui';
+import { formatDate } from '@/lib/localeFormatters';
 
 interface MemberCardProps {
   member: WorkspaceMember;
@@ -117,7 +118,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({
             </span>
           </Tooltip>
           <span className="text-xs text-gray-500">
-            Joined {new Date(member.joined_at).toLocaleDateString()}
+            Joined {formatDate(member.joined_at)}
           </span>
         </div>
       </CardContent>

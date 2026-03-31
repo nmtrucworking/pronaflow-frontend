@@ -10,10 +10,11 @@ import { AvatarStack } from '../../../components/molecules/AvatarStack';
 
 interface ProjectRowProps {
   project: Project;
+  compact?: boolean;
   onProjectClick?: (project: Project) => void;
 }
 
-export function ProjectRow({ project, onProjectClick }: ProjectRowProps) {
+export function ProjectRow({ project, compact = false, onProjectClick }: ProjectRowProps) {
   const handleClick = () => {
     onProjectClick?.(project);
   };
@@ -26,20 +27,24 @@ export function ProjectRow({ project, onProjectClick }: ProjectRowProps) {
   return (
     <div 
       onClick={handleClick} 
-      className="group relative md:grid md:grid-cols-12 md:gap-4 md:items-center p-3 md:px-6 md:py-3.5 bg-white border-b border-slate-100 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-all duration-200 cursor-pointer active:scale-95"
+      className={cn(
+        'group relative md:grid md:grid-cols-12 md:gap-4 md:items-center bg-white border-b border-slate-100 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-all duration-200 cursor-pointer active:scale-95',
+        compact ? 'p-2.5 md:px-4 md:py-2.5' : 'p-3 md:px-6 md:py-3.5'
+      )}
     >
       {/* Left Decorator */}
       <div className="hidden md:block absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-indigo-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       {/* Project Info */}
-      <div className="md:col-span-4 flex items-start gap-2.5 pb-2 md:pb-0">
+      <div className={cn('md:col-span-4 flex items-start pb-2 md:pb-0', compact ? 'gap-2' : 'gap-2.5')}>
         <div className={cn(
-          "p-1.5 rounded-lg flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md",
+          'rounded-lg flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md',
+          compact ? 'p-1' : 'p-1.5',
           isAgile 
             ? "bg-purple-100 text-purple-600" 
             : "bg-blue-100 text-blue-600"
         )}>
-          {isAgile ? <Zap className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
+          {isAgile ? <Zap className={cn(compact ? 'w-3.5 h-3.5' : 'w-4 h-4')} /> : <Layers className={cn(compact ? 'w-3.5 h-3.5' : 'w-4 h-4')} />}
         </div>
         
         <div className="flex-1 min-w-0">
@@ -47,7 +52,7 @@ export function ProjectRow({ project, onProjectClick }: ProjectRowProps) {
             <span className="text-[10px] font-mono text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded bg-slate-50 font-semibold">
               {project.key}
             </span>
-            <h4 className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 truncate transition-colors">
+            <h4 className={cn('font-semibold text-slate-900 group-hover:text-indigo-700 truncate transition-colors', compact ? 'text-[13px]' : 'text-sm')}>
               {project.name}
             </h4>
           </div>

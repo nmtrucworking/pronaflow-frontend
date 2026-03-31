@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, CheckCircle2, Circle, Calendar, Users, TrendingUp, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
+import { formatDate } from '@/lib/localeFormatters';
 
 // ========================================================================
 // Mock Data Interfaces
@@ -226,8 +227,6 @@ interface ProjectDetailCompactProps {
   projectId: string;
   onClose?: () => void;
 }
-
-import { formatDate } from '@/lib/localeFormatters';
 
 export const ProjectDetailCompact: React.FC<ProjectDetailCompactProps> = ({ projectId, onClose }) => {
   const { data, isLoading, error } = useProjectDetail(projectId);

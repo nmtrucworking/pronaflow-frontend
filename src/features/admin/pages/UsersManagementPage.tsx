@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Search, Plus, Edit, Trash2, Lock, Unlock, MoreHorizontal } from 'lucide-react';
 import type { AdminUser } from '@/types/admin';
+import { formatDate } from '@/lib/localeFormatters';
 
 const UsersManagementPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -158,7 +159,7 @@ const UsersManagementPage = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                    {new Date(user.last_login).toLocaleDateString()}
+                    {formatDate(user.last_login)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">

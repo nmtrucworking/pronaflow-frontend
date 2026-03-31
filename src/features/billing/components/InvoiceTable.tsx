@@ -3,6 +3,7 @@ import { Download, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { InvoiceEntity } from '../types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { formatDate, formatCurrency } from '@/lib/localeFormatters';
 
 interface InvoiceTableProps {
   invoices: InvoiceEntity[];
@@ -36,18 +37,6 @@ const StatusBadge = ({ status }: { status: InvoiceEntity['status'] }) => {
 };
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices, isCompact }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(amount);
-  };
-
   if (invoices.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg bg-card">
@@ -81,7 +70,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ invoices, isCompact 
                 {invoice.invoice_id}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {formatDate(invoice.created_at)}
+                {formatDate(invoice.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
               </td>
               <td className="px-4 py-3 font-medium">
                 {formatCurrency(invoice.amount, invoice.currency)}

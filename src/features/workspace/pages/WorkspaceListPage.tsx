@@ -27,6 +27,7 @@ import workspaceService from '@/services/workspaceService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkspaceMembers, useInvitations, useCancelInvitation } from '@/hooks/useWorkspace';
+import { useDensityPreference } from '@/hooks/useDensityPreference';
 
 type WorkspaceStatusFilter = 'all' | 'ACTIVE' | 'SOFT_DELETED';
 type WorkspaceSortField = 'name' | 'created_at' | 'updated_at';
@@ -37,6 +38,7 @@ type SortOrder = 'asc' | 'desc';
  */
 interface WorkspaceCardWithDataProps {
   workspace: Workspace;
+  compact?: boolean;
   currentUserId?: string;
   onSelect?: (workspace: Workspace, role: WorkspaceRole) => void;
   onEdit?: (workspace: Workspace) => void;
@@ -50,6 +52,7 @@ interface WorkspaceCardWithDataProps {
 
 const WorkspaceCardWithData: React.FC<WorkspaceCardWithDataProps> = ({
   workspace,
+  compact = false,
   currentUserId,
   onSelect,
   onEdit,
@@ -81,6 +84,7 @@ const WorkspaceCardWithData: React.FC<WorkspaceCardWithDataProps> = ({
   return (
     <WorkspaceCard
       workspace={workspace}
+      compact={compact}
       role={userRole}
       invitationsCount={invitationsCount}
       onSelect={() => onSelect?.(workspace, userRole)}
@@ -172,6 +176,8 @@ const ViewInvitationsDialog: React.FC<ViewInvitationsDialogProps> = ({ workspace
 
 export const WorkspaceListPage: React.FC = () => {
   const navigate = useNavigate();
+  const densityPreference = useDensityPreference();
+  const isCompact = densityPreference === 'compact';
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -414,11 +420,12 @@ export const WorkspaceListPage: React.FC = () => {
         {/* Workspaces Grid */}
         {!isLoading && visibleWorkspaces.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={isCompact ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}>
               {visibleWorkspaces.map((workspace) => (
                 <WorkspaceCardWithData
                   key={workspace.id}
                   workspace={workspace}
+                  compact={isCompact}
                   currentUserId={user?.user_id}
                   onSelect={handleSelectWorkspace}
                   onDelete={() => setDeletingWorkspace(workspace)}

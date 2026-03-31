@@ -5,6 +5,7 @@
 
 import { AlertTriangle, Eye, Archive } from 'lucide-react';
 import type { SecurityIncident } from '@/types/admin';
+import { formatDate } from '@/lib/localeFormatters';
 
 const SecurityIncidentsPage = () => {
   const mockIncidents: SecurityIncident[] = [
@@ -120,7 +121,7 @@ const SecurityIncidentsPage = () => {
                     <div>
                       <p className="opacity-75">Detected</p>
                       <p className="font-mono font-bold">
-                        {new Date(incident.detected_at).toLocaleDateString()}
+                        {formatDate(incident.detected_at)}
                       </p>
                     </div>
                     <div>

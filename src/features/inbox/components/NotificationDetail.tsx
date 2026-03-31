@@ -2,6 +2,7 @@ import * as ScrollArea from '@radix-ui/react-scroll-area';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Archive, MessageSquare, Eye, Briefcase, FileText, ImageIcon } from 'lucide-react';
 import type { NotificationEntity, Attachment } from '../types/inbox-types';
+import { formatDateTime } from '@/lib/localeFormatters';
 
 interface NotificationDetailProps {
   notification: NotificationEntity | null;
@@ -79,8 +80,8 @@ export const NotificationDetail: React.FC<NotificationDetailProps> = ({
                 <p className="text-sm font-semibold text-slate-900">
                   {notification.actor?.username || 'PronaFlow System'}
                 </p>
-                <p className="text-xs text-slate-500">
-                  {new Date(notification.created_at).toLocaleString('vi-VN')}
+                  <p className="text-xs text-slate-500">
+                    {formatDateTime(notification.created_at)}
                 </p>
               </div>
             </div>

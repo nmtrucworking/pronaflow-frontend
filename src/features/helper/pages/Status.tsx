@@ -4,6 +4,7 @@ import {
   AlertTriangle, XCircle, Info, CheckCircle2, 
   Activity, Clock, ChevronRight 
 } from 'lucide-react';
+import { formatDate, formatDateTime } from '@/lib/localeFormatters';
 
 /**
  * Interface định nghĩa cấu trúc dữ liệu cho từng dịch vụ hệ thống
@@ -35,8 +36,10 @@ const App: React.FC = () => {
   useEffect(() => {
     // Thiết lập thời gian cập nhật dữ liệu lần cuối
     const now = new Date();
-    const formatted = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + 
-                    " " + now.toLocaleDateString('vi-VN');
+    const formatted =
+      formatDateTime(now, { hour: '2-digit', minute: '2-digit', year: undefined, month: undefined, day: undefined }) +
+      ' ' +
+      formatDate(now);
     setCurrentTime(formatted);
   }, []);
 

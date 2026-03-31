@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 interface ProjectListProps {
   projects: Project[];
   viewMode: ViewMode;
+  isCompact?: boolean;
   onProjectClick: (project: Project) => void;
   isLoading?: boolean;
   isEmpty?: boolean;
@@ -22,6 +23,7 @@ interface ProjectListProps {
 export const ProjectList: React.FC<ProjectListProps> = ({
   projects,
   viewMode,
+  isCompact = false,
   onProjectClick,
   isLoading = false,
   isEmpty = false,
@@ -81,8 +83,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   return (
     <main className="flex-1 overflow-y-auto">
       {viewMode === 'GRID' && (
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 animate-in fade-in duration-500 auto-rows-max">
+        <div className={cn(isCompact ? 'p-4' : 'p-6')}>
+          <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 animate-in fade-in duration-500 auto-rows-max', isCompact ? 'gap-3' : 'gap-5')}>
             {projects.map((project, index) => (
               <div 
                 key={project.project_id} 
@@ -91,6 +93,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
               >
                 <ProjectCard 
                   project={project} 
+                  compact={isCompact}
                   onProjectClick={onProjectClick}
                   onDoubleClick={(proj) => {
                     // Open full project details on double-click
@@ -104,10 +107,10 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       )}
 
       {viewMode === 'LIST' && (
-        <div className="p-4">
+        <div className={cn(isCompact ? 'p-3' : 'p-4')}>
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             {/* List Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 sticky top-0 z-20">
+            <div className={cn('hidden md:grid grid-cols-12 gap-4 px-6 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 sticky top-0 z-20', isCompact ? 'py-2' : 'py-3')}>
               <div className="col-span-4">
                 <SortableHeader column="name">Dự án</SortableHeader>
               </div>
@@ -134,6 +137,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
               >
                 <ProjectRow 
                   project={project} 
+                  compact={isCompact}
                   onProjectClick={onProjectClick} 
                 />
               </div>

@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatDateTime } from '@/lib/localeFormatters';
 
 // Hooks
 import {
@@ -349,13 +350,13 @@ export const ExampleAccessLogs: React.FC<{ workspaceId: string }> = ({
           </tr>
         </thead>
         <tbody>
-          {logsData?.items?.map((log) => (
-            <tr key={log.id}>
-              <td>{log.user_id}</td>
-              <td>{log.action}</td>
-              <td>{new Date(log.created_at).toLocaleString()}</td>
-            </tr>
-          ))}
+            {logsData?.items?.map((log) => (
+              <tr key={log.id}>
+                <td>{log.user_id}</td>
+                <td>{log.action}</td>
+                <td>{formatDateTime(log.created_at)}</td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

@@ -47,7 +47,7 @@ import { taskService } from '@/services/taskService';
 import type { ApiTaskPriority, ApiTaskStatus, CreateTaskDTO, TaskListItem, TaskResponse } from '@/services/taskService';
 import { cn } from '../utils';
 import { STATUS_CONFIG, USERS } from '../constants';
-import type { ProjectRef, SortOption, TaskEntity, TaskPriority, TaskStatus, ViewMode } from '../types';
+import type { DensityMode, ProjectRef, SortOption, TaskEntity, TaskPriority, TaskStatus, ViewMode } from '../types';
 import { useBulkDeleteTasks, useBulkUpdateTasks, useCreateTask, useTask, useTasks } from '../hooks/useTaskQueries';
 import { CsvImportModal } from '../components/CsvImportModal';
 import { CreateTaskModal } from '../components/CreateTaskModal';
@@ -58,6 +58,8 @@ import { TaskGroupSection } from '../components/TaskGroupSection';
 import { TaskKanbanCard } from '../components/TaskKanbanCard';
 import { TaskListRow } from '../components/TaskListRow';
 import { TaskEmptyState } from '../components/TaskEmptyState';
+import { formatDate } from '@/lib/localeFormatters';
+import { useDensityPreference } from '@/hooks/useDensityPreference';
 import { TaskBulkActionBar } from '../components/TaskBulkActionBar';
 import { TaskSkeletonLoader } from '../components/TaskSkeletonLoader';
 
@@ -206,12 +208,14 @@ function toTaskEntity(task: TaskResponseWithRelations, index: number, projectLoo
 
 function SortableTaskListRow({
   task,
+  density,
   isSelected,
   onSelect,
   onViewDetails,
   onOpenProject,
 }: {
   task: TaskEntity;
+  density: DensityMode;
   isSelected: boolean;
   onSelect: () => void;
   onViewDetails: () => void;
@@ -237,6 +241,7 @@ function SortableTaskListRow({
       <div className="pl-5">
         <TaskListRow
           task={task}
+          density={density}
           isSelected={isSelected}
           onSelect={onSelect}
           onViewDetails={onViewDetails}
@@ -249,10 +254,12 @@ function SortableTaskListRow({
 
 function SortableKanbanTaskCard({
   task,
+  isCompact,
   onViewDetails,
   onOpenProject,
 }: {
   task: TaskEntity;
+  isCompact: boolean;
   onViewDetails: () => void;
   onOpenProject: () => void;
 }) {
@@ -265,7 +272,7 @@ function SortableKanbanTaskCard({
   return (
     <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-60 scale-[0.99]')}>
       <div {...attributes} {...listeners}>
-        <TaskKanbanCard task={task} onViewDetails={onViewDetails} onOpenProject={onOpenProject} />
+        <TaskKanbanCard task={task} compact={isCompact} onViewDetails={onViewDetails} onOpenProject={onOpenProject} />
       </div>
     </div>
   );
@@ -303,6 +310,9 @@ function SortableTaskListManagerItem({
 export default function TasksPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const densityPreference = useDensityPreference();
+  const isCompact = densityPreference === 'compact';
+  const taskDensity: DensityMode = isCompact ? 'COMPACT' : 'COMFORTABLE';
 
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [searchQuery, setSearchQuery] = useState('');
@@ -866,7 +876,7 @@ export default function TasksPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="animate-in fade-in slide-in-from-left-4 duration-500">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">My Tasks <span className="text-sm font-normal text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full mt-1 shadow-sm">{filteredTasks.length}</span></h1>
-            <p className="text-sm text-slate-500 mt-1 flex items-center gap-2"><span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}</span><span className="w-1 h-1 bg-slate-300 rounded-full"></span>{groupedTasks.overdue.length > 0 ? <span className="font-semibold text-red-600 flex items-center gap-1 animate-pulse"><AlertCircle className="w-3.5 h-3.5" /> {groupedTasks.overdue.length} overdue</span> : <span className="text-emerald-600 font-medium">On track</span>}</p>
+            <p className="text-sm text-slate-500 mt-1 flex items-center gap-2"><span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> {formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long' })}</span><span className="w-1 h-1 bg-slate-300 rounded-full"></span>{groupedTasks.overdue.length > 0 ? <span className="font-semibold text-red-600 flex items-center gap-1 animate-pulse"><AlertCircle className="w-3.5 h-3.5" /> {groupedTasks.overdue.length} overdue</span> : <span className="text-emerald-600 font-medium">On track</span>}</p>
           </div>
           <div className="flex items-center gap-2 md:gap-3 flex-wrap">
             <div className="relative group">
@@ -937,7 +947,7 @@ export default function TasksPage() {
 
         {!isLoading && !isError && viewMode === 'LIST' && (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => { void handleTaskDragEnd(event); }}>
-            <div className="flex-1 w-full max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+            <div className={cn('flex-1 w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out', isCompact ? 'p-4 space-y-5' : 'p-6 space-y-8')}>
               {filteredTasks.length === 0 ? (
                 <TaskEmptyState
                   type={searchQuery ? 'no-results' : 'no-tasks'}
@@ -962,6 +972,7 @@ export default function TasksPage() {
                           <SortableTaskListRow
                             key={task.id}
                             task={task}
+                            density={taskDensity}
                             isSelected={selectedTaskIds.has(task.id)}
                             onSelect={() => toggleTaskSelection(task.id)}
                             onViewDetails={() => setSelectedTask(task)}
@@ -986,6 +997,7 @@ export default function TasksPage() {
                           <SortableTaskListRow
                             key={task.id}
                             task={task}
+                            density={taskDensity}
                             isSelected={selectedTaskIds.has(task.id)}
                             onSelect={() => toggleTaskSelection(task.id)}
                             onViewDetails={() => setSelectedTask(task)}
@@ -1012,6 +1024,7 @@ export default function TasksPage() {
                         <SortableTaskListRow
                           key={task.id}
                           task={task}
+                          density={taskDensity}
                           isSelected={selectedTaskIds.has(task.id)}
                           onSelect={() => toggleTaskSelection(task.id)}
                           onViewDetails={() => setSelectedTask(task)}
@@ -1034,6 +1047,7 @@ export default function TasksPage() {
                         <SortableTaskListRow
                           key={task.id}
                           task={task}
+                          density={taskDensity}
                           isSelected={selectedTaskIds.has(task.id)}
                           onSelect={() => toggleTaskSelection(task.id)}
                           onViewDetails={() => setSelectedTask(task)}
@@ -1050,7 +1064,7 @@ export default function TasksPage() {
 
         {!isLoading && !isError && viewMode === 'KANBAN' && (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => { void handleTaskDragEnd(event); }}>
-            <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 custom-scrollbar">
+            <div className={cn('flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar', isCompact ? 'p-4' : 'p-6')}>
               <div className="h-full flex gap-6 min-w-max">
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => {
                   const columnTasks = kanbanColumns[key as TaskStatus];
@@ -1069,6 +1083,7 @@ export default function TasksPage() {
                             <SortableKanbanTaskCard
                               key={task.id}
                               task={task}
+                              isCompact={isCompact}
                               onViewDetails={() => setSelectedTask(task)}
                               onOpenProject={() => openProject(task.project)}
                             />

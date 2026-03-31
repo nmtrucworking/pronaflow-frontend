@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import type { KeyboardEvent, RefObject } from 'react';
+import { formatDate } from '@/lib/localeFormatters';
 
 // ARIA labels and roles for Gantt Chart elements
 export const ARIA_LABELS = {
@@ -189,7 +190,7 @@ export function generateTaskAriaDescription(task: {
   const parts = [
     `Công việc: ${task.name}`,
     `Tiến độ: ${task.progress}%`,
-    `Từ ${task.startDate.toLocaleDateString('vi-VN')} đến ${task.endDate.toLocaleDateString('vi-VN')}`,
+     `Từ ${formatDate(task.startDate)} đến ${formatDate(task.endDate)}`,
   ];
 
   if (task.assignee) {

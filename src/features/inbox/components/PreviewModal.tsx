@@ -1,5 +1,6 @@
 import { X, Download, FileText, ImageIcon } from 'lucide-react';
 import type { Attachment } from '../types/inbox-types';
+import { formatDate } from '@/lib/localeFormatters';
 
 interface PreviewModalProps {
   attachment: Attachment | null;
@@ -25,7 +26,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ attachment, onClose 
             </div>
             <div>
               <h3 className="text-sm font-semibold">{attachment.name}</h3>
-              <p className="text-xs text-white/70">{attachment.size} • {new Date().toLocaleDateString()}</p>
+              <p className="text-xs text-white/70">{attachment.size} • {formatDate(new Date())}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

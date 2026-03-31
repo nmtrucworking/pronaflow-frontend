@@ -42,6 +42,7 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import COLORS from '@/config/colors';
+import { formatNumber } from '@/lib/localeFormatters';
 import {
   MOCK_WORKSPACES as CENTRAL_WORKSPACES,
   MOCK_WORKSPACE_MEMBERS as CENTRAL_WORKSPACE_MEMBERS,
@@ -73,7 +74,7 @@ const MOCK_MEMBERS = CENTRAL_WORKSPACE_MEMBERS.map((member) => ({
 const MOCK_INVOICES = CENTRAL_INVOICES.map((invoice) => ({
   id: invoice.invoice_id,
   date: invoice.created_at,
-  amount: `${invoice.amount.toLocaleString('vi-VN')} ${invoice.currency}`,
+  amount: `${formatNumber(invoice.amount)} ${invoice.currency}`,
   status: invoice.status.toUpperCase(),
 }));
 

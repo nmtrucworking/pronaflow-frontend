@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { EntityType, TrashItemEntity } from '../types';
 import TrashTooltip from './TrashTooltip';
+import { formatDate, formatDateTime } from '@/lib/localeFormatters';
 
 interface TrashTableProps {
   items: TrashItemEntity[];
@@ -90,8 +91,8 @@ const TrashTable: React.FC<TrashTableProps> = ({ items, isSelectionMode, selecte
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col text-xs text-slate-500">
-                    <span className="font-medium text-slate-700">{new Date(item.deleted_at).toLocaleDateString('vi-VN')}</span>
-                    <span>{new Date(item.deleted_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-medium text-slate-700">{formatDate(item.deleted_at)}</span>
+                    <span>{formatDateTime(item.deleted_at, { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">

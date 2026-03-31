@@ -68,6 +68,7 @@ import {
     Cpu
 } from 'lucide-react';
 import COLORS from '@/config/colors';
+import { formatDate } from '@/lib/localeFormatters';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -967,7 +968,7 @@ export default function ProjectDetails({
                                         <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Thời hạn cuối</div>
                                         <div className="flex items-center justify-end gap-1.5 text-sm font-bold text-slate-800">
                                             <Calendar className="w-4 h-4 text-indigo-500" />
-                                            {new Date(currentProject.end_date).toLocaleDateString('vi-VN')}
+                                            {formatDate(currentProject.end_date)}
                                         </div>
                                     </div>
                                 </div>
@@ -1023,7 +1024,7 @@ export default function ProjectDetails({
                                         <div className="flex items-center gap-2 mb-4">{note.tags.map(tag => (<span key={tag} className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200 font-bold">#{tag}</span>))}</div>
                                         <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
                                             <div className="flex items-center gap-2"><img src={note.author.avatar_url} alt={note.author.name} className="w-5 h-5 rounded-full shadow-sm" /><span className="text-xs font-medium text-slate-600">{note.author.name}</span></div>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(note.updatedAt).toLocaleDateString('vi-VN')}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{formatDate(note.updatedAt)}</span>
                                         </div>
                                     </div>
                                 ))}

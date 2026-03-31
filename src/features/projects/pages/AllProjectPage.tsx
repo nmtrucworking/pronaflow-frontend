@@ -9,8 +9,11 @@ import { CreateProjectModal } from '../components/CreateProjectModal';
 import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useProjectSelection } from '../hooks/useProjectSelection';
 import type { ViewMode, SortOption } from '../constants/viewModes';
+import { useDensityPreference } from '@/hooks/useDensityPreference';
 
 export const AllProjectsPage: React.FC = () => {
+  const densityPreference = useDensityPreference();
+  const isCompact = densityPreference === 'compact';
   // Data fetching
   const { data: projectsResponse, isLoading, error } = useProjects();
   const projects = projectsResponse?.projects ?? [];
@@ -213,6 +216,7 @@ export const AllProjectsPage: React.FC = () => {
           <ProjectList
             projects={filteredProjects}
             viewMode={viewMode}
+            isCompact={isCompact}
             onProjectClick={selectProject}
             isEmpty={filteredProjects.length === 0}
             sortColumn={sortColumn}
