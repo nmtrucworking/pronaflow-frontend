@@ -3,6 +3,7 @@ import { CalendarDays, Flag } from 'lucide-react';
 import type { DensityMode, TaskEntity } from '../types';
 import { STATUS_CONFIG } from '../constants';
 import { cn } from '../utils';
+import { formatDate } from '@/lib/localeFormatters';
 import { TaskActionsMenu } from './TaskActionsMenu';
 import { PriorityBadge } from './PriorityBadge';
 import { ProjectTag } from './ProjectTag';
@@ -71,7 +72,7 @@ export const TaskListRow = ({
           <div className="flex items-center gap-3">
              <div className="opacity-70 group-hover:opacity-100 transition-opacity"><AssigneeAvatarGroup users={task.assignees} /></div>
              <div className={cn("flex items-center text-xs px-2 py-1 rounded transition-colors duration-200 whitespace-nowrap", new Date(task.dueDate) < new Date() && !isDone ? "text-red-600 font-bold bg-red-50" : "text-slate-500 group-hover:bg-white group-hover:shadow-sm")}> 
-                <CalendarDays className={cn("w-3.5 h-3.5 mr-1.5", new Date(task.dueDate) < new Date() && !isDone && "animate-pulse")} />{new Date(task.dueDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                <CalendarDays className={cn("w-3.5 h-3.5 mr-1.5", new Date(task.dueDate) < new Date() && !isDone && "animate-pulse")} />{formatDate(task.dueDate, { day: '2-digit', month: '2-digit' })}
               </div>
           </div>
           <TaskActionsMenu onViewDetails={onViewDetails} />

@@ -2,6 +2,7 @@ import * as Progress from '@radix-ui/react-progress';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Plus, CalendarDays, Clock, EyeOff, LayoutGrid, List as ListIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/localeFormatters';
 import type { DensityMode, DashboardConfig, GroupedTasks } from '../types/dashboard-types';
 import { StatCard } from './DashboardCard';
 import { DashboardCustomizer } from './DashboardCustomizer';
@@ -32,7 +33,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 flex items-center">
             <CalendarDays className="w-4 h-4 mr-1.5" />
-            {new Date().toLocaleDateString('vi-VN', {
+            {formatDate(new Date(), {
               weekday: 'long',
               year: 'numeric',
               month: 'long',

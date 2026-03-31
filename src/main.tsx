@@ -7,6 +7,7 @@ import { ThemeProvider } from './themes/ThemeProvider'
 import App from './App.tsx'
 import store from './store'
 import './index.css'
+import './lib/i18n'
 
 // Create a client
 const queryClient = new QueryClient({

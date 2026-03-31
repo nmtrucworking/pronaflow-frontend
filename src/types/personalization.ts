@@ -29,9 +29,17 @@ export type NotificationFrequency = 'immediate' | 'hourly' | 'daily';
 
 export interface NotificationPreference {
   event_type: string;
-  in_app: boolean;
-  email: boolean;
-  push: boolean;
+  channels: {
+    in_app: boolean;
+    email: boolean;
+    browser_push: boolean;
+    ignore_during_dnd?: boolean;
+  };
+  is_enabled: boolean;
+  exceptions?: {
+    urgent_only?: boolean;
+    allowed_senders?: string[];
+  };
 }
 
 export interface DoNotDisturbSchedule {
@@ -80,7 +88,7 @@ export type WidgetType =
 
 export interface Widget {
   id: string;
-  type: WidgetType;
+  type: WidgetType | string;
   title: string;
   description: string;
   icon: string;
@@ -93,12 +101,19 @@ export interface Widget {
 // Alias for backward compatibility
 export type DashboardWidget = Widget;
 
+export interface DashboardLayoutConfig {
+  widgets: Widget[];
+}
+
 export interface DashboardLayout {
   id: string;
   user_id: string;
+  workspace_id?: string;
   name: string;
+  layout_config?: DashboardLayoutConfig;
   widgets: Widget[];
-  is_default: boolean;
+  is_active?: boolean;
+  is_default?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -135,6 +150,9 @@ export interface UserSettings {
   // Notifications
   notification_preferences: NotificationPreference[];
   do_not_disturb: DoNotDisturbSchedule | null;
+  dnd_enabled?: boolean;
+  dnd_start_time?: string | null;
+  dnd_end_time?: string | null;
   
   // Dashboard
   dashboard_layout_id: string | null;
@@ -159,18 +177,22 @@ export interface UpdateUserSettingsDTO {
   accessibility?: Partial<AccessibilitySettings>;
   notification_preferences?: NotificationPreference[];
   do_not_disturb?: DoNotDisturbSchedule | null;
+  dnd_enabled?: boolean;
+  dnd_start_time?: string;
+  dnd_end_time?: string;
 }
 
 export interface CreateDashboardLayoutDTO {
   name: string;
-  widgets: Widget[];
-  is_default?: boolean;
+  workspace_id: string;
+  layout_config: DashboardLayoutConfig;
+  is_active?: boolean;
 }
 
 export interface UpdateDashboardLayoutDTO {
   name?: string;
-  widgets?: Widget[];
-  is_default?: boolean;
+  layout_config?: DashboardLayoutConfig;
+  is_active?: boolean;
 }
 
 // ==================== Response Types ====================

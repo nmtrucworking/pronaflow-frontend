@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { taskService, TaskComment } from '@/services/taskService';
 import { useTheme } from '@/themes/ThemeProvider';
+import { formatDateTime } from '@/lib/localeFormatters';
 
 interface TaskCommentSectionProps {
   taskId: string;
@@ -245,7 +246,7 @@ export function TaskCommentSection({ taskId, isLoading: initialLoading = false }
                           {comment.author_name}
                         </span>
                         <span className="text-xs text-slate-500">
-                          {new Date(comment.created_at).toLocaleString('vi-VN', {
+                          {formatDateTime(comment.created_at, {
                             month: 'short',
                             day: 'numeric',
                             hour: '2-digit',

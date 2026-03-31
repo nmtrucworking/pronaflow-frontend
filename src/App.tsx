@@ -50,6 +50,7 @@ import AnalyticsPage from './features/analytics/pages/AnalyticsPage';
 // Import Module 9 Components
 import CommandPalette from './components/CommandPalette';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import { isEditableTarget } from './lib/keyboardShortcuts';
 
 // Import Admin Pages (Module 14)
 import {
@@ -203,19 +204,41 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const isModifierPressed = e.metaKey || e.ctrlKey;
+      const canUsePlainKey = !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey;
+
       // Command Palette: Cmd/Ctrl + K
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if (isModifierPressed && key === 'k') {
         e.preventDefault();
         setIsCommandPaletteOpen(true);
+        return;
       }
+
+      // Sidebar Toggle: Cmd/Ctrl + B
+      if (isModifierPressed && key === 'b') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('pronaflow-sidebar-toggle'));
+        return;
+      }
+
       // Keyboard Shortcuts: ?
-      if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const target = e.target as HTMLElement;
-        // Don't open if user is typing in an input field
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-          setIsShortcutsModalOpen(true);
+      if (e.key === '?' && canUsePlainKey && !isEditableTarget(e.target)) {
+        e.preventDefault();
+        setIsShortcutsModalOpen(true);
+        return;
+      }
+
+      // Required FM9 binding: C for create-task flow
+      if (key === 'c' && canUsePlainKey && !isEditableTarget(e.target)) {
+        e.preventDefault();
+
+        if (window.location.pathname.includes(ROUTES.app.tasks)) {
+          window.dispatchEvent(new CustomEvent('pronaflow-create-task'));
+          return;
         }
+
+        window.location.href = `${ROUTES.app.tasks}?create=1`;
       }
     };
 

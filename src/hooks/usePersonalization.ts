@@ -9,6 +9,7 @@ import type {
   UpdateUserSettingsDTO,
   CreateDashboardLayoutDTO,
   UpdateDashboardLayoutDTO,
+  NotificationPreference,
 } from '@/types/personalization';
 import { toast } from 'sonner';
 
@@ -55,6 +56,84 @@ export const useResetSettings = (userId: string) => {
   });
 };
 
+// ==================== Notification Preferences ====================
+
+export const useNotificationPreferences = () => {
+  return useQuery({
+    queryKey: ['notification-preferences'],
+    queryFn: () => personalizationService.getNotificationPreferences(),
+  });
+};
+
+export const useUpdateNotificationPreference = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventType, data }: { eventType: string; data: Partial<NotificationPreference> }) =>
+      personalizationService.updateNotificationPreference(eventType, data),
+    onMutate: async ({ eventType, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['notification-preferences'] });
+
+      const previous = queryClient.getQueryData<NotificationPreference[]>(['notification-preferences']);
+      if (!previous) {
+        return { previous };
+      }
+
+      queryClient.setQueryData<NotificationPreference[]>(
+        ['notification-preferences'],
+        previous.map((pref) =>
+          pref.event_type === eventType
+            ? {
+                ...pref,
+                ...data,
+                channels: {
+                  ...pref.channels,
+                  ...(data.channels || {}),
+                },
+              }
+            : pref
+        )
+      );
+
+      return { previous };
+    },
+    onError: (error: any, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['notification-preferences'], context.previous);
+      }
+      toast.error(error.response?.data?.message || 'Failed to update notification preference');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+    },
+  });
+};
+
+export const useBulkUpdateNotificationChannels = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      eventTypes,
+      patch,
+    }: {
+      eventTypes: string[];
+      patch: (current: NotificationPreference) => Partial<NotificationPreference>;
+    }) => {
+      const current = queryClient.getQueryData<NotificationPreference[]>(['notification-preferences']) || [];
+      const target = current.filter((pref) => eventTypes.includes(pref.event_type));
+      await Promise.all(
+        target.map((pref) =>
+          personalizationService.updateNotificationPreference(pref.event_type, patch(pref))
+        )
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+    },
+  });
+};
+
 // ==================== Localization ====================
 
 export const useAvailableLanguages = () => {
@@ -75,30 +154,30 @@ export const useTimezones = () => {
 
 // ==================== Dashboard Layouts ====================
 
-export const useDashboardLayouts = (userId: string) => {
+export const useDashboardLayouts = (workspaceId: string) => {
   return useQuery({
-    queryKey: ['dashboard-layouts', userId],
-    queryFn: () => personalizationService.getDashboardLayouts(userId),
-    enabled: !!userId,
+    queryKey: ['dashboard-layouts', workspaceId],
+    queryFn: () => personalizationService.getDashboardLayouts(workspaceId),
+    enabled: !!workspaceId,
   });
 };
 
-export const useDashboardLayout = (userId: string, layoutId: string) => {
+export const useDashboardLayout = (workspaceId: string, layoutId: string) => {
   return useQuery({
-    queryKey: ['dashboard-layout', userId, layoutId],
-    queryFn: () => personalizationService.getDashboardLayout(userId, layoutId),
-    enabled: !!userId && !!layoutId,
+    queryKey: ['dashboard-layout', workspaceId, layoutId],
+    queryFn: () => personalizationService.getDashboardLayout(workspaceId, layoutId),
+    enabled: !!workspaceId && !!layoutId,
   });
 };
 
-export const useCreateDashboardLayout = (userId: string) => {
+export const useCreateDashboardLayout = (workspaceId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (data: CreateDashboardLayoutDTO) => 
-      personalizationService.createDashboardLayout(userId, data),
+      personalizationService.createDashboardLayout(workspaceId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', workspaceId] });
       toast.success('Dashboard layout created');
     },
     onError: (error: any) => {
@@ -107,15 +186,15 @@ export const useCreateDashboardLayout = (userId: string) => {
   });
 };
 
-export const useUpdateDashboardLayout = (userId: string, layoutId: string) => {
+export const useUpdateDashboardLayout = (workspaceId: string, layoutId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (data: UpdateDashboardLayoutDTO) => 
-      personalizationService.updateDashboardLayout(userId, layoutId, data),
+      personalizationService.updateDashboardLayout(workspaceId, layoutId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', userId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-layout', userId, layoutId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-layout', workspaceId, layoutId] });
       toast.success('Dashboard layout updated');
     },
     onError: (error: any) => {
@@ -124,14 +203,14 @@ export const useUpdateDashboardLayout = (userId: string, layoutId: string) => {
   });
 };
 
-export const useDeleteDashboardLayout = (userId: string) => {
+export const useDeleteDashboardLayout = (workspaceId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (layoutId: string) => 
-      personalizationService.deleteDashboardLayout(userId, layoutId),
+      personalizationService.deleteDashboardLayout(workspaceId, layoutId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', workspaceId] });
       toast.success('Dashboard layout deleted');
     },
     onError: (error: any) => {
@@ -140,14 +219,14 @@ export const useDeleteDashboardLayout = (userId: string) => {
   });
 };
 
-export const useSetDefaultLayout = (userId: string) => {
+export const useSetDefaultLayout = (workspaceId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (layoutId: string) => 
-      personalizationService.setDefaultLayout(userId, layoutId),
+      personalizationService.setDefaultLayout(workspaceId, layoutId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-layouts', workspaceId] });
       toast.success('Default layout set');
     },
     onError: (error: any) => {

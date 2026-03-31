@@ -207,6 +207,17 @@ export default function App({
     };
   }, []);
 
+  useEffect(() => {
+    const handleSidebarToggle = () => {
+      setIsCollapsed((prev) => !prev);
+    };
+
+    window.addEventListener('pronaflow-sidebar-toggle', handleSidebarToggle as EventListener);
+    return () => {
+      window.removeEventListener('pronaflow-sidebar-toggle', handleSidebarToggle as EventListener);
+    };
+  }, []);
+
   const toggleSidebar = () => {
     setIsCollapsed(prev => !prev);
   };

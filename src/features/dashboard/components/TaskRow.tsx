@@ -2,6 +2,7 @@ import * as Checkbox from '@radix-ui/react-checkbox';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Check, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/localeFormatters';
 import type { TaskEntity, DensityMode } from '../types/dashboard-types';
 import { TaskPriorityBadge } from './TaskPriorityBadge';
 import { TaskActionsMenu } from './TaskActionsMenu';
@@ -94,7 +95,7 @@ export const TaskRow: React.FC<TaskRowProps> = ({ task, density, onToggle, onVie
             )}
           >
             <CalendarIcon className="w-3 h-3 mr-1.5" />
-            {new Date(task.planned_end).toLocaleDateString('vi-VN', {
+            {formatDate(task.planned_end, {
               day: '2-digit',
               month: '2-digit',
             })}

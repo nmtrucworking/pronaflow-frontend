@@ -54,6 +54,13 @@ import AccessibilityPanel from '@/features/personalization/components/Accessibil
 import DashboardCustomizer from '@/features/personalization/components/DashboardCustomizer';
 import { useTheme } from '@/themes/ThemeProvider';
 import { MOCK_CURRENT_USER } from '@/mocks';
+import {
+  useNotificationPreferences,
+  useBulkUpdateNotificationChannels,
+  useUpdateNotificationPreference,
+  useUserSettings,
+  useUpdateUserSettings,
+} from '@/hooks/usePersonalization';
 
 const SETTINGS_TAB_IDS = ['profile', 'security', 'preferences', 'notifications', 'accessibility', 'dashboard', 'shortcuts'] as const;
 type SettingsTabId = (typeof SETTINGS_TAB_IDS)[number];
@@ -1283,39 +1290,144 @@ const SecuritySettings = () => {
  * 4. Notification Settings Tab (NEW)
  */
 const NotificationSettings = () => {
-  // Mock state for global toggles
+  const { data: userSettings } = useUserSettings('current-user');
+  const updateSettings = useUpdateUserSettings('current-user');
+  const { data: preferences = [], isLoading: isPrefsLoading } = useNotificationPreferences();
+  const updateNotificationPreference = useUpdateNotificationPreference();
+  const bulkUpdateChannels = useBulkUpdateNotificationChannels();
+
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [dndEnabled, setDndEnabled] = useState(false);
+  const [dndStart, setDndStart] = useState('22:00');
+  const [dndEnd, setDndEnd] = useState('08:00');
+  const [updatingEvents, setUpdatingEvents] = useState<Record<string, boolean>>({});
+  const [failedEvents, setFailedEvents] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!userSettings) return;
+    setDndEnabled(Boolean(userSettings.dnd_enabled));
+    setDndStart(userSettings.dnd_start_time || '22:00');
+    setDndEnd(userSettings.dnd_end_time || '08:00');
+  }, [userSettings]);
+
+  useEffect(() => {
+    if (!preferences.length) return;
+    setEmailEnabled(preferences.some((pref) => pref.channels?.email && pref.is_enabled));
+    setPushEnabled(
+      preferences.some((pref) => (pref.channels?.browser_push || pref.channels?.in_app) && pref.is_enabled)
+    );
+  }, [preferences]);
+
+  const saveDndSettings = (nextEnabled: boolean, nextStart: string, nextEnd: string) => {
+    updateSettings.mutate({
+      dnd_enabled: nextEnabled,
+      dnd_start_time: nextStart,
+      dnd_end_time: nextEnd,
+    });
+  };
+
+  const handleGlobalChannelToggle = (channel: 'email' | 'browser_push' | 'in_app', value: boolean) => {
+    const eventTypes = preferences.map((pref) => pref.event_type);
+    bulkUpdateChannels.mutate({
+      eventTypes,
+      patch: (pref) => ({
+        channels: {
+          in_app: pref.channels?.in_app ?? true,
+          email: pref.channels?.email ?? false,
+          browser_push: pref.channels?.browser_push ?? true,
+          ignore_during_dnd: pref.channels?.ignore_during_dnd ?? true,
+          [channel]: value,
+        },
+      }),
+    });
+  };
+
+  const getPreferenceForEvent = (eventType: string) => {
+    return (
+      preferences.find((pref) => pref.event_type === eventType) || {
+        event_type: eventType,
+        is_enabled: true,
+        channels: {
+          in_app: true,
+          email: false,
+          browser_push: true,
+          ignore_during_dnd: true,
+        },
+      }
+    );
+  };
+
+  const toggleEventChannel = async (
+    eventType: string,
+    payload: {
+      email?: boolean;
+      browser_push?: boolean;
+      in_app?: boolean;
+    }
+  ) => {
+    const current = getPreferenceForEvent(eventType);
+    setUpdatingEvents((prev) => ({ ...prev, [eventType]: true }));
+    setFailedEvents((prev) => ({ ...prev, [eventType]: false }));
+
+    try {
+      await updateNotificationPreference.mutateAsync({
+        eventType,
+        data: {
+          is_enabled: current.is_enabled,
+          channels: {
+            in_app: current.channels?.in_app ?? true,
+            email: current.channels?.email ?? false,
+            browser_push: current.channels?.browser_push ?? true,
+            ignore_during_dnd: current.channels?.ignore_during_dnd ?? true,
+            ...payload,
+          },
+        },
+      });
+    } catch {
+      setFailedEvents((prev) => ({ ...prev, [eventType]: true }));
+    } finally {
+      setUpdatingEvents((prev) => ({ ...prev, [eventType]: false }));
+    }
+  };
 
   const notifCategories = [
     {
       id: 'tasks',
       title: 'Công việc & Dự án',
       items: [
-        { id: 'assigned', label: 'Khi tôi được giao việc mới', email: true, push: true },
-        { id: 'due_soon', label: 'Nhắc nhở sắp đến hạn (trước 24h)', email: true, push: true },
-        { id: 'status_change', label: 'Trạng thái công việc thay đổi', email: false, push: true },
-        { id: 'comment', label: 'Bình luận mới trong công việc của tôi', email: true, push: true },
+        { id: 'assigned', eventType: 'task_assigned', label: 'Khi tôi được giao việc mới' },
+        { id: 'due_soon', eventType: 'deadline_approaching', label: 'Nhắc nhở sắp đến hạn (trước 24h)' },
+        { id: 'status_change', eventType: 'task_status_changed', label: 'Trạng thái công việc thay đổi' },
+        { id: 'comment', eventType: 'comment_added', label: 'Bình luận mới trong công việc của tôi' },
       ]
     },
     {
       id: 'mentions',
       title: 'Đề cập & Thảo luận',
       items: [
-        { id: 'mention_me', label: 'Khi ai đó nhắc đến tôi (@mention)', email: true, push: true },
-        { id: 'reply', label: 'Phản hồi bình luận của tôi', email: true, push: true },
+        { id: 'mention_me', eventType: 'mention', label: 'Khi ai đó nhắc đến tôi (@mention)' },
+        { id: 'project_updates', eventType: 'project_updated', label: 'Cập nhật quan trọng từ dự án' },
       ]
     },
     {
       id: 'system',
       title: 'Hệ thống',
       items: [
-        { id: 'access', label: 'Yêu cầu quyền truy cập', email: true, push: false },
-        { id: 'security', label: 'Cảnh báo bảo mật & Đăng nhập', email: true, push: true, required: true }, // Cannot disable
+        { id: 'access', eventType: 'collaboration_request', label: 'Yêu cầu quyền truy cập', required: true },
       ]
     }
   ];
+
+  if (isPrefsLoading) {
+    return (
+      <div className="max-w-2xl animate-pulse space-y-4">
+        <div className="h-16 rounded-xl bg-slate-200 dark:bg-slate-700" />
+        <div className="h-24 rounded-xl bg-slate-200 dark:bg-slate-700" />
+        <div className="h-48 rounded-xl bg-slate-200 dark:bg-slate-700" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
@@ -1331,7 +1443,14 @@ const NotificationSettings = () => {
                 <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
                   <Mail className="w-5 h-5" />
                 </div>
-                <Switch.Root checked={emailEnabled} onCheckedChange={setEmailEnabled} className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer">
+                <Switch.Root
+                  checked={emailEnabled}
+                  onCheckedChange={(checked) => {
+                    setEmailEnabled(checked);
+                    handleGlobalChannelToggle('email', checked);
+                  }}
+                  className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer"
+                >
                   <Switch.Thumb className="block w-[16px] h-[16px] bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
                 </Switch.Root>
               </div>
@@ -1344,7 +1463,24 @@ const NotificationSettings = () => {
                 <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-600 dark:text-orange-400">
                   <Bell className="w-5 h-5" />
                 </div>
-                <Switch.Root checked={pushEnabled} onCheckedChange={setPushEnabled} className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer">
+                <Switch.Root
+                  checked={pushEnabled}
+                  onCheckedChange={(checked) => {
+                    setPushEnabled(checked);
+                    bulkUpdateChannels.mutate({
+                      eventTypes: preferences.map((pref) => pref.event_type),
+                      patch: (pref) => ({
+                        channels: {
+                          in_app: checked,
+                          email: pref.channels?.email ?? false,
+                          browser_push: checked,
+                          ignore_during_dnd: pref.channels?.ignore_during_dnd ?? true,
+                        },
+                      }),
+                    });
+                  }}
+                  className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer"
+                >
                   <Switch.Thumb className="block w-[16px] h-[16px] bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
                 </Switch.Root>
               </div>
@@ -1363,7 +1499,14 @@ const NotificationSettings = () => {
                </h3>
                <p className="text-xs text-slate-500 mt-1">Tắt tất cả thông báo trong khung giờ đã chọn.</p>
              </div>
-             <Switch.Root checked={dndEnabled} onCheckedChange={setDndEnabled} className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer">
+             <Switch.Root
+               checked={dndEnabled}
+               onCheckedChange={(checked) => {
+                 setDndEnabled(checked);
+                 saveDndSettings(checked, dndStart, dndEnd);
+               }}
+               className="w-[36px] h-[20px] bg-slate-300 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-600 outline-none cursor-pointer"
+             >
                 <Switch.Thumb className="block w-[16px] h-[16px] bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
              </Switch.Root>
            </div>
@@ -1371,10 +1514,22 @@ const NotificationSettings = () => {
            {dndEnabled && (
              <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 animate-in slide-in-from-top-2 fade-in">
                 <InputGroup label="Bắt đầu" id="dnd_start">
-                  <input type="time" defaultValue="22:00" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm" />
+                  <input
+                    type="time"
+                    value={dndStart}
+                    onChange={(event) => setDndStart(event.target.value)}
+                    onBlur={() => saveDndSettings(dndEnabled, dndStart, dndEnd)}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                  />
                 </InputGroup>
                 <InputGroup label="Kết thúc" id="dnd_end">
-                  <input type="time" defaultValue="08:00" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm" />
+                  <input
+                    type="time"
+                    value={dndEnd}
+                    onChange={(event) => setDndEnd(event.target.value)}
+                    onBlur={() => saveDndSettings(dndEnabled, dndStart, dndEnd)}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                  />
                 </InputGroup>
              </div>
            )}
@@ -1395,25 +1550,64 @@ const NotificationSettings = () => {
               
               {category.items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                  {(() => {
+                    const pref = getPreferenceForEvent(item.eventType);
+                    const emailChecked = pref.channels?.email ?? false;
+                    const pushChecked = (pref.channels?.browser_push ?? false) || (pref.channels?.in_app ?? false);
+                    const isUpdating = Boolean(updatingEvents[item.eventType]);
+                    const isFailed = Boolean(failedEvents[item.eventType]);
+                    return (
+                      <>
                   <span className="text-sm text-slate-700 dark:text-slate-300 pr-4">{item.label}</span>
                   <div className="flex items-center gap-8">
                     <div className="w-8 flex justify-center">
                       <input 
                         type="checkbox" 
-                        defaultChecked={item.email} 
-                        disabled={!emailEnabled || (item as any).required}
+                        checked={emailChecked}
+                        onChange={(event) => {
+                          void toggleEventChannel(item.eventType, { email: event.target.checked });
+                        }}
+                        disabled={!emailEnabled || (item as any).required || isUpdating || bulkUpdateChannels.isPending}
                         className="accent-indigo-600 w-4 h-4 rounded disabled:opacity-50 cursor-pointer" 
                       />
                     </div>
                     <div className="w-8 flex justify-center">
                       <input 
                         type="checkbox" 
-                        defaultChecked={item.push} 
-                        disabled={!pushEnabled || (item as any).required}
+                        checked={pushChecked}
+                        onChange={(event) => {
+                          const next = event.target.checked;
+                          void toggleEventChannel(item.eventType, {
+                            browser_push: next,
+                            in_app: next,
+                          });
+                        }}
+                        disabled={!pushEnabled || (item as any).required || isUpdating || bulkUpdateChannels.isPending}
                         className="accent-indigo-600 w-4 h-4 rounded disabled:opacity-50 cursor-pointer" 
                       />
                     </div>
+                    <div className="w-[74px] text-right">
+                      {isUpdating && <span className="text-[10px] text-slate-400">Saving...</span>}
+                      {isFailed && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void toggleEventChannel(item.eventType, {
+                              email: emailChecked,
+                              browser_push: pref.channels?.browser_push ?? false,
+                              in_app: pref.channels?.in_app ?? false,
+                            });
+                          }}
+                          className="text-[10px] text-red-600 hover:text-red-700 font-medium"
+                        >
+                          Retry
+                        </button>
+                      )}
+                    </div>
                   </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
             </div>

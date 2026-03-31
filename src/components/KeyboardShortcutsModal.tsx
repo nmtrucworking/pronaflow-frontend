@@ -6,14 +6,7 @@
 
 import React from 'react';
 import { X, Command, Keyboard } from 'lucide-react';
-
-interface ShortcutGroup {
-  title: string;
-  shortcuts: {
-    keys: string[];
-    description: string;
-  }[];
-}
+import { getActiveShortcutGroups } from '@/lib/keyboardShortcuts';
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
@@ -25,72 +18,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
   onClose,
 }) => {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const modKey = isMac ? '⌘' : 'Ctrl';
-
-  const shortcutGroups: ShortcutGroup[] = [
-    {
-      title: 'General',
-      shortcuts: [
-        { keys: [modKey, 'K'], description: 'Open command palette' },
-        { keys: [modKey, '/'], description: 'Toggle sidebar' },
-        { keys: ['?'], description: 'Show keyboard shortcuts' },
-        { keys: [modKey, ','], description: 'Open settings' },
-        { keys: ['Esc'], description: 'Close dialog/modal' },
-      ],
-    },
-    {
-      title: 'Navigation',
-      shortcuts: [
-        { keys: [modKey, 'D'], description: 'Go to Dashboard' },
-        { keys: [modKey, 'T'], description: 'Go to Tasks' },
-        { keys: [modKey, 'P'], description: 'Go to Projects' },
-        { keys: [modKey, 'C'], description: 'Go to Calendar' },
-        { keys: [modKey, 'I'], description: 'Go to Inbox' },
-        { keys: ['G', 'H'], description: 'Go to Home' },
-      ],
-    },
-    {
-      title: 'Actions',
-      shortcuts: [
-        { keys: [modKey, 'N'], description: 'Create new task' },
-        { keys: [modKey, 'Shift', 'N'], description: 'Create new project' },
-        { keys: [modKey, 'S'], description: 'Save changes' },
-        { keys: [modKey, 'Enter'], description: 'Submit form' },
-        { keys: [modKey, 'Z'], description: 'Undo' },
-        { keys: [modKey, 'Shift', 'Z'], description: 'Redo' },
-      ],
-    },
-    {
-      title: 'Task Management',
-      shortcuts: [
-        { keys: ['E'], description: 'Edit selected task' },
-        { keys: ['D'], description: 'Delete selected task' },
-        { keys: ['A'], description: 'Assign task' },
-        { keys: ['L'], description: 'Add label' },
-        { keys: ['M'], description: 'Move to project' },
-        { keys: ['Space'], description: 'Mark as complete' },
-      ],
-    },
-    {
-      title: 'List Navigation',
-      shortcuts: [
-        { keys: ['↑', '↓'], description: 'Navigate items' },
-        { keys: ['Enter'], description: 'Open item' },
-        { keys: ['J', 'K'], description: 'Next/Previous (vim-style)' },
-        { keys: [modKey, 'A'], description: 'Select all' },
-        { keys: ['Shift', '↑/↓'], description: 'Multi-select' },
-      ],
-    },
-    {
-      title: 'Search & Filter',
-      shortcuts: [
-        { keys: [modKey, 'F'], description: 'Focus search' },
-        { keys: [modKey, 'Shift', 'F'], description: 'Advanced filters' },
-        { keys: ['Tab'], description: 'Switch filter tabs' },
-        { keys: ['Esc'], description: 'Clear search' },
-      ],
-    },
-  ];
+  const shortcutGroups = getActiveShortcutGroups(isMac);
 
   if (!isOpen) return null;
 

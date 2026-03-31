@@ -40,7 +40,7 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
 import { useProjects } from '@/hooks/projectHooks';
 import { taskService } from '@/services/taskService';
@@ -302,6 +302,7 @@ function SortableTaskListManagerItem({
 
 export default function TasksPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = useState<ViewMode>('LIST');
   const [searchQuery, setSearchQuery] = useState('');
@@ -338,6 +339,29 @@ export default function TasksPage() {
       },
     })
   );
+
+  useEffect(() => {
+    const shouldOpenCreate = searchParams.get('create') === '1';
+    if (!shouldOpenCreate) {
+      return;
+    }
+
+    setIsCreateTaskModalOpen(true);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('create');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const handleCreateTaskShortcut = () => {
+      setIsCreateTaskModalOpen(true);
+    };
+
+    window.addEventListener('pronaflow-create-task', handleCreateTaskShortcut as EventListener);
+    return () => {
+      window.removeEventListener('pronaflow-create-task', handleCreateTaskShortcut as EventListener);
+    };
+  }, []);
 
   const { data: projectsResponse } = useProjects(undefined, undefined, 1, 200);
   const { data: taskListResponse, isLoading, isError, error, refetch } = useTasks({

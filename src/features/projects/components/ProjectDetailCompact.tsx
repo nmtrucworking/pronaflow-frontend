@@ -227,6 +227,8 @@ interface ProjectDetailCompactProps {
   onClose?: () => void;
 }
 
+import { formatDate } from '@/lib/localeFormatters';
+
 export const ProjectDetailCompact: React.FC<ProjectDetailCompactProps> = ({ projectId, onClose }) => {
   const { data, isLoading, error } = useProjectDetail(projectId);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -243,7 +245,7 @@ export const ProjectDetailCompact: React.FC<ProjectDetailCompactProps> = ({ proj
     );
   }
 
-  const formattedDueDate = new Date(data.dueDate).toLocaleDateString('en-US', {
+  const formattedDueDate = formatDate(data.dueDate, {
     day: '2-digit',
     month: 'short',
   });

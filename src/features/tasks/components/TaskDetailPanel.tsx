@@ -42,6 +42,7 @@ import { PRIORITY_CONFIG, STATUS_CONFIG, USERS } from '../constants';
 import { cn } from '../utils';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { TaskCommentSection } from './TaskCommentSection';
+import { formatDate } from '@/lib/localeFormatters';
 
 function SortableSubtaskItem({
   subtask,
@@ -640,7 +641,7 @@ export const TaskDetailPanel = ({ task, onClose }: { task: TaskEntity | null, on
                   onClick={() => setActivePopover(activePopover === 'deadline' ? null : 'deadline')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200"
                 >
-                  <span>{new Date(task.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span>{formatDate(task.dueDate, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                 </button>
 
                 {activePopover === 'deadline' && (

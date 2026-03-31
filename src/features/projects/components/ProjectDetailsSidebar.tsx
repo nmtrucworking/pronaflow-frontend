@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, Maximize2, BarChart2, List, FileText, Settings, Users, Calendar } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { formatDate } from '@/lib/localeFormatters';
 import type { Project } from '../../../types/project';
 import ProjectDetails from './ProjectDetails';
 
@@ -68,7 +69,7 @@ export default function ProjectDetailsSidebar({
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-slate-500" />
             <span className="text-body text-slate-600">
-              {new Date(project.end_date).toLocaleDateString('vi-VN')}
+              {formatDate(project.end_date)}
             </span>
           </div>
         </div>

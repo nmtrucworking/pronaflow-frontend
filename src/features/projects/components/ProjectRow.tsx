@@ -2,6 +2,7 @@
 import React from 'react';
 import { Calendar, Zap, Layers, ArrowUpRight, MoreHorizontal } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { formatDate } from '@/lib/localeFormatters';
 import type { Project } from '../../../types/project';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { ProgressBar } from '../../../components/ui/ProgressBar';
@@ -87,7 +88,7 @@ export function ProjectRow({ project, onProjectClick }: ProjectRowProps) {
           <div className="flex items-center gap-1.5 md:flex-col md:items-end">
             <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
             <div className="text-sm text-slate-700 font-medium">
-              {new Date(project.end_date).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}
+              {formatDate(project.end_date, { month: 'short', day: 'numeric' })}
             </div>
             {daysUntilEnd <= 7 && daysUntilEnd > 0 && (
               <span className="hidden md:block text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-semibold">

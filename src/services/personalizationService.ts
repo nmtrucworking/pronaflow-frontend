@@ -10,13 +10,74 @@ import type {
   UpdateUserSettingsDTO,
   Language,
   DashboardLayout,
+  DashboardLayoutConfig,
   CreateDashboardLayoutDTO,
   UpdateDashboardLayoutDTO,
   KeyboardShortcut,
+  NotificationPreference,
+  Widget,
 } from '@/types/personalization';
+
+interface DashboardLayoutApiResponse {
+  id: string;
+  user_id: string;
+  workspace_id: string;
+  name: string;
+  layout_config?: DashboardLayoutConfig;
+  is_active?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DashboardLayoutListApiResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  has_more: boolean;
+  items: DashboardLayoutApiResponse[];
+}
+
+interface NotificationPreferenceListApiResponse {
+  total: number;
+  items: NotificationPreference[];
+}
+
+const toFallbackWidget = (item: any, index: number): Widget => ({
+  id: item?.id || `widget-${index}`,
+  type: item?.type || 'quick-stats',
+  title: item?.title || 'Widget',
+  description: item?.description || 'Custom widget',
+  icon: item?.icon || 'layout-grid',
+  is_enabled: item?.is_enabled ?? item?.visible ?? true,
+  size: item?.size || 'medium',
+  position: item?.position || { x: item?.x || 0, y: item?.y || index },
+  config: item?.config || {},
+});
+
+const normalizeWidgets = (layoutConfig?: DashboardLayoutConfig): Widget[] => {
+  const rawWidgets = Array.isArray(layoutConfig?.widgets) ? layoutConfig?.widgets : [];
+  return rawWidgets.map((item, index) => toFallbackWidget(item, index));
+};
+
+const normalizeDashboardLayout = (layout: DashboardLayoutApiResponse): DashboardLayout => {
+  const widgets = normalizeWidgets(layout.layout_config);
+  return {
+    id: layout.id,
+    user_id: layout.user_id,
+    workspace_id: layout.workspace_id,
+    name: layout.name,
+    layout_config: layout.layout_config || { widgets },
+    widgets,
+    is_active: layout.is_active,
+    is_default: layout.is_active,
+    created_at: layout.created_at,
+    updated_at: layout.updated_at,
+  };
+};
 
 class PersonalizationService {
   private api: AxiosInstance;
+  private readonly basePath = '/personalization';
 
   constructor() {
     this.api = createApiClient();
@@ -25,18 +86,18 @@ class PersonalizationService {
   // ==================== User Preferences ====================
   
   async getUserSettings(userId: string): Promise<UserSettings> {
-    const response = await this.api.get(`/users/${userId}/settings`);
+    const response = await this.api.get(`${this.basePath}/settings`);
     return response.data.data || response.data;
   }
 
   async updateUserSettings(userId: string, data: UpdateUserSettingsDTO): Promise<UserSettings> {
-    const response = await this.api.patch(`/users/${userId}/settings`, data);
+    const response = await this.api.put(`${this.basePath}/settings`, data);
     return response.data.data || response.data;
   }
 
   async resetToDefaults(userId: string): Promise<UserSettings> {
-    const response = await this.api.post(`/users/${userId}/settings/reset`);
-    return response.data.data || response.data;
+    await this.api.post(`${this.basePath}/reset`);
+    return this.getUserSettings(userId);
   }
 
   // ==================== Localization ====================
@@ -53,43 +114,79 @@ class PersonalizationService {
 
   // ==================== Dashboard Layouts ====================
   
-  async getDashboardLayouts(userId: string): Promise<DashboardLayout[]> {
-    const response = await this.api.get(`/users/${userId}/dashboard-layouts`);
-    return response.data.data || response.data;
+  async getDashboardLayouts(workspaceId: string): Promise<DashboardLayout[]> {
+    const response = await this.api.get<DashboardLayoutListApiResponse>(`${this.basePath}/dashboard/layouts`, {
+      params: { workspace_id: workspaceId },
+    });
+    return (response.data.items || []).map(normalizeDashboardLayout);
   }
 
-  async getDashboardLayout(userId: string, layoutId: string): Promise<DashboardLayout> {
-    const response = await this.api.get(`/users/${userId}/dashboard-layouts/${layoutId}`);
-    return response.data.data || response.data;
+  async getDashboardLayout(workspaceId: string, layoutId: string): Promise<DashboardLayout> {
+    const layouts = await this.getDashboardLayouts(workspaceId);
+    const layout = layouts.find((item) => item.id === layoutId);
+    if (!layout) {
+      throw new Error('Dashboard layout not found');
+    }
+    return layout;
   }
 
-  async createDashboardLayout(userId: string, data: CreateDashboardLayoutDTO): Promise<DashboardLayout> {
-    const response = await this.api.post(`/users/${userId}/dashboard-layouts`, data);
-    return response.data.data || response.data;
+  async createDashboardLayout(workspaceId: string, data: CreateDashboardLayoutDTO): Promise<DashboardLayout> {
+    const response = await this.api.post<DashboardLayoutApiResponse>(`${this.basePath}/dashboard/layouts`, {
+      ...data,
+      workspace_id: workspaceId,
+    });
+    return normalizeDashboardLayout(response.data);
   }
 
   async updateDashboardLayout(
-    userId: string,
+    workspaceId: string,
     layoutId: string,
     data: UpdateDashboardLayoutDTO
   ): Promise<DashboardLayout> {
-    const response = await this.api.patch(`/users/${userId}/dashboard-layouts/${layoutId}`, data);
-    return response.data.data || response.data;
+    const response = await this.api.put<DashboardLayoutApiResponse>(`${this.basePath}/dashboard/layouts/${layoutId}`, data);
+    return normalizeDashboardLayout(response.data);
   }
 
-  async deleteDashboardLayout(userId: string, layoutId: string): Promise<void> {
-    await this.api.delete(`/users/${userId}/dashboard-layouts/${layoutId}`);
+  async deleteDashboardLayout(workspaceId: string, layoutId: string): Promise<void> {
+    await this.api.delete(`${this.basePath}/dashboard/layouts/${layoutId}`);
   }
 
-  async setDefaultLayout(userId: string, layoutId: string): Promise<void> {
-    await this.api.post(`/users/${userId}/dashboard-layouts/${layoutId}/set-default`);
+  async setDefaultLayout(workspaceId: string, layoutId: string): Promise<void> {
+    await this.updateDashboardLayout(workspaceId, layoutId, { is_active: true });
   }
 
   // ==================== Keyboard Shortcuts ====================
+
+  // ==================== Notification Preferences ====================
+
+  async getNotificationPreferences(): Promise<NotificationPreference[]> {
+    const response = await this.api.get<NotificationPreferenceListApiResponse>(
+      `${this.basePath}/notifications/preferences`
+    );
+    return response.data.items || [];
+  }
+
+  async updateNotificationPreference(
+    eventType: string,
+    data: Partial<NotificationPreference>
+  ): Promise<NotificationPreference> {
+    const response = await this.api.put<NotificationPreference>(
+      `${this.basePath}/notifications/preferences/${eventType}`,
+      data
+    );
+    return response.data;
+  }
   
   async getKeyboardShortcuts(): Promise<KeyboardShortcut[]> {
-    const response = await this.api.get('/preferences/keyboard-shortcuts');
-    return response.data.data || response.data;
+    const response = await this.api.get(`${this.basePath}/shortcuts/cheatsheet`);
+    const shortcuts = response.data?.shortcuts || [];
+    return shortcuts.map((item: { key: string; action: string; context?: string }, index: number) => ({
+      id: `${item.action}-${index}`,
+      key: item.key,
+      description: item.context || 'Global',
+      action: item.action,
+      category: 'general' as const,
+    }));
   }
 
   async updateKeyboardShortcut(
