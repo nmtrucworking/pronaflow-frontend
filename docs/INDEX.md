@@ -7,20 +7,17 @@ Chỉ mục tài liệu dự án PronaFlow Frontend
 ### 1. Deployment (`/deployment`)
 Tài liệu về quá trình triển khai và cập nhật hệ thống:
 - `COLOR_SYSTEM_DEPLOYMENT.md` - Triển khai hệ thống màu sắc
-- `COMPLETION_REPORT.md` - Báo cáo hoàn thành
 - `DEPLOYMENT_SUMMARY.md` - Tóm tắt triển khai
-- `FE_MODULES_DEPLOYMENT_COMPLETE_VI.md` - Báo cáo hoàn thành module (Tiếng Việt)
 - `FINAL_DEPLOYMENT_STATUS.md` - Trạng thái triển khai cuối cùng
 - `MODULES_DEPLOYMENT_STATUS.md` - Trạng thái triển khai modules
-- `SIDEBAR_REFACTOR_SUMMARY.md` - Tổng kết refactor sidebar
 
 ### 2. Modules (`/modules`)
 Tài liệu chi tiết về từng module trong hệ thống:
 - `MODULE_1_README.md` - Module 1 documentation
 - `MODULE_2_DEPLOYMENT_READINESS.md` - Module 2 canonical deployment readiness
 - `MODULE_3_QUICKSTART.md`, `MODULE_3_README.md`, `MODULE_3_REFERENCE.md`, `MODULE_3_SUMMARY.md` - Module 3
-- `MODULE_9_COMPLETION.md`, `MODULE_9_QUICKREF.md`, `MODULE_9_README.md` - Module 9
-- `MODULE_12_COMPLETION.md`, `MODULE_12_QUICKREF.md`, `MODULE_12_README.md` - Module 12
+- `MODULE_9_QUICKREF.md`, `MODULE_9_README.md` - Module 9
+- `MODULE_12_QUICKREF.md`, `MODULE_12_README.md` - Module 12
 
 ### 3. Implementation (`/implementation`)
 Hướng dẫn và báo cáo implementation:
@@ -32,6 +29,8 @@ Hướng dẫn và báo cáo implementation:
 Báo cáo tổng quan và chi tiết dự án:
 - `ALLPROJECTS_BEFORE_AFTER.md` - So sánh trước/sau của tất cả projects
 - `ALLPROJECTS_OPTIMIZATION_SUMMARY.md` - Tổng kết tối ưu hóa
+- `FRONTEND_PLAN_REVIEW_REPORT_2026-03-31_MASTER.md` - Báo cáo hợp nhất cho toàn bộ các vòng plan review
+- `FRONTEND_DOCS_ARCHIVE_FINAL_REPORT_2026-03-31.md` - Báo cáo tổng kết archive frontend docs
 - `PROJECTDETAILCOMPACT_DOCS.md` - Tài liệu chi tiết dự án (compact)
 - `PROJECTDETAILCOMPACT_QUICKREF.md` - Quick reference
 
@@ -70,39 +69,36 @@ Tài liệu API của PronaFlow:
 - **API_DOCUMENTATION_V1.2_RELEASE_NOTES.md** - Release notes
 
 ### 7. Technical Docs (`/technical-docs`)
-Tài liệu kỹ thuật tổng thể dự án PronaFlow (cả Frontend & Backend):
-- **README.md** - Hướng dẫn sử dụng technical docs
-- **00-General/** - Tổng quan, Technology Stack, Glossary
-- **01-Requirements/** - Yêu cầu hệ thống, 16 Functional Modules
-- **02-Architecture/** - Kiến trúc hệ thống, ERD, API Design
-- **03-UI-UX-Design/** - Thiết kế giao diện, wireframes, mockups
-- **04-AI-Specifications/** - Đặc tả AI/ML features
-- **05-Deployment-Operations/** - Deployment guides, monitoring
-- **06-Quality-Assurance/** - Testing strategy, QA processes
-- **07-References/** - Tài liệu tham khảo
+Entry point cho tài liệu kỹ thuật dùng chung (đã chuẩn hóa canonical):
+- **technical-docs/INDEX.md** - Frontend entry point + migration context
+- **technical-docs/README.md** - Compatibility stub
+- **Canonical shared docs**: `../../../docs/technical-docs/`
 
-### 7. Backend (`/backend`)
+### 8. Backend (`/backend`)
 Tài liệu kỹ thuật backend (nếu có riêng)
 
-### 8. Architecture (`/architecture`)
+### 9. Architecture (`/architecture`)
 Tài liệu kiến trúc hệ thống (nếu có riêng)
 
-### 9. Planning (`/planning`)
+### 10. Planning (`/planning`)
 Tài liệu kế hoạch và lộ trình
 
-### 10. Draft (`/draft`)
+### 11. Draft (`/draft`)
 Các file nháp, cũ hoặc không sử dụng
+- `archive/plans/` - Khu vực lưu các plan artifacts đã hoàn thành
+- `archive/deployment/` - Khu vực lưu deployment artifacts đã hoàn thành
+- `archive/modules/` - Khu vực lưu module completion artifacts đã hoàn thành
 
 ## 🔍 Tìm tài liệu theo chủ đề
 
 ### Bắt đầu với dự án
 1. Đọc [README.md](../README.md) chính
-2. Xem [Technical Docs Overview](technical-docs/README.md)
+2. Xem [Technical Docs Entry Point](technical-docs/INDEX.md)
 3. Xem [Frontend Overview](frontend/README.md)
 4. Tham khảo [Tech Stack](technical-docs/00-General/)
 
 ### Hiểu về kiến trúc & requirements
-1. Xem [Technical Docs - General](technical-docs/00-General/)
+1. Xem [Technical Docs Canonical Hub](../../../docs/technical-docs/README.md)
 2. Đọc [Requirements & Modules](technical-docs/01-Requirements/)
 3. Tham khảo [System Architecture](technical-docs/02-Architecture/)
 
@@ -118,7 +114,7 @@ Các file nháp, cũ hoặc không sử dụng
 4. Kiểm tra [Component Specs](frontend/03-Component%20Specifications/)
 
 ### Backend Development  
-1. Xem [Technical Docs - General](technical-docs/00-General/)
+1. Xem [Technical Docs Canonical Hub](../../../docs/technical-docs/README.md)
 2. Tham khảo [Architecture](technical-docs/02-Architecture/)
 3. Xem [API & Security](frontend/04-API%20&%20Security/)
 
@@ -155,7 +151,7 @@ Các file nháp, cũ hoặc không sử dụng
 
 ## 🔄 Cập nhật
 
-Tài liệu này được cập nhật lần cuối: **2026-02-03**
+Tài liệu này được cập nhật lần cuối: **2026-03-31**
 
 ---
 
