@@ -45,6 +45,10 @@ export interface Project {
   owner_id: string;
   created_at: string;
   updated_at?: string;
+  is_archived?: boolean;
+  archived_at?: string;
+  archived_by?: string;
+  deleted_at?: string | null;
   
   // Frontend only fields
   manager?: UserEntity; // Deprecated, use owner_id instead
@@ -84,6 +88,7 @@ export interface UpdateProjectDTO {
   start_date?: string;
   end_date?: string;
   tag_ids?: string[];
+  is_archived?: boolean;
 }
 
 export interface ProjectSettings {

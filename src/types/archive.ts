@@ -3,6 +3,48 @@
  * Module 8: Archive & Data Management
  */
 
+export type ArchiveResourceType = 'project' | 'task' | 'workspace' | 'file';
+
+export interface ArchiveItem {
+  id: string;
+  resource_id: string;
+  resource_type: ArchiveResourceType;
+  name: string;
+  archived_at: string;
+  archived_by: string;
+  reason?: string;
+  expiry_date?: string;
+  is_archived: boolean;
+}
+
+export interface TrashItemEntity {
+  trash_id: string;
+  resource_id: string;
+  resource_type: ArchiveResourceType;
+  name: string;
+  deleted_at: string;
+  purge_after: string;
+  deleted_by: string;
+  reason?: string;
+}
+
+export interface DataExportRequest {
+  workspace_id: string;
+  resources: ('project' | 'task' | 'user' | 'attachment' | 'comment')[];
+  format: 'json' | 'csv';
+  include_deleted?: boolean;
+}
+
+export interface ExportStatus {
+  export_id: string;
+  status: 'queued' | 'processing' | 'ready' | 'failed';
+  progress_percent: number;
+  file_size?: number;
+  download_url?: string;
+  expires_at: string;
+  error_message?: string;
+}
+
 export interface ArchivedItem {
   archive_id: string;
   resource_type: 'project' | 'task' | 'workspace';
@@ -49,3 +91,7 @@ export interface DataRetentionPolicy {
   created_at: string;
   updated_at: string;
 }
+
+// Backward-compatible aliases for legacy consumers.
+export type LegacyArchivedItem = ArchivedItem;
+export type LegacyTrashItem = TrashItem;
