@@ -13,6 +13,7 @@ interface CreateTaskModalProps {
     title: string;
     projectId: string;
     priority: TaskPriority;
+    isMilestone: boolean;
     dueDate: string;
     assigneeId?: string;
     description?: string;
@@ -26,6 +27,7 @@ export function CreateTaskModal({ isOpen, onClose, projects, onCreateTask }: Cre
   const [title, setTitle] = useState('');
   const [projectId, setProjectId] = useState(defaultProject);
   const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
+  const [isMilestone, setIsMilestone] = useState(false);
   const [dueDate, setDueDate] = useState(today);
   const [assigneeId, setAssigneeId] = useState('');
   const [description, setDescription] = useState('');
@@ -37,6 +39,7 @@ export function CreateTaskModal({ isOpen, onClose, projects, onCreateTask }: Cre
     setTitle('');
     setProjectId(projects[0]?.id ?? '');
     setPriority('MEDIUM');
+    setIsMilestone(false);
     setDueDate(today);
     setAssigneeId('');
     setDescription('');
@@ -54,6 +57,7 @@ export function CreateTaskModal({ isOpen, onClose, projects, onCreateTask }: Cre
       title: title.trim(),
       projectId,
       priority,
+      isMilestone,
       dueDate,
       assigneeId: assigneeId || undefined,
       description: description.trim() || undefined,
@@ -155,6 +159,22 @@ export function CreateTaskModal({ isOpen, onClose, projects, onCreateTask }: Cre
           </div>
         </div>
 
+        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+          <label className="flex items-center justify-between gap-3 cursor-pointer">
+            <span className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <Flag className="w-4 h-4 text-amber-500" />
+              Mark as milestone
+            </span>
+            <input
+              type="checkbox"
+              checked={isMilestone}
+              onChange={(event) => setIsMilestone(event.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            />
+          </label>
+          <p className="mt-1 text-xs text-slate-500">Milestones are highlighted and can be filtered separately in task views.</p>
+        </div>
+
         <div>
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Mô tả (tuỳ chọn)</label>
           <textarea
@@ -168,7 +188,7 @@ export function CreateTaskModal({ isOpen, onClose, projects, onCreateTask }: Cre
 
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
           <div className="font-medium text-slate-700">Xác nhận nhanh</div>
-          <div className="mt-1">Task sẽ được tạo trong dự án <span className="font-semibold text-slate-800">{selectedProject?.name || '—'}</span> với ưu tiên <span className="font-semibold text-slate-800">{PRIORITY_CONFIG[priority].label}</span>.</div>
+          <div className="mt-1">Task sẽ được tạo trong dự án <span className="font-semibold text-slate-800">{selectedProject?.name || '—'}</span> với ưu tiên <span className="font-semibold text-slate-800">{PRIORITY_CONFIG[priority].label}</span>{isMilestone ? <span className="font-semibold text-amber-700"> dưới dạng milestone</span> : ''}.</div>
         </div>
       </div>
 

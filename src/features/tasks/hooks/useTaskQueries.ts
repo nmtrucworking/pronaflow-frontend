@@ -15,6 +15,7 @@ export function useTasks(params?: {
   task_list_id?: string;
   status?: string;
   priority?: string;
+  is_milestone?: boolean;
   assigned_to?: string;
   due_date_from?: string;
   due_date_to?: string;

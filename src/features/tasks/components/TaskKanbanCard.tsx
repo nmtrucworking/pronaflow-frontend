@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Flag } from 'lucide-react';
 import type { TaskEntity } from '../types';
 import { cn } from '../utils';
 import { TaskActionsMenu } from './TaskActionsMenu';
@@ -37,6 +37,12 @@ export const TaskKanbanCard = ({ task, onViewDetails, onOpenProject }: { task: T
         <div className="opacity-0 group-hover:opacity-100 transition-opacity"><TaskActionsMenu onViewDetails={onViewDetails} /></div>
       </div>
       <h4 className="text-sm font-semibold text-slate-800 mb-3 line-clamp-2 leading-relaxed group-hover:text-indigo-700 transition-colors cursor-pointer" onClick={onViewDetails}>{task.title}</h4>
+      {task.isMilestone && (
+        <div className="mb-3 inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+          <Flag className="w-3 h-3" />
+          Milestone
+        </div>
+      )}
       <button type="button" onClick={onOpenProject} className="text-xs font-medium text-slate-500 hover:text-indigo-700 transition-colors mb-3 inline-flex max-w-full truncate">{task.project.name}</button>
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-50 group-hover:border-slate-100 transition-colors">
         <div className="flex items-center gap-2"><AssigneeAvatarGroup users={task.assignees} limit={2} /></div>

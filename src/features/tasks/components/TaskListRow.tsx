@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from 'react';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Flag } from 'lucide-react';
 import type { DensityMode, TaskEntity } from '../types';
 import { STATUS_CONFIG } from '../constants';
 import { cn } from '../utils';
@@ -63,7 +63,7 @@ export const TaskListRow = ({
       <button className="flex-shrink-0 mr-4 text-slate-400 hover:text-indigo-600 transition-colors active:scale-90 duration-200 transform focus:outline-none"><StatusIcon className={cn("w-5 h-5 transition-all duration-300", isDone ? "text-emerald-500" : "group-hover:stroke-[2.5px]")} /></button>
       <div className="flex-1 min-w-0 grid grid-cols-12 gap-4 items-center">
         <div className="col-span-6 md:col-span-5 pr-4 cursor-pointer" onClick={onViewDetails}>
-          <div className="flex items-center gap-2 mb-1.5 opacity-80 group-hover:opacity-100 transition-opacity"><span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1 rounded group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">{task.key}</span><PriorityBadge priority={task.priority} /></div>
+          <div className="flex items-center gap-2 mb-1.5 opacity-80 group-hover:opacity-100 transition-opacity"><span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1 rounded group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">{task.key}</span>{task.isMilestone && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded"><Flag className="w-3 h-3" />Milestone</span>}<PriorityBadge priority={task.priority} /></div>
           <h4 className={cn("font-medium text-slate-900 truncate transition-colors duration-200 group-hover:text-indigo-700", isCompact ? "text-sm" : "text-[15px]", isDone && "text-slate-400 line-through decoration-slate-300")}>{task.title}</h4>
         </div>
         <div className="hidden md:block col-span-3 opacity-80 group-hover:opacity-100 transition-opacity duration-300"><ProjectTag project={task.project} onClick={onOpenProject} /></div>
