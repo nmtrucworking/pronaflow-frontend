@@ -11,7 +11,7 @@
 // ============================================================================
 
 export type WorkspaceStatus = 'ACTIVE' | 'SOFT_DELETED';
-export type WorkspaceRole = 'owner' | 'admin' | 'member' | 'viewer' | 'guest';
+export type WorkspaceRole = 'owner' | 'admin' | 'member' | 'viewer';
 
 // ============================================================================
 // Workspace Models

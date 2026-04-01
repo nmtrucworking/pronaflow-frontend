@@ -126,6 +126,7 @@ Configure workspace settings
 - Fields: timezone (optional), work_days (optional), work_hours (optional), logo_url (optional)
 - Validation: Zod schema
 - Features: Advanced settings, complex validation
+- Branding UI keeps the existing upload-logo experience: avatar/logo trigger, popover with preset samples, preview state, and remove action. Preserve this pattern when extending the settings form.
 
 **Stats:** 320+ lines, 4 forms, Zod + React Hook Form integration
 
@@ -292,6 +293,7 @@ frontend/src/
 - ✅ Configure work days/hours
 - ✅ Upload logo
 - ✅ Save preferences
+- ✅ Keep the existing upload-logo UI/UX pattern with presets and preview states
 
 ### Access & Security
 - ✅ Role-based access control (RBAC)

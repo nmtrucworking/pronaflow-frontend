@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Switch from '@radix-ui/react-switch';
 import * as Label from '@radix-ui/react-label';
@@ -42,8 +43,12 @@ import {
 import { LogoUploadComponent } from './LogoUploadComponent';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { ROUTES } from '@/routes/paths';
 import COLORS from '@/config/colors';
 import { formatNumber } from '@/lib/localeFormatters';
+import { useAuth } from '@/hooks/useAuth';
+import { useCurrentUserRole, useCurrentWorkspaceId } from '@/store/features/workspaceStore';
+import workspaceService from '@/services/workspaceService';
 import {
   MOCK_WORKSPACES as CENTRAL_WORKSPACES,
   MOCK_WORKSPACE_MEMBERS as CENTRAL_WORKSPACE_MEMBERS,
@@ -511,8 +516,58 @@ const WorkspaceSwitcher = () => {
  * Workspace General Settings
  */
 const WorkspaceGeneral = () => {
-  const [currentWorkspaceId] = useState('ws-1'); // Replace with actual workspace ID
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const currentWorkspaceId = useCurrentWorkspaceId() ?? 'ws-1';
+  const currentUserRole = useCurrentUserRole();
   const [logoUrl, setLogoUrl] = useState<string>('');
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleLeaveWorkspace = async () => {
+    if (!user?.user_id) {
+      setActionError('Không tìm thấy thông tin người dùng hiện tại.');
+      return;
+    }
+
+    if (currentUserRole === 'owner') {
+      setActionError('Chủ sở hữu cần chuyển quyền cho thành viên khác trước khi rời workspace.');
+      return;
+    }
+
+    setIsLeaving(true);
+    setActionError(null);
+
+    try {
+      await workspaceService.removeMember(currentWorkspaceId, user.user_id);
+      setLeaveOpen(false);
+      navigate(ROUTES.workspace.list);
+    } catch (error) {
+      setActionError('Không thể rời workspace lúc này. Vui lòng thử lại.');
+      console.error('Failed to leave workspace:', error);
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    setIsDeleting(true);
+    setActionError(null);
+
+    try {
+      await workspaceService.deleteWorkspace(currentWorkspaceId);
+      setDeleteOpen(false);
+      navigate(ROUTES.workspace.list);
+    } catch (error) {
+      setActionError('Không thể xóa workspace lúc này. Vui lòng thử lại.');
+      console.error('Failed to delete workspace:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="max-w-3xl animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
@@ -594,11 +649,85 @@ const WorkspaceGeneral = () => {
               <p className="text-sm font-medium text-red-900 dark:text-red-400">Xóa Workspace</p>
               <p className="text-xs text-red-700 dark:text-red-500 mt-1 max-w-md">Hành động này không thể hoàn tác. Tất cả dữ liệu dự án, task và thành viên sẽ bị xóa vĩnh viễn.</p>
             </div>
-            <button className="px-4 py-2 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors active:scale-95 whitespace-nowrap shadow-sm">
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="px-4 py-2 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors active:scale-95 whitespace-nowrap shadow-sm"
+            >
               Xóa vĩnh viễn
             </button>
           </div>
         </div>
+
+        {actionError && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {actionError}
+          </p>
+        )}
+
+        <Dialog.Root open={leaveOpen} onOpenChange={setLeaveOpen}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50 animate-in fade-in" />
+            <Dialog.Content className="fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[420px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white dark:bg-slate-900 p-6 shadow-2xl focus:outline-none z-50 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
+              <Dialog.Title className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                Rời workspace?
+              </Dialog.Title>
+              <Dialog.Description className="text-sm text-slate-500 mb-6">
+                Bạn sẽ mất quyền truy cập vào workspace này. Nếu bạn là chủ sở hữu, hãy chuyển quyền trước khi rời.
+              </Dialog.Description>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLeaveOpen(false)}
+                  className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLeaveWorkspace}
+                  disabled={isLeaving || currentUserRole === 'owner'}
+                  className="px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLeaving ? 'Đang rời...' : 'Rời Workspace'}
+                </button>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+
+        <Dialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50 animate-in fade-in" />
+            <Dialog.Content className="fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[420px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white dark:bg-slate-900 p-6 shadow-2xl focus:outline-none z-50 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
+              <Dialog.Title className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                Xóa workspace vĩnh viễn?
+              </Dialog.Title>
+              <Dialog.Description className="text-sm text-slate-500 mb-6">
+                Toàn bộ dự án, task, thành viên và dữ liệu liên quan sẽ bị xóa. Hành động này không thể hoàn tác.
+              </Dialog.Description>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeleteOpen(false)}
+                  className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteWorkspace}
+                  disabled={isDeleting}
+                  className="px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+                </button>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
       </div>
     </div>
   );
@@ -1144,6 +1273,39 @@ const WorkspaceBilling = () => {
 
 export default function WorkspaceSettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const currentWorkspaceId = useCurrentWorkspaceId() ?? 'ws-1';
+  const currentUserRole = useCurrentUserRole();
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleLeaveWorkspace = async () => {
+    if (!user?.user_id) {
+      setLeaveError('Không tìm thấy thông tin người dùng hiện tại.');
+      return;
+    }
+
+    if (currentUserRole === 'owner') {
+      setLeaveError('Chủ sở hữu cần chuyển quyền cho thành viên khác trước khi rời workspace.');
+      return;
+    }
+
+    setIsLeaving(true);
+    setLeaveError(null);
+
+    try {
+      await workspaceService.removeMember(currentWorkspaceId, user.user_id);
+      setLeaveOpen(false);
+      navigate(ROUTES.workspace.list);
+    } catch (error) {
+      setLeaveError('Không thể rời workspace lúc này. Vui lòng thử lại.');
+      console.error('Failed to leave workspace:', error);
+    } finally {
+      setIsLeaving(false);
+    }
+  };
 
   const navItems = [
     { id: 'general', label: 'Thông tin chung', icon: Building },
@@ -1169,6 +1331,44 @@ export default function WorkspaceSettingsPage() {
         `}
       </style>
 
+      <Dialog.Root open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50 animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[420px] translate-x-[-50%] translate-y-[-50%] rounded-xl bg-white dark:bg-slate-900 p-6 shadow-2xl focus:outline-none z-50 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
+            <Dialog.Title className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+              Rời workspace?
+            </Dialog.Title>
+            <Dialog.Description className="text-sm text-slate-500 mb-6">
+              Bạn sẽ mất quyền truy cập vào workspace này. Nếu bạn là chủ sở hữu, hãy chuyển quyền trước khi rời.
+            </Dialog.Description>
+
+            {leaveError && (
+              <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                {leaveError}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setLeaveOpen(false)}
+                className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleLeaveWorkspace}
+                disabled={isLeaving || currentUserRole === 'owner'}
+                className="px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLeaving ? 'Đang rời...' : 'Rời Workspace'}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
           
@@ -1179,7 +1379,11 @@ export default function WorkspaceSettingsPage() {
               <WorkspaceSwitcher />
             </div>
             <div className="hidden sm:block">
-               <button className="flex items-center text-sm font-medium text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10">
+               <button
+                 type="button"
+                 onClick={() => setLeaveOpen(true)}
+                 className="flex items-center text-sm font-medium text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10"
+               >
                  <LogOut className="w-4 h-4 mr-2" /> Rời Workspace
                </button>
             </div>
@@ -1226,7 +1430,7 @@ export default function WorkspaceSettingsPage() {
 
               {/* Sidebar Footer */}
               <div className="hidden md:block mt-auto pt-6 px-3 border-t border-slate-100 dark:border-slate-800 pb-2">
-                <a href="#" className="flex items-center text-xs text-slate-500 hover:text-indigo-600 transition-colors mb-2">
+                <a href={ROUTES.help.root} target="_blank" rel="noreferrer" className="flex items-center text-xs text-slate-500 hover:text-indigo-600 transition-colors mb-2">
                   <HelpCircle className="w-3.5 h-3.5 mr-2" />
                   Hướng dẫn quản trị
                 </a>
