@@ -15,6 +15,7 @@ import {
   CreateWorkspaceDTO,
   UpdateWorkspaceDTO,
   CreateInvitationDTO,
+  CreateBulkInvitationDTO,
   UpdateSettingsDTO,
   WorkspaceRole,
 } from '@/types/workspace';
@@ -31,7 +32,12 @@ const updateWorkspaceSchema = z.object({
 
 const inviteUserSchema = z.object({
   email: z.string().email('Invalid email address'),
-  invited_role: z.enum(['owner', 'admin', 'member', 'viewer', 'guest']).default('member'),
+  invited_role: z.enum(['admin', 'member', 'viewer']).default('member'),
+});
+
+const bulkInviteUserSchema = z.object({
+  emails: z.string().min(1, 'At least one email is required'),
+  invited_role: z.enum(['admin', 'member', 'viewer']).default('member'),
 });
 
 const settingsSchema = z.object({
@@ -144,7 +150,7 @@ interface InviteUserFormProps {
   isLoading?: boolean;
 }
 
-const roleOptions: WorkspaceRole[] = ['owner', 'admin', 'member', 'viewer', 'guest'];
+const roleOptions: WorkspaceRole[] = ['admin', 'member', 'viewer'];
 
 export const InviteUserForm: React.FC<InviteUserFormProps> = ({
   onSubmit,
@@ -194,6 +200,87 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
 
       <Button type="submit" disabled={isLoading}>
         {isLoading ? 'Sending...' : 'Send Invitation'}
+      </Button>
+    </form>
+  );
+};
+
+interface BulkInviteUserFormProps {
+  onSubmit: (data: CreateBulkInvitationDTO) => void;
+  isLoading?: boolean;
+}
+
+type BulkInviteFormValues = {
+  emails: string;
+  invited_role: 'admin' | 'member' | 'viewer';
+};
+
+const parseEmailList = (value: string): string[] =>
+  Array.from(
+    new Set(
+      value
+        .split(/[\n,]+/)
+        .map((email) => email.trim())
+        .filter(Boolean)
+    )
+  );
+
+export const BulkInviteUserForm: React.FC<BulkInviteUserFormProps> = ({
+  onSubmit,
+  isLoading = false,
+}) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<BulkInviteFormValues>({
+    resolver: zodResolver(bulkInviteUserSchema),
+    defaultValues: {
+      emails: '',
+      invited_role: 'member',
+    },
+  });
+
+  const submitBulk = (data: BulkInviteFormValues) => {
+    onSubmit({
+      emails: parseEmailList(data.emails),
+      invited_role: data.invited_role,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit(submitBulk)} className="space-y-6">
+      <FormItem>
+        <FormLabel>Email Addresses *</FormLabel>
+        <Textarea
+          placeholder="user1@example.com\nuser2@example.com"
+          {...register('emails')}
+          disabled={isLoading}
+          className="min-h-[140px] resize-y"
+        />
+        <FormDescription>Enter one email per line or separate multiple addresses with commas.</FormDescription>
+        <FormMessage>{errors.emails?.message}</FormMessage>
+      </FormItem>
+
+      <FormItem>
+        <FormLabel>Role</FormLabel>
+        <select
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          {...register('invited_role')}
+          disabled={isLoading}
+        >
+          {roleOptions.map((role) => (
+            <option key={role} value={role}>
+              {role.charAt(0).toUpperCase() + role.slice(1)}
+            </option>
+          ))}
+        </select>
+        <FormDescription>The role assigned after the invitation is accepted</FormDescription>
+        <FormMessage>{errors.invited_role?.message}</FormMessage>
+      </FormItem>
+
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? 'Sending...' : 'Send Invitations'}
       </Button>
     </form>
   );

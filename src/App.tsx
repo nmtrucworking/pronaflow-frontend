@@ -79,8 +79,8 @@ const LegacyWorkspaceSettingsRedirect = () => {
       return null;
     }
 
-    if (lastAccessedWorkspace?.workspace_id) {
-      return <Navigate to={ROUTES.workspace.settings(lastAccessedWorkspace.workspace_id)} replace />;
+    if (lastAccessedWorkspace?.id) {
+      return <Navigate to={ROUTES.workspace.settings(lastAccessedWorkspace.id)} replace />;
     }
 
     return <Navigate to={ROUTES.workspace.list} replace />;

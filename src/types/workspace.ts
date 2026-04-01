@@ -124,8 +124,17 @@ export interface CreateInvitationDTO {
   invited_role?: WorkspaceRole;
 }
 
+export interface CreateBulkInvitationDTO {
+  emails: string[];
+  invited_role?: WorkspaceRole;
+}
+
 export interface AcceptInvitationDTO {
   token: string;
+}
+
+export interface WorkspaceOwnershipTransferDTO {
+  new_owner_id: string;
 }
 
 export interface UpdateSettingsDTO {

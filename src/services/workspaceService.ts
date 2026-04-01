@@ -17,9 +17,11 @@ import {
   AddMemberDTO,
   UpdateMemberDTO,
   CreateInvitationDTO,
+  CreateBulkInvitationDTO,
   UpdateSettingsDTO,
   WorkspaceListResponse,
   WorkspaceRole,
+  WorkspaceOwnershipTransferDTO,
 } from '@/types/workspace';
 
 class WorkspaceService {
@@ -201,21 +203,39 @@ class WorkspaceService {
     * POST /workspaces/invitations/accept
    */
   async acceptInvitation(token: string): Promise<{ workspace_id: string; workspace_name: string }> {
-    const response = await this.api.post<{ workspace_id: string; workspace_name: string }>(
+    const response = await this.api.post<Workspace>(
       '/workspaces/invitations/accept',
       {},
       { params: { token } }
     );
-    return response.data;
+    return {
+      workspace_id: response.data.id,
+      workspace_name: response.data.name,
+    };
   }
 
   /**
    * Get last accessed workspace
     * GET /workspaces/me/last-accessed
    */
-  async getLastAccessedWorkspace(): Promise<{ workspace_id: string; name: string; accessed_at: string }> {
-    const response = await this.api.get<{ workspace_id: string; name: string; accessed_at: string }>(
+  async getLastAccessedWorkspace(): Promise<Workspace> {
+    const response = await this.api.get<Workspace>(
       '/workspaces/me/last-accessed'
+    );
+    return response.data;
+  }
+
+  /**
+   * Transfer workspace ownership
+   * POST /workspaces/:id/ownership/transfer
+   */
+  async transferOwnership(
+    workspaceId: string,
+    data: WorkspaceOwnershipTransferDTO
+  ): Promise<WorkspaceMember> {
+    const response = await this.api.post<WorkspaceMember>(
+      `/workspaces/${workspaceId}/ownership/transfer`,
+      data
     );
     return response.data;
   }
@@ -313,22 +333,52 @@ class WorkspaceService {
    */
   async sendBulkInvitations(
     workspaceId: string,
-    emails: string[],
-    role: WorkspaceRole = 'member'
+    data: CreateBulkInvitationDTO
   ): Promise<WorkspaceInvitation[]> {
-    const results: WorkspaceInvitation[] = [];
-    for (const email of emails) {
-      try {
-        const result = await this.sendInvitation(workspaceId, {
-          email,
-          invited_role: role,
-        });
-        results.push(result);
-      } catch (error) {
-        console.error(`Failed to invite ${email}:`, error);
+    const response = await this.api.post<WorkspaceInvitation[]>(
+      `/workspaces/${workspaceId}/invitations/bulk`,
+      data
+    );
+    return response.data;
+  }
+
+  // ========================================================================
+  // Branding
+  // ========================================================================
+
+  /**
+   * Upload workspace logo
+   * PUT /workspaces/:id/upload-logo
+   */
+  async uploadLogo(workspaceId: string, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await this.api.put<Workspace>(
+      `/workspaces/${workspaceId}/upload-logo`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       }
-    }
-    return results;
+    );
+    return response.data.logo_url || '';
+  }
+
+  /**
+   * Remove workspace logo
+   * DELETE /workspaces/:id/logo
+   */
+  async removeLogo(workspaceId: string): Promise<void> {
+    await this.api.delete(`/workspaces/${workspaceId}/logo`);
+  }
+
+  /**
+   * Get workspace logo URL
+   */
+  getLogoUrl(workspaceId: string, filename: string): string {
+    return `/api/v1/workspaces/${workspaceId}/logo/${filename}`;
   }
 }
 

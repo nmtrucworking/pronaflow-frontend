@@ -11,9 +11,9 @@ import { useWorkspaces, useCreateWorkspace, useDeleteWorkspace, useLogAccess } f
 import { useWorkspaceStore } from '@/store/features/workspaceStore';
 import { ROUTES } from '@/routes/paths';
 import { WorkspaceCard } from '../components/WorkspaceCard';
-import { CreateWorkspaceForm, InviteUserForm } from '@/features/workspace/forms/WorkspaceForms';
+import { CreateWorkspaceForm, BulkInviteUserForm } from '@/features/workspace/forms/WorkspaceForms';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Workspace, WorkspaceMember, WorkspaceRole, CreateWorkspaceDTO, CreateInvitationDTO } from '@/types/workspace';
+import { Workspace, WorkspaceMember, WorkspaceRole, CreateWorkspaceDTO, CreateBulkInvitationDTO } from '@/types/workspace';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -187,6 +187,7 @@ export const WorkspaceListPage: React.FC = () => {
   const [invitingWorkspace, setInvitingWorkspace] = useState<Workspace | null>(null);
   const [leavingWorkspace, setLeavingWorkspace] = useState<Workspace | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] = useState<Workspace | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [viewingInvitationsWorkspace, setViewingInvitationsWorkspace] = useState<Workspace | null>(null);
 
   const { user } = useAuth();
@@ -198,11 +199,11 @@ export const WorkspaceListPage: React.FC = () => {
   const deleteWorkspaceMutation = useDeleteWorkspace('');
   const logAccessMutation = useLogAccess('');
   const inviteWorkspaceMemberMutation = useMutation({
-    mutationFn: ({ workspaceId, data }: { workspaceId: string; data: CreateInvitationDTO }) =>
-      workspaceService.sendInvitation(workspaceId, data),
-    onSuccess: (invitation, { workspaceId }) => {
+    mutationFn: ({ workspaceId, data }: { workspaceId: string; data: CreateBulkInvitationDTO }) =>
+      workspaceService.sendBulkInvitations(workspaceId, data),
+    onSuccess: (invitations, { workspaceId }) => {
       queryClient.invalidateQueries({ queryKey: ['invitations', workspaceId] });
-      toast.success(`Invitation sent to ${invitation.email}!`);
+      toast.success(`Sent ${invitations.length} invitation${invitations.length === 1 ? '' : 's'}`);
       setInvitingWorkspace(null);
     },
     onError: () => {
@@ -240,9 +241,10 @@ export const WorkspaceListPage: React.FC = () => {
   const handleDeleteWorkspace = async (workspaceId: string) => {
     await deleteWorkspaceMutation.mutateAsync(workspaceId);
     setDeletingWorkspace(null);
+    setDeleteConfirmation('');
   };
 
-  const handleInviteWorkspaceMember = async (data: CreateInvitationDTO) => {
+  const handleInviteWorkspaceMember = async (data: CreateBulkInvitationDTO) => {
     if (!invitingWorkspace) {
       return;
     }
@@ -505,7 +507,7 @@ export const WorkspaceListPage: React.FC = () => {
                     : 'Invite a teammate to this workspace'}
                 </Dialog.Description>
               </div>
-              <InviteUserForm
+              <BulkInviteUserForm
                 onSubmit={handleInviteWorkspaceMember}
                 isLoading={inviteWorkspaceMemberMutation.isPending}
               />
@@ -553,7 +555,15 @@ export const WorkspaceListPage: React.FC = () => {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <Dialog.Root open={!!deletingWorkspace} onOpenChange={(open) => !open && setDeletingWorkspace(null)}>
+      <Dialog.Root
+        open={!!deletingWorkspace}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingWorkspace(null);
+            setDeleteConfirmation('');
+          }
+        }}
+      >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 w-[95vw] max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-xl z-50">
@@ -566,15 +576,30 @@ export const WorkspaceListPage: React.FC = () => {
                   <Dialog.Title className="text-lg font-semibold text-slate-900">Delete workspace?</Dialog.Title>
                   <Dialog.Description className="text-sm text-slate-600 mt-1">
                     {deletingWorkspace
-                      ? `This will archive ${deletingWorkspace.name}. This action cannot be undone.`
+                      ? `This will archive ${deletingWorkspace.name}. Type the workspace name to confirm.`
                       : 'This action cannot be undone.'}
                   </Dialog.Description>
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700" htmlFor="delete-confirmation">
+                  Workspace name
+                </label>
+                <input
+                  id="delete-confirmation"
+                  value={deleteConfirmation}
+                  onChange={(event) => setDeleteConfirmation(event.target.value)}
+                  placeholder={deletingWorkspace?.name || 'Enter workspace name'}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                />
+              </div>
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setDeletingWorkspace(null)}
+                  onClick={() => {
+                    setDeletingWorkspace(null);
+                    setDeleteConfirmation('');
+                  }}
                   disabled={deleteWorkspaceMutation.isPending}
                 >
                   Cancel
@@ -582,7 +607,11 @@ export const WorkspaceListPage: React.FC = () => {
                 <Button
                   variant="destructive"
                   onClick={() => deletingWorkspace && handleDeleteWorkspace(deletingWorkspace.id)}
-                  disabled={deleteWorkspaceMutation.isPending || !deletingWorkspace}
+                  disabled={
+                    deleteWorkspaceMutation.isPending ||
+                    !deletingWorkspace ||
+                    deleteConfirmation.trim() !== deletingWorkspace.name
+                  }
                 >
                   {deleteWorkspaceMutation.isPending ? 'Deleting...' : 'Delete workspace'}
                 </Button>

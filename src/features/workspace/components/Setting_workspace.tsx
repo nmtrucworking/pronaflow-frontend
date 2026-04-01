@@ -39,6 +39,7 @@ import {
   Link,
   Copy
 } from 'lucide-react';
+import { LogoUploadComponent } from './LogoUploadComponent';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import COLORS from '@/config/colors';
@@ -510,61 +511,76 @@ const WorkspaceSwitcher = () => {
  * Workspace General Settings
  */
 const WorkspaceGeneral = () => {
+  const [currentWorkspaceId] = useState('ws-1'); // Replace with actual workspace ID
+  const [logoUrl, setLogoUrl] = useState<string>('');
+
   return (
     <div className="max-w-3xl animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
       <SectionHeader title="Thông tin chung" description="Quản lý tên, logo và địa chỉ truy cập của Workspace." />
       
       <div className="space-y-8">
+        {/* Logo Upload Section */}
+        <div className="p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
+          <LogoUploadComponent 
+            workspaceId={currentWorkspaceId}
+            currentLogoUrl={logoUrl}
+            onUploadSuccess={setLogoUrl}
+          />
+        </div>
+
         {/* Identity */}
-        <div className="flex flex-col sm:flex-row items-start gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
-          <LogoUploader />
-          <div className="flex-1 space-y-4 w-full">
-            <InputGroup label="Tên Workspace" id="ws_name">
-              <input type="text" defaultValue="PronaFlow HQ" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" />
-            </InputGroup>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <InputGroup label="Ngành nghề" id="ws_industry">
-                 <CustomSelect 
-                   value="tech" 
-                   onChange={() => {}} 
-                   options={[
-                     { value: 'tech', label: 'Technology & Software' },
-                     { value: 'marketing', label: 'Marketing Agency' },
-                     { value: 'edu', label: 'Education' },
-                     { value: 'finance', label: 'Finance' },
-                   ]} 
-                 />
-               </InputGroup>
-               <InputGroup label="Quy mô công ty" id="ws_size">
-                 <CustomSelect 
-                   value="11-50" 
-                   onChange={() => {}} 
-                   options={[
-                     { value: '1-10', label: '1 - 10 người' },
-                     { value: '11-50', label: '11 - 50 người' },
-                     { value: '50-plus', label: '50+ người' },
-                   ]} 
-                 />
-               </InputGroup>
+        <div className="space-y-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div>
+            <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">Tên Workspace</label>
+            <input type="text" defaultValue="PronaFlow HQ" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div>
+               <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">Ngành nghề</label>
+               <CustomSelect 
+                 value="tech" 
+                 onChange={() => {}} 
+                 options={[
+                   { value: 'tech', label: 'Technology & Software' },
+                   { value: 'marketing', label: 'Marketing Agency' },
+                   { value: 'edu', label: 'Education' },
+                   { value: 'finance', label: 'Finance' },
+                 ]} 
+               />
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">Quy mô công ty</label>
+               <CustomSelect 
+                 value="11-50" 
+                 onChange={() => {}} 
+                 options={[
+                   { value: '1-10', label: '1 - 10 người' },
+                   { value: '11-50', label: '11 - 50 người' },
+                   { value: '50-plus', label: '50+ người' },
+                 ]} 
+               />
+             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">Mô tả Workspace</label>
+            <textarea className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none h-24" placeholder="Mô tả ngắn về không gian làm việc của bạn..." />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">Workspace URL</label>
+            <p className="text-xs text-slate-500 mb-2">Địa chỉ truy cập nhanh cho thành viên tổ chức.</p>
+            <div className="flex group focus-within:ring-2 focus-within:ring-indigo-500/50 rounded-lg transition-all">
+              <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 text-sm select-none font-mono">
+                pronaflow.com/
+              </span>
+              <input 
+                type="text" 
+                defaultValue="pronaflow-hq" 
+                className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-r-lg text-sm focus:outline-none font-mono text-slate-700 dark:text-slate-300" 
+              />
             </div>
-
-            <InputGroup label="Mô tả Workspace" id="ws_desc">
-              <textarea className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none h-24" placeholder="Mô tả ngắn về không gian làm việc của bạn..." />
-            </InputGroup>
-
-            <InputGroup label="Workspace URL" id="ws_url" helpText="Địa chỉ truy cập nhanh cho thành viên tổ chức.">
-              <div className="flex group focus-within:ring-2 focus-within:ring-indigo-500/50 rounded-lg transition-all">
-                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 text-sm select-none font-mono">
-                  pronaflow.com/
-                </span>
-                <input 
-                  type="text" 
-                  defaultValue="pronaflow-hq" 
-                  className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-r-lg text-sm focus:outline-none font-mono text-slate-700 dark:text-slate-300" 
-                />
-              </div>
-            </InputGroup>
           </div>
         </div>
 
