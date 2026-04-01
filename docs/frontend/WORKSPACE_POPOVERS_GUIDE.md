@@ -35,11 +35,18 @@ This guide covers popover and contextual dropdown behavior for all pages under `
 - Menu supports copy email, resend invitation (active only), and cancel invitation.
 - Tooltip on invited-role badge for context.
 
+### Branding / Logo Upload
+- Workspace branding uses the existing logo upload popover pattern rather than a plain file picker.
+- The trigger should remain visually close to a workspace avatar/logo card.
+- The popover should keep the familiar `Upload` / `Presets` / `Library` tabs, with preset logo/avatar samples available for quick selection.
+- Preview and remove actions should stay visible so users can confirm the change before saving.
+
 ## UX Rules
 - Keep one primary contextual trigger per card (`More` icon button).
 - Use labels in dropdowns when there are grouped actions.
 - Show selection state with check icons for filter/sort popovers.
 - Avoid destructive actions without explicit red styling.
+- For branding uploads, prefer the established popover-and-gallery pattern over a bare file input.
 
 ## Extension Notes
 If a new block is added under `/workspaces/*` and requires contextual actions:

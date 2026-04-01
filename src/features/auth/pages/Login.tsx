@@ -3,45 +3,6 @@
  * Module 1: Identity and Access Management
  */
 
-import workspaceService from '@/services/workspaceService';
-import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ROUTES } from '@/routes/paths';
-import { useLogin, useMFA } from '@/hooks/useAuth';
-import { LogIn, Loader2, Github, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-  const redirectToLastWorkspace = async () => {
-  try {
-    const lastWorkspace = await workspaceService.getLastAccessedWorkspace();
-    navigate(ROUTES.workspace.detail(lastWorkspace.id), { replace: true });
-  } catch {
-    navigate(ROUTES.app.dashboard, { replace: true });
-  }
-  };
-
-interface LoginState {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-  errors: Record<string, string>;
-  accountLocked: boolean;
-  lockoutTimeRemaining: number;
-}
-
-interface MFAState {
-  totpCode: string;
-  error: string | null;
-  isVerifying: boolean;
-}
-
-const Login = () => {
-  const navigate = useNavigate();
-  const { login, isLoading, error } = useLogin();
-      await redirectToLastWorkspace();
-/**
- * Login Page Component
- * Module 1: Identity and Access Management
- */
-
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
