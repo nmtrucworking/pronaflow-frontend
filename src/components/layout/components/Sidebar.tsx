@@ -5,7 +5,7 @@ import {
   Calendar, Inbox, Star, Folder,
   GanttChart, Users, Archive, Trash2, Megaphone,
   LifeBuoy, Search, PlusCircle, Settings, Plug,
-  User, Sliders, Moon, LogOut, Check, MoreHorizontal
+  User, Sliders, Moon, LogOut, Check, MoreHorizontal, EyeOff, Eye
 } from 'lucide-react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
@@ -55,6 +55,14 @@ export default function App({
     favorites: true,
     data: true
   });
+  const [hiddenSections, setHiddenSections] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('pronaflow-hidden-sidebar-sections');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
   const selectedWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
   const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
 
@@ -73,7 +81,7 @@ export default function App({
   const { data: workspacesData } = useQuery({
     queryKey: ['workspaces'],
     queryFn: async () => {
-      const response = await workspaceService.getWorkspaces({ page: 1, page_size: 10 });
+      const response = await workspaceService.listWorkspaces(0, 10);
       return response.data;
     },
     staleTime: 5 * 60 * 1000,
@@ -84,7 +92,7 @@ export default function App({
   const currentWorkspaceId =
     currentWorkspace?.workspace_id ||
     selectedWorkspaceId ||
-    workspacesData?.workspaces?.[0]?.workspace_id;
+    workspacesData?.items?.[0]?.id;
 
   useEffect(() => {
     if (currentWorkspaceId && currentWorkspaceId !== selectedWorkspaceId) {
@@ -227,6 +235,18 @@ export default function App({
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const toggleHiddenSection = (id: string) => {
+    setHiddenSections((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      try {
+        localStorage.setItem('pronaflow-hidden-sidebar-sections', JSON.stringify(next));
+      } catch {
+        // Ignore storage failures.
+      }
+      return next;
+    });
+  };
+
   const handleSearchClick = () => {
     if (isCollapsed) {
       setIsCollapsed(false);
@@ -356,7 +376,24 @@ export default function App({
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.05em] opacity-80 select-none">
                       {section.title}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${!expandedSections[section.id] ? '-rotate-90' : ''}`} />
+                    <div className="flex items-center gap-1">
+                      {section.id === 'favorites' && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            toggleHiddenSection(section.id);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          aria-label={hiddenSections[section.id] ? 'Hiện section' : 'Ẩn section'}
+                          title={hiddenSections[section.id] ? 'Hiện section' : 'Ẩn section'}
+                        >
+                          {hiddenSections[section.id] ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                          <span>{hiddenSections[section.id] ? 'Hiện' : 'Ẩn'}</span>
+                        </button>
+                      )}
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${!expandedSections[section.id] ? '-rotate-90' : ''}`} />
+                    </div>
                   </>
                 ) : (
                   <div className="h-[1px] w-8 bg-slate-200 dark:bg-slate-700 my-2" />
@@ -364,7 +401,7 @@ export default function App({
               </div>
 
               {/* Danh sách các mục (Chỉ hiển thị khi expanded hoặc sidebar bị thu gọn) */}
-              {(isCollapsed || expandedSections[section.id]) && (
+              {!hiddenSections[section.id] && (isCollapsed || expandedSections[section.id]) && (
                 <ul className="space-y-0.5">
                   {section.items.map((item) => (
                     // onClick truyền từ App.tsx để cập nhật route
@@ -607,60 +644,97 @@ function WorkspacePopover({
   currentWorkspaceId,
   onSelectWorkspace,
 }: { 
-  workspaces: any[]; 
+  workspaces: { id: string; name: string; description?: string; status?: string; updated_at?: string; created_at?: string }[]; 
   currentWorkspaceId?: string;
   onSelectWorkspace: (workspaceId: string | null) => void;
 }) {
+  const activeWorkspace = workspaces.find((workspace) => workspace.id === currentWorkspaceId) || workspaces[0];
+
   return (
     <Popover.Portal>
       <Popover.Content
         side="bottom"
         align="start"
         sideOffset={8}
-        className="w-[228px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+        className="w-[320px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Switch Workspace</div>
-        
+        <div className="px-3 py-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Switch Workspace</div>
+              <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                {activeWorkspace?.name || 'Workspace'}
+              </div>
+            </div>
+            <div className="text-right text-[10px] text-slate-500 dark:text-slate-400">
+              <div>{workspaces.length} workspaces</div>
+              <div className="uppercase tracking-wider">Tap để chuyển</div>
+            </div>
+          </div>
+          {activeWorkspace?.description && (
+            <p className="mt-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400 line-clamp-2">
+              {activeWorkspace.description}
+            </p>
+          )}
+        </div>
+
+        <div className="max-h-[300px] overflow-y-auto py-1">
         {workspaces.map((workspace) => (
-          <Popover.Close asChild key={workspace.workspace_id}>
+          <Popover.Close asChild key={workspace.id}>
             <Link
-              to={ROUTES.workspace.detail(workspace.workspace_id)}
-              onClick={() => onSelectWorkspace(workspace.workspace_id)}
-              className={`w-full flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
-                workspace.workspace_id === currentWorkspaceId
+              to={ROUTES.workspace.detail(workspace.id)}
+              onClick={() => onSelectWorkspace(workspace.id)}
+              className={`w-full flex items-start gap-3 p-2 mx-1 rounded-lg cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                workspace.id === currentWorkspaceId
                   ? 'bg-blue-50/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100/50 dark:border-blue-800/60'
                   : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
               }`}
             >
-              <div className={`w-6 h-6 rounded text-white text-[10px] flex items-center justify-center font-bold ${
-                workspace.workspace_id === currentWorkspaceId ? 'bg-blue-600' : 'bg-slate-400 dark:bg-slate-500'
+              <div className={`w-9 h-9 rounded-lg text-white text-[11px] flex items-center justify-center font-bold flex-shrink-0 ${
+                workspace.id === currentWorkspaceId ? 'bg-blue-600' : 'bg-slate-400 dark:bg-slate-500'
               }`}>
                 {workspace.name?.charAt(0).toUpperCase() || 'W'}
               </div>
-              <span className="text-sm font-semibold flex-1 text-left truncate">{workspace.name}</span>
-              {workspace.workspace_id === currentWorkspaceId && <Check className="w-4 h-4" />}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold truncate flex-1 text-left">{workspace.name}</span>
+                  {workspace.id === currentWorkspaceId && <Check className="w-4 h-4 flex-shrink-0" />}
+                </div>
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="uppercase tracking-wider">{workspace.status || 'active'}</span>
+                  {workspace.updated_at && <span>• Updated {new Date(workspace.updated_at).toLocaleDateString()}</span>}
+                </div>
+                {workspace.description && (
+                  <p className="mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400 line-clamp-2">
+                    {workspace.description}
+                  </p>
+                )}
+              </div>
             </Link>
           </Popover.Close>
         ))}
-        
+        </div>
+
         <div className="h-px bg-slate-100 dark:bg-slate-800 my-1.5" />
-        <Popover.Close asChild>
-          <Link
-            to={ROUTES.workspace.create}
-            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            <PlusCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Create Workspace
-          </Link>
-        </Popover.Close>
-        <Popover.Close asChild>
-          <Link
-            to={ROUTES.app.workspaceSettings}
-            className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-          >
-            <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Workspace Settings
-          </Link>
-        </Popover.Close>
+        <div className="px-1 pb-1 space-y-0.5">
+          <Popover.Close asChild>
+            <Link
+              to={ROUTES.workspace.create}
+              className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              <PlusCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Create Workspace
+            </Link>
+          </Popover.Close>
+          <Popover.Close asChild>
+            <Link
+              to={ROUTES.app.workspaceSettings}
+              className="w-full flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            >
+              <Settings className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Workspace Settings
+            </Link>
+          </Popover.Close>
+        </div>
       </Popover.Content>
     </Popover.Portal>
   );
