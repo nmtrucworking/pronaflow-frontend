@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { LayoutGrid, List as ListIcon, Kanban as KanbanIcon, Search, Plus, Settings2, X, Clipboard } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Kanban as KanbanIcon, Search, Plus, Settings2, Clipboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ViewMode } from '../constants/viewModes';
 import type { ProjectStatus, ProjectPriority } from '@/types/project';
@@ -36,8 +36,9 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     { value: 'ALL', label: 'Tất cả trạng thái' },
     { value: 'NOT_STARTED', label: 'Chưa bắt đầu' },
     { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
+    { value: 'IN_REVIEW', label: 'Đang rà soát' },
     { value: 'ON_HOLD', label: 'Tạm dừng' },
-    { value: 'COMPLETED', label: 'Hoàn thành' },
+    { value: 'DONE', label: 'Đã hoàn thành' },
     { value: 'ARCHIVED', label: 'Lưu trữ' },
   ];
 
@@ -47,6 +48,17 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     { value: 'HIGH', label: '🟠 Cao' },
     { value: 'MEDIUM', label: '🟡 Trung bình' },
     { value: 'LOW', label: '🟢 Thấp' },
+  ];
+
+  const viewModeOptions: Array<{
+    value: ViewMode;
+    label: string;
+    hint: string;
+    icon: React.ElementType;
+  }> = [
+    { value: 'GRID', label: 'Lưới', hint: 'Xem nhanh các project card', icon: LayoutGrid },
+    { value: 'LIST', label: 'Danh sách', hint: 'Theo dõi theo hàng rõ ràng', icon: ListIcon },
+    { value: 'KANBAN', label: 'Kanban', hint: 'Kéo thả theo trạng thái', icon: KanbanIcon },
   ];
 
   const hasActiveFilters = statusFilter !== 'ALL' || priorityFilter !== 'ALL';
@@ -185,51 +197,33 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </div>
 
           {/* View Mode Switcher */}
-          <div className="flex items-center p-1.5 bg-white border-2 border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
-            <button
-              onClick={() => onViewModeChange('GRID')}
-              className={cn(
-                'px-3 py-1.5 rounded-md transition-all duration-200 flex items-center gap-1.5 font-medium text-sm group',
-                viewMode === 'GRID'
-                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              )}
-              aria-label="Grid view"
-              title="Chế độ lưới"
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">Lưới</span>
-            </button>
-            <div className="w-px h-6 bg-slate-200 mx-1" />
-            <button
-              onClick={() => onViewModeChange('LIST')}
-              className={cn(
-                'px-3 py-1.5 rounded-md transition-all duration-200 flex items-center gap-1.5 font-medium text-sm group',
-                viewMode === 'LIST'
-                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              )}
-              aria-label="List view"
-              title="Chế độ danh sách"
-            >
-              <ListIcon className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">Danh sách</span>
-            </button>
-            <div className="w-px h-6 bg-slate-200 mx-1" />
-            <button
-              onClick={() => onViewModeChange('KANBAN')}
-              className={cn(
-                'px-3 py-1.5 rounded-md transition-all duration-200 flex items-center gap-1.5 font-medium text-sm group',
-                viewMode === 'KANBAN'
-                  ? 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              )}
-              aria-label="Kanban view"
-              title="Chế độ Kanban"
-            >
-              <KanbanIcon className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">Kanban</span>
-            </button>
+          <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+            {viewModeOptions.map(({ value, label, hint, icon: Icon }) => {
+              const active = viewMode === value;
+
+              return (
+                <button
+                  key={value}
+                  onClick={() => onViewModeChange(value)}
+                  className={cn(
+                    'min-w-[98px] rounded-xl px-3 py-2.5 text-left transition-all duration-200 flex flex-col gap-1 group',
+                    active
+                      ? 'bg-gradient-to-br from-indigo-50 via-white to-indigo-100 text-indigo-700 shadow-sm ring-1 ring-indigo-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  )}
+                  aria-label={`${label} view`}
+                  title={hint}
+                >
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </span>
+                  <span className={cn('text-[10px] leading-tight', active ? 'text-indigo-600' : 'text-slate-500')}>
+                    {hint}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -7,6 +7,14 @@ import type { ViewMode } from '../constants/viewModes';
 import type { ProjectStatus } from '@/types/project';
 import { cn } from '@/lib/utils';
 
+const KANBAN_STATUSES: Array<Exclude<ProjectStatus, 'ARCHIVED'>> = [
+  'NOT_STARTED',
+  'IN_PROGRESS',
+  'IN_REVIEW',
+  'ON_HOLD',
+  'DONE',
+];
+
 interface ProjectListProps {
   projects: Project[];
   viewMode: ViewMode;
@@ -149,30 +157,15 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       {viewMode === 'KANBAN' && (
         <div className="p-6">
           <div className="flex gap-4 overflow-x-auto pb-4">
-            <KanbanColumn
-              status="NOT_STARTED"
-              projects={projects.filter(p => p.status === 'NOT_STARTED')}
-              onProjectClick={onProjectClick}
-              onStatusChange={onStatusChange}
-            />
-            <KanbanColumn
-              status="IN_PROGRESS"
-              projects={projects.filter(p => p.status === 'IN_PROGRESS')}
-              onProjectClick={onProjectClick}
-              onStatusChange={onStatusChange}
-            />
-            <KanbanColumn
-              status="ON_HOLD"
-              projects={projects.filter(p => p.status === 'ON_HOLD')}
-              onProjectClick={onProjectClick}
-              onStatusChange={onStatusChange}
-            />
-            <KanbanColumn
-              status="DONE"
-              projects={projects.filter(p => p.status === 'DONE')}
-              onProjectClick={onProjectClick}
-              onStatusChange={onStatusChange}
-            />
+            {KANBAN_STATUSES.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                projects={projects.filter((project) => project.status === status)}
+                onProjectClick={onProjectClick}
+                onStatusChange={onStatusChange}
+              />
+            ))}
           </div>
         </div>
       )}

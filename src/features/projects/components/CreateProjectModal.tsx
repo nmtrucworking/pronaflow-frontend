@@ -97,13 +97,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 z-40" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] border border-slate-200 bg-white shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-xl">
-          <form onSubmit={handleSubmit} className="relative p-8">
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-[min(92vw,860px)] translate-x-[-50%] translate-y-[-50%] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+          <form onSubmit={handleSubmit} className="relative bg-gradient-to-b from-white to-slate-50 p-8">
             {/* Close Button */}
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="absolute right-4 top-4 rounded-lg opacity-70 hover:opacity-100 hover:bg-slate-100 p-1.5 transition-all"
+                className="absolute right-4 top-4 rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
               >
                 <X className="h-5 w-5" />
                 <span className="sr-only">Đóng</span>
@@ -111,12 +111,15 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             </Dialog.Close>
 
             {/* Header */}
-            <div className="mb-6">
+            <div className="mb-6 pr-10">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
+                PronaFlow project studio
+              </div>
               <Dialog.Title className="text-2xl font-bold text-slate-900 mb-2">
-                🚀 Tạo dự án mới
+                Tạo dự án mới
               </Dialog.Title>
               <Dialog.Description className="text-slate-600">
-                Khởi tạo một dự án mới để bắt đầu quản lý công việc của bạn
+                Khởi tạo dự án với layout rõ ràng, hiện đại và đồng nhất với hệ thống PronaFlow.
               </Dialog.Description>
             </div>
 
@@ -261,23 +264,20 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 mt-8">
+              <div className="flex gap-3 mt-8">
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+                    className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-[0.99]"
                 >
                   Hủy
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all duration-200 transform inline-flex items-center justify-center gap-2 group"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2.5 font-semibold text-white transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.01] active:scale-[0.99]"
               >
-                <span className="group-hover:animate-bounce [animation-delay:0ms]">Khởi</span>
-                <span className="group-hover:animate-bounce [animation-delay:100ms]">tạo</span>
-                <span className="group-hover:animate-bounce [animation-delay:200ms]">dự</span>
-                <span className="group-hover:animate-bounce [animation-delay:300ms]">án</span>
+                  Khởi tạo dự án
               </button>
             </div>
           </form>
