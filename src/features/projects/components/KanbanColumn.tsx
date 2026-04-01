@@ -2,25 +2,27 @@
 import React, { useState } from 'react';
 import { ProjectCard } from './ProjectCard';
 import type { Project, ProjectStatus } from '@/types/project';
-import { Circle, Clock, Pause, CheckCircle2 } from 'lucide-react';
+import { Circle, Clock, ClipboardCheck, Pause, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+type KanbanStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'ON_HOLD' | 'DONE';
+
 interface KanbanColumnProps {
-  status: ProjectStatus;
+  status: KanbanStatus;
   projects: Project[];
   onProjectClick: (project: Project) => void;
   onStatusChange?: (projectId: string, newStatus: ProjectStatus) => void;
 }
 
-const statusConfig: Record<ProjectStatus, { 
+const statusConfig: Record<KanbanStatus, { 
   label: string; 
   icon: React.ElementType; 
   color: string;
   bgColor: string;
   borderColor: string;
 }> = {
-  PLANNING: {
-    label: 'Lên kế hoạch',
+  NOT_STARTED: {
+    label: 'Chưa bắt đầu',
     icon: Circle,
     color: 'text-slate-600',
     bgColor: 'bg-slate-50',
@@ -32,6 +34,13 @@ const statusConfig: Record<ProjectStatus, {
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
+  },
+  IN_REVIEW: {
+    label: 'Đang rà soát',
+    icon: ClipboardCheck,
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50',
+    borderColor: 'border-violet-200',
   },
   ON_HOLD: {
     label: 'Tạm dừng',
@@ -82,7 +91,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         const project = JSON.parse(projectData);
         // Only update if status is different
         if (project.status !== status) {
-          onStatusChange?.(project.id, status);
+          onStatusChange?.(project.project_id, status);
         }
       }
     } catch (error) {
@@ -91,7 +100,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   };
 
   return (
-    <div className="flex-shrink-0 w-80">
+    <div className="flex-shrink-0 w-[18rem] sm:w-80">
       {/* Column Header */}
       <div className={cn(
         "flex items-center gap-2 px-4 py-3 rounded-t-xl border-2 border-b-0",
@@ -123,13 +132,16 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         )}
       >
         {projects.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-slate-400 text-sm">
-            Không có dự án
+          <div className="flex flex-col items-center justify-center h-36 text-slate-400 text-sm text-center px-4">
+            <div className="mb-2 rounded-full border border-dashed border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+              Trống
+            </div>
+            <p>Chưa có dự án ở trạng thái này</p>
           </div>
         ) : (
           projects.map((project, index) => (
             <div
-              key={project.id}
+              key={project.project_id}
               className="animate-in fade-in slide-in-from-top-2 duration-300"
               style={{ animationDelay: `${index * 40}ms` }}
             >
