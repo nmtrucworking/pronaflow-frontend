@@ -30,6 +30,7 @@ import { useTasks } from '@/features/tasks/hooks/useTaskQueries';
 import {
   useApprovePlan,
   useCriticalPath,
+  useCreateTaskBaseline,
   useImpactAnalysis,
   useLockPlan,
   usePlanState,
@@ -56,16 +57,31 @@ interface PronaFlowGanttTask extends GanttTask {
 const TASK_PROGRESS_STYLE = GANTT_TASK_PROGRESS_STYLE;
 
 const toGanttPriority = (priority: string): PronaFlowGanttTask['priority'] => {
-  if (priority === 'URGENT') return 'urgent';
-  if (priority === 'HIGH') return 'high';
-  if (priority === 'MEDIUM') return 'medium';
+  const normalized = priority.trim().toLowerCase();
+  if (normalized === 'urgent' || normalized === 'critical') return 'urgent';
+  if (normalized === 'high') return 'high';
+  if (normalized === 'medium') return 'medium';
   return 'low';
 };
 
 const toGanttStatus = (status: string): PronaFlowGanttTask['status'] => {
-  if (status === 'DONE') return 'done';
-  if (status === 'IN_PROGRESS') return 'in-progress';
+  const normalized = status.trim().toLowerCase();
+  if (normalized === 'done' || normalized === 'completed') return 'done';
+  if (normalized === 'in_progress' || normalized === 'in-progress' || normalized === 'in progress') return 'in-progress';
+  if (normalized === 'in_review' || normalized === 'in-review' || normalized === 'review') return 'review';
   return 'todo';
+};
+
+const normalizeAssignees = (value: unknown): Array<{ id: string; name: string; avatar?: string }> => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => (isRecord(item) ? {
+      id: String(item.id ?? item.user_id ?? ''),
+      name: String(item.name ?? item.username ?? item.full_name ?? item.email ?? 'Unknown'),
+      avatar: typeof item.avatar === 'string' ? item.avatar : typeof item.avatar_url === 'string' ? item.avatar_url : undefined,
+    } : null))
+    .filter((item): item is { id: string; name: string; avatar?: string } => Boolean(item?.id));
 };
 
 const styleByStatus = (status: PronaFlowGanttTask['status']) => {
@@ -107,7 +123,7 @@ const mapTaskResponseToGanttTask = (task: TaskResponse): PronaFlowGanttTask | nu
     styles: styleByStatus(toGanttStatus(task.status)),
     priority: toGanttPriority(task.priority),
     status: toGanttStatus(task.status),
-    assignees: [],
+    assignees: normalizeAssignees((task as unknown as Record<string, unknown>).assignees),
     source: 'task-api',
     isPersisted: true,
   };
@@ -139,7 +155,7 @@ const mapSchedulingTaskToGanttTask = (task: Record<string, unknown>): PronaFlowG
     styles: styleByStatus(status),
     priority,
     status,
-    assignees: [],
+    assignees: normalizeAssignees(task.assignees),
     source: 'scheduling',
     isPersisted: true,
   };
@@ -275,6 +291,7 @@ const GanttChartEnhanced: React.FC = () => {
   const simulation = useSimulation();
   const impactAnalysis = useImpactAnalysis();
   const planStateQuery = usePlanState(projectId || undefined);
+  const createBaseline = useCreateTaskBaseline();
   const submitPlan = useSubmitPlan();
   const approvePlan = useApprovePlan();
   const lockPlan = useLockPlan();
@@ -287,6 +304,14 @@ const GanttChartEnhanced: React.FC = () => {
   const criticalPathQuery = useCriticalPath(projectId || undefined);
   const baselineQuery = useTaskBaseline(
     selectedTask && selectedTask.isPersisted && selectedTask.source !== 'mock' ? selectedTask.id : undefined
+  );
+
+  const chartTasks = useMemo(
+    () => resolvedTasks.map((task) => ({
+      ...task,
+      isDisabled: activePlanState === 'LOCKED' || task.isDisabled,
+    })),
+    [resolvedTasks, activePlanState]
   );
 
   const criticalTaskSet = useMemo(
@@ -304,8 +329,8 @@ const GanttChartEnhanced: React.FC = () => {
   }, [baselineQuery.data, selectedTask]);
 
   React.useEffect(() => {
-    setTasks(resolvedTasks);
-  }, [resolvedTasks]);
+    setTasks(chartTasks);
+  }, [chartTasks]);
 
   React.useEffect(() => {
     if (!selectedTaskId && resolvedTasks.length > 0) {
@@ -333,6 +358,10 @@ const GanttChartEnhanced: React.FC = () => {
 
   // Handlers
   const handleTaskChange = (task: GanttTask) => {
+    if (activePlanState === 'LOCKED') {
+      return;
+    }
+
     const previousTasks = tasks;
     const nextTasks = tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t));
     setTasks(nextTasks);
@@ -403,6 +432,11 @@ const GanttChartEnhanced: React.FC = () => {
     if (!selectedTask?.isPersisted) return;
     impactAnalysis.mutate(selectedTask.id);
   }, [impactAnalysis, selectedTask]);
+
+  const handleSaveBaseline = useCallback(() => {
+    if (!selectedTask?.isPersisted) return;
+    createBaseline.mutate({ task_id: selectedTask.id });
+  }, [createBaseline, selectedTask]);
 
   const lastSimulationResult =
     simulation.applySimulation.data ||
@@ -546,6 +580,7 @@ const GanttChartEnhanced: React.FC = () => {
              {/* Create Task Button */}
              <Button
                 onClick={() => setIsCreateModalOpen(true)}
+               disabled={activePlanState === 'LOCKED'}
                className="flex items-center gap-2"
              >
                 <Plus size={18} />
@@ -651,6 +686,13 @@ const GanttChartEnhanced: React.FC = () => {
                 <span className={`px-2 py-1 rounded-full ${selectedTaskVarianceDays === null || selectedTaskVarianceDays <= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'}`}>
                   Variance: {selectedTaskVarianceDays ?? 0}d
                 </span>
+                <button
+                  onClick={handleSaveBaseline}
+                  disabled={!selectedTask?.isPersisted || createBaseline.isPending}
+                  className="px-2 py-1 rounded-md bg-slate-700 text-white disabled:opacity-50"
+                >
+                  Save Baseline
+                </button>
               </>
             ) : (
               <span className="text-amber-700 dark:text-amber-300">No baseline available</span>
