@@ -87,7 +87,7 @@ export const MOCK_WORKSPACE_MEMBERS: WorkspaceMember[] = [
 		id: 'wm-5',
 		workspace_id: 'ws-1',
 		user_id: 'u-5',
-		role: 'guest',
+		role: 'viewer',
 		is_active: true,
 		joined_at: '2026-02-15T09:00:00.000Z',
 		user: {
@@ -154,7 +154,7 @@ export const MOCK_WORKSPACE_INVITATIONS: WorkspaceInvitation[] = [
 		id: 'wi-3',
 		workspace_id: 'ws-2',
 		email: 'contractor@vendor.local',
-		invited_role: 'guest',
+		invited_role: 'viewer',
 		token_hash: 'mock-token-3',
 		expires_at: '2026-03-04T09:00:00.000Z',
 		accepted_at: null,

@@ -9,7 +9,7 @@ import { Workspace } from '@/types/workspace';
 
 interface WorkspaceLogoUploadProps {
   workspace: Workspace;
-  onUploadSuccess: (workspace: Workspace) => void;
+  onUploadSuccess: (logoUrl: string) => void;
   onUploadError?: (error: string) => void;
 }
 

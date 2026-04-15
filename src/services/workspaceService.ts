@@ -25,7 +25,7 @@ import {
 } from '@/types/workspace';
 
 class WorkspaceService {
-  private api: AxiosInstance;
+  public readonly api: AxiosInstance;
 
   constructor() {
     this.api = createApiClient();

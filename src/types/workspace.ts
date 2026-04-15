@@ -21,6 +21,7 @@ export interface Workspace {
   id: string;
   name: string;
   description?: string;
+  logo_url?: string;
   owner_id: string;
   status: WorkspaceStatus;
   is_deleted: boolean;

@@ -53,6 +53,8 @@ interface PronaFlowGanttTask extends GanttTask {
   isPersisted: boolean;
 }
 
+type GanttAssignee = { id: string; name: string; avatar?: string };
+
 // --- MOCK DATA (Thay thế bằng API call thực tế) ---
 const TASK_PROGRESS_STYLE = GANTT_TASK_PROGRESS_STYLE;
 
@@ -72,16 +74,25 @@ const toGanttStatus = (status: string): PronaFlowGanttTask['status'] => {
   return 'todo';
 };
 
-const normalizeAssignees = (value: unknown): Array<{ id: string; name: string; avatar?: string }> => {
+const normalizeAssignees = (value: unknown): GanttAssignee[] => {
   if (!Array.isArray(value)) return [];
 
-  return value
-    .map((item) => (isRecord(item) ? {
-      id: String(item.id ?? item.user_id ?? ''),
-      name: String(item.name ?? item.username ?? item.full_name ?? item.email ?? 'Unknown'),
-      avatar: typeof item.avatar === 'string' ? item.avatar : typeof item.avatar_url === 'string' ? item.avatar_url : undefined,
-    } : null))
-    .filter((item): item is { id: string; name: string; avatar?: string } => Boolean(item?.id));
+  return value.reduce<GanttAssignee[]>((acc, item) => {
+    if (!isRecord(item)) return acc;
+
+    const id = String(item.id ?? item.user_id ?? '');
+    if (!id) return acc;
+
+    const name = String(item.name ?? item.username ?? item.full_name ?? item.email ?? 'Unknown');
+    const avatar = typeof item.avatar === 'string'
+      ? item.avatar
+      : typeof item.avatar_url === 'string'
+        ? item.avatar_url
+        : undefined;
+
+    acc.push(avatar ? { id, name, avatar } : { id, name });
+    return acc;
+  }, []);
 };
 
 const styleByStatus = (status: PronaFlowGanttTask['status']) => {
@@ -295,6 +306,7 @@ const GanttChartEnhanced: React.FC = () => {
   const submitPlan = useSubmitPlan();
   const approvePlan = useApprovePlan();
   const lockPlan = useLockPlan();
+  const activePlanState = planStateQuery.data?.state || 'DRAFT';
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) || null,
@@ -442,8 +454,6 @@ const GanttChartEnhanced: React.FC = () => {
     simulation.applySimulation.data ||
     simulation.discardSimulation.data ||
     simulation.startSimulation.data;
-
-  const activePlanState = planStateQuery.data?.state || 'DRAFT';
 
   // Filter Logic
   const filteredTasks = useMemo(() => {

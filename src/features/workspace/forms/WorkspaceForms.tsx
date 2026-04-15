@@ -41,12 +41,12 @@ const updateWorkspaceSchema = z.object({
 
 const inviteUserSchema = z.object({
   email: z.string().email('Invalid email address'),
-  invited_role: z.enum(['admin', 'member', 'viewer']).default('member'),
+  invited_role: z.enum(['admin', 'member', 'viewer']),
 });
 
 const bulkInviteUserSchema = z.object({
   emails: z.string().min(1, 'At least one email is required'),
-  invited_role: z.enum(['admin', 'member', 'viewer']).default('member'),
+  invited_role: z.enum(['admin', 'member', 'viewer']),
 });
 
 const settingsSchema = z.object({
@@ -185,6 +185,10 @@ interface InviteUserFormProps {
 }
 
 const roleOptions: WorkspaceRole[] = ['admin', 'member', 'viewer'];
+type InviteFormValues = {
+  email: string;
+  invited_role: 'admin' | 'member' | 'viewer';
+};
 
 export const InviteUserForm: React.FC<InviteUserFormProps> = ({
   onSubmit,
@@ -194,7 +198,7 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateInvitationDTO>({
+  } = useForm<InviteFormValues>({
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: '',
@@ -202,8 +206,12 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
     },
   });
 
+  const submitInvite = (data: InviteFormValues) => {
+    onSubmit(data);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(submitInvite)} className="space-y-6">
       <FormItem>
         <FormLabel>Email Address *</FormLabel>
         <Input
