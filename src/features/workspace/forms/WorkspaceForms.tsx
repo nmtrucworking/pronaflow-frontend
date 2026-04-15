@@ -185,6 +185,7 @@ interface InviteUserFormProps {
 }
 
 const roleOptions: WorkspaceRole[] = ['admin', 'member', 'viewer'];
+
 type InviteFormValues = {
   email: string;
   invited_role: 'admin' | 'member' | 'viewer';

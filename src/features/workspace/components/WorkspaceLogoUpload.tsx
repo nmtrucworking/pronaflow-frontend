@@ -59,12 +59,12 @@ export const WorkspaceLogoUpload: React.FC<WorkspaceLogoUploadProps> = ({
       setError(null);
       setSuccess(false);
 
-      const updatedWorkspace = await workspaceService.uploadLogo(
+      const logoUrl = await workspaceService.uploadLogo(
         workspace.id,
         file
       );
 
-      onUploadSuccess(updatedWorkspace);
+      onUploadSuccess(logoUrl);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
