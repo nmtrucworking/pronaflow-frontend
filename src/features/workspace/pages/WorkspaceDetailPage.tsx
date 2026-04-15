@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, Settings, Users, Mail, Search, SlidersHorizontal, Check } from 'lucide-react';
+import { Loader2, ArrowLeft, Settings, Users, Mail, Search, SlidersHorizontal, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as Tabs from '@radix-ui/react-tabs';
 import {
@@ -195,10 +195,19 @@ export const WorkspaceDetailPage: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>{members.length} members</span>
-            <span>•</span>
-            <span className="capitalize">{workspace.status}</span>
+          <div className="flex items-center gap-3 text-sm text-gray-500">
+            <div className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md">
+              <Users className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />
+              <span className="font-medium">{members.length} members</span>
+            </div>
+            <div className="group inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-100 hover:shadow-md">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <Sparkles className="h-3.5 w-3.5 transition-transform duration-200 group-hover:rotate-12" />
+              <span className="font-semibold uppercase tracking-[0.22em]">{workspace.status}</span>
+            </div>
           </div>
         </div>
       </div>

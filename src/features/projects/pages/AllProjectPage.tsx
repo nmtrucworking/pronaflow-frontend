@@ -10,11 +10,12 @@ import { useFilteredProjects } from '../hooks/useFilteredProjects';
 import { useProjectSelection } from '../hooks/useProjectSelection';
 import type { ViewMode, SortOption } from '../constants/viewModes';
 import { useDensityPreference } from '@/hooks/useDensityPreference';
+import { cn } from '@/lib/utils';
 
 export const AllProjectsPage: React.FC = () => {
   const densityPreference = useDensityPreference();
   const isCompact = densityPreference === 'compact';
-  const [includeArchived, setIncludeArchived] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'>('ALL');
   
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,11 +31,11 @@ export const AllProjectsPage: React.FC = () => {
   // Data fetching
   const { data: projectsResponse, isLoading, error } = useProjects(
     undefined,
-    statusFilter === 'ALL' ? undefined : statusFilter,
+    undefined,
     1,
-    20,
+    1000,
     'created_at',
-    includeArchived
+    true
   );
   const projects = projectsResponse?.projects ?? [];
   const { mutate: createProject, isPending: isCreating } = useCreateProject();
@@ -89,8 +90,19 @@ export const AllProjectsPage: React.FC = () => {
                            project.key.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || project.status === statusFilter;
       const matchesPriority = priorityFilter === 'ALL' || project.priority === priorityFilter;
-      const matchesArchive = includeArchived || (!project.is_archived && project.status !== 'ARCHIVED');
-      return matchesSearch && matchesStatus && matchesPriority && matchesArchive;
+      const matchesQuickFilter = (() => {
+        switch (quickFilter) {
+          case 'ACTIVE':
+            return project.status === 'IN_PROGRESS' || project.status === 'ON_HOLD';
+          case 'COMPLETED':
+            return project.status === 'DONE';
+          case 'ARCHIVED':
+            return project.status === 'ARCHIVED' || project.is_archived;
+          default:
+            return true;
+        }
+      })();
+      return matchesSearch && matchesStatus && matchesPriority && matchesQuickFilter;
     });
 
     // Apply column sorting
@@ -114,7 +126,7 @@ export const AllProjectsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [projects, searchQuery, statusFilter, priorityFilter, includeArchived, sortColumn, sortDirection]);
+  }, [projects, searchQuery, statusFilter, priorityFilter, quickFilter, sortColumn, sortDirection]);
 
   // Project statistics
   const stats = useMemo(() => ({
@@ -123,6 +135,17 @@ export const AllProjectsPage: React.FC = () => {
     completed: projects.filter((p: Project) => p.status === 'DONE').length,
     archived: projects.filter((p: Project) => p.status === 'ARCHIVED').length,
   }), [projects]);
+
+  const quickFilterItems: Array<{
+    key: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+    label: string;
+    count: number;
+    tone: string;
+  }> = [
+    { key: 'ALL', label: 'Tất cả', count: stats.total, tone: 'text-slate-700' },
+    { key: 'ACTIVE', label: 'Đang hoạt động', count: stats.active, tone: 'text-blue-700' },
+    { key: 'COMPLETED', label: 'Đã hoàn thành', count: stats.completed, tone: 'text-emerald-700' },
+  ];
 
   // Loading state
   if (isLoading) {
@@ -199,38 +222,43 @@ export const AllProjectsPage: React.FC = () => {
             onCreateClick={() => setShowCreateModal(true)}
           />
 
-          <div className="px-6 py-3 bg-white border-b border-slate-200 flex-shrink-0">
-            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={includeArchived}
-                onChange={(event) => setIncludeArchived(event.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              Hiển thị dự án đã lưu trữ
-            </label>
-          </div>
-
-          {/* Quick Stats Bar */}
-          <div className="hidden md:flex gap-8 px-6 py-4 bg-white border-b border-slate-200 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-indigo-600">{stats.total}</span>
-              <span className="text-sm text-slate-600">Tổng dự án</span>
-            </div>
-            <div className="w-px h-6 bg-slate-200" />
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-blue-600">{stats.active}</span>
-              <span className="text-sm text-slate-600">Đang hoạt động</span>
-            </div>
-            <div className="w-px h-6 bg-slate-200" />
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-emerald-600">{stats.completed}</span>
-              <span className="text-sm text-slate-600">Đã hoàn thành</span>
-            </div>
-            <div className="w-px h-6 bg-slate-200" />
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-slate-600">{stats.archived}</span>
-              <span className="text-sm text-slate-600">Lưu trữ</span>
+          <div className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white border-b border-slate-200 flex-shrink-0 overflow-x-auto">
+            {quickFilterItems.map((item) => {
+              const active = quickFilter === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setQuickFilter(item.key)}
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-all duration-200 whitespace-nowrap',
+                    active
+                      ? 'border-indigo-300 bg-indigo-50 text-indigo-700 shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                  )}
+                >
+                  <span className={cn('text-base font-bold', item.tone)}>{item.count}</span>
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              );
+            })}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => setQuickFilter('ARCHIVED')}
+                className={cn(
+                  'text-sm font-medium underline underline-offset-4 transition-colors',
+                  quickFilter === 'ARCHIVED' ? 'text-indigo-700' : 'text-slate-500 hover:text-indigo-600'
+                )}
+              >
+                Lưu trữ
+              </button>
+              <span className="text-slate-300">•</span>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md active:scale-[0.98]"
+              >
+                <span className="text-base leading-none">+</span>
+                Tạo nhanh project
+              </button>
             </div>
           </div>
 

@@ -3,7 +3,7 @@
  * Reusable form components for workspace operations
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,15 @@ import { FormDescription, FormItem, FormLabel, FormMessage } from '@/components/
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown, Check } from 'lucide-react';
 import {
   CreateWorkspaceDTO,
   UpdateWorkspaceDTO,
@@ -46,6 +55,31 @@ const settingsSchema = z.object({
   work_hours: z.string().optional(),
   logo_url: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
+
+const TIMEZONE_OPTIONS = [
+  { value: 'Asia/Ho_Chi_Minh', label: 'Asia/Ho Chi Minh (UTC+7)' },
+  { value: 'Asia/Singapore', label: 'Asia/Singapore (UTC+8)' },
+  { value: 'UTC', label: 'UTC (UTC+0)' },
+  { value: 'America/New_York', label: 'America/New York (UTC-5/-4)' },
+  { value: 'Europe/London', label: 'Europe/London (UTC+0/+1)' },
+];
+
+const WORKING_DAY_PRESETS = [
+  { value: 'Mon,Tue,Wed,Thu,Fri', label: 'Mon - Fri' },
+  { value: 'Mon,Tue,Wed,Thu,Fri,Sat', label: 'Mon - Sat' },
+  { value: 'Sat,Sun', label: 'Weekend only' },
+  { value: 'Mon,Tue,Wed,Thu,Fri,Sat,Sun', label: 'Every day' },
+];
+
+const WORK_HOUR_PRESETS = [
+  { value: '{"start":"09:00","end":"18:00"}', label: 'Standard office hours' },
+  { value: '{"start":"08:00","end":"17:00"}', label: 'Early shift' },
+  { value: '{"start":"10:00","end":"19:00"}', label: 'Late shift' },
+  { value: '{"start":"00:00","end":"23:59"}', label: '24/7 coverage' },
+];
+
+const getLabelByValue = (options: { value: string; label: string }[], value?: string) =>
+  options.find((option) => option.value === value)?.label ?? 'Custom';
 
 interface CreateWorkspaceFormProps {
   onSubmit: (data: CreateWorkspaceDTO) => void;
@@ -301,47 +335,141 @@ export const WorkspaceSettingsForm: React.FC<WorkspaceSettingsFormProps> = ({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<UpdateSettingsDTO>({
     resolver: zodResolver(settingsSchema),
     defaultValues: defaultValues || {},
   });
 
+  const timezone = watch('timezone');
+  const workDays = watch('work_days');
+  const workHours = watch('work_hours');
+
   useEffect(() => {
     reset(defaultValues || {});
   }, [defaultValues, reset]);
+
+  const selectedWorkDays = useMemo(
+    () => new Set((workDays || '').split(',').map((day) => day.trim()).filter(Boolean)),
+    [workDays]
+  );
+
+  const selectedWorkDaysLabel = useMemo(() => {
+    const preset = WORKING_DAY_PRESETS.find((option) => option.value === workDays);
+    if (preset) {
+      return preset.label;
+    }
+
+    if (selectedWorkDays.size === 0) {
+      return 'Choose days';
+    }
+
+    return Array.from(selectedWorkDays).join(', ');
+  }, [selectedWorkDays, workDays]);
+
+  const selectedWorkHoursLabel = useMemo(
+    () => getLabelByValue(WORK_HOUR_PRESETS, workHours),
+    [workHours]
+  );
+
+  const toggleWorkingDay = (day: string) => {
+    const next = new Set(selectedWorkDays);
+    if (next.has(day)) {
+      next.delete(day);
+    } else {
+      next.add(day);
+    }
+
+    setValue('work_days', Array.from(next).join(','), { shouldDirty: true, shouldValidate: true });
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <FormItem>
         <FormLabel>Timezone</FormLabel>
-        <Input
-          placeholder="e.g., Asia/Ho_Chi_Minh"
-          {...register('timezone')}
-          disabled={isLoading}
-        />
+        <div className="relative">
+          <select
+            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-9 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900"
+            {...register('timezone')}
+            disabled={isLoading}
+          >
+            <option value="">Select timezone</option>
+            {TIMEZONE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </div>
+        <FormDescription>Pick the workspace timezone from a preset list.</FormDescription>
         <FormMessage>{errors.timezone?.message}</FormMessage>
       </FormItem>
 
       <FormItem>
         <FormLabel>Working Days</FormLabel>
-        <Input
-          placeholder="e.g., Mon,Tue,Wed,Thu,Fri"
-          {...register('work_days')}
-          disabled={isLoading}
-        />
-        <FormDescription>Comma-separated list of working days</FormDescription>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-sm text-slate-700 transition-all hover:border-indigo-300 hover:bg-indigo-50/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              disabled={isLoading}
+            >
+              <span>{selectedWorkDaysLabel}</span>
+              <ChevronDown className="h-4 w-4 text-slate-400" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-72">
+            <DropdownMenuLabel>Working day presets</DropdownMenuLabel>
+            {WORKING_DAY_PRESETS.map((preset) => (
+              <DropdownMenuItem
+                key={preset.value}
+                onSelect={() =>
+                  setValue('work_days', preset.value, { shouldDirty: true, shouldValidate: true })
+                }
+              >
+                <span className="flex-1">{preset.label}</span>
+                {workDays === preset.value && <Check className="h-4 w-4 text-indigo-600" />}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Custom days</DropdownMenuLabel>
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+              <DropdownMenuItem key={day} onSelect={() => toggleWorkingDay(day)}>
+                <span className="flex-1">{day}</span>
+                {selectedWorkDays.has(day) && <Check className="h-4 w-4 text-indigo-600" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <FormDescription>Use a preset or pick days individually from the dropdown.</FormDescription>
         <FormMessage>{errors.work_days?.message}</FormMessage>
       </FormItem>
 
       <FormItem>
         <FormLabel>Working Hours</FormLabel>
-        <Input
-          placeholder='e.g., {"start": "09:00", "end": "18:00"}'
-          {...register('work_hours')}
-          disabled={isLoading}
-        />
-        <FormDescription>Working hours in JSON format</FormDescription>
+        <div className="relative">
+          <select
+            className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-9 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900"
+            {...register('work_hours')}
+            disabled={isLoading}
+          >
+            <option value="">Select working hours</option>
+            {WORK_HOUR_PRESETS.map((preset) => (
+              <option key={preset.value} value={preset.value}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </div>
+        <FormDescription>
+          {selectedWorkHoursLabel === 'Custom'
+            ? 'Choose a preset schedule to avoid manual JSON input.'
+            : `Current preset: ${selectedWorkHoursLabel}`}
+        </FormDescription>
         <FormMessage>{errors.work_hours?.message}</FormMessage>
       </FormItem>
 

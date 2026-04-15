@@ -49,7 +49,7 @@ const statusConfig: Record<KanbanStatus, {
     bgColor: 'bg-amber-50',
     borderColor: 'border-amber-200',
   },
-  COMPLETED: {
+  DONE: {
     label: 'Hoàn thành',
     icon: CheckCircle2,
     color: 'text-emerald-600',
@@ -65,7 +65,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onStatusChange,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const config = statusConfig[status];
+  const config = statusConfig[status] ?? statusConfig.NOT_STARTED;
   const Icon = config.icon;
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {

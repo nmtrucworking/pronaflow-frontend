@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuthBootstrap } from './hooks/useAuth';
 import { useCurrentWorkspaceId } from './store/features/workspaceStore';
 import { useLastAccessedWorkspace } from './hooks/useWorkspace';
+import { usePersonalizationStore } from './stores/personalizationStore';
 
 // Import Auth Pages
 import {
@@ -199,8 +200,14 @@ const router = createBrowserRouter([
 
 function App() {
   useAuthBootstrap();
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const { initializeFromStorage } = usePersonalizationStore();
+
+  useEffect(() => {
+    // Bootstrap personalization preferences from localStorage
+    initializeFromStorage();
+  }, [initializeFromStorage]);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

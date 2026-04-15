@@ -6,6 +6,33 @@ import COLORS from '@/config/colors';
 import { hexToRgb } from '@/config/colorUtils';
 import type { ProjectStatus } from '../../types/project';
 
+const DEFAULT_STATUS: ProjectStatus = 'ON_HOLD';
+
+const normalizeStatus = (status: string | undefined | null): ProjectStatus => {
+  const value = String(status ?? '').trim().toUpperCase();
+
+  switch (value) {
+    case 'ACTIVE':
+    case 'IN_PROGRESS':
+      return 'IN_PROGRESS';
+    case 'IN_REVIEW':
+      return 'IN_REVIEW';
+    case 'DONE':
+    case 'COMPLETED':
+      return 'DONE';
+    case 'ARCHIVED':
+      return 'ARCHIVED';
+    case 'NOT_STARTED':
+    case 'PLANNED':
+      return 'NOT_STARTED';
+    case 'ON_HOLD':
+    case 'PENDING':
+      return 'ON_HOLD';
+    default:
+      return DEFAULT_STATUS;
+  }
+};
+
 const toRgba = (color: string, opacity: number): string => {
   if (color.includes('rgb(')) {
     return color.replace('/ 1', `/ ${opacity}`);
@@ -53,11 +80,23 @@ const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string; bg: s
     border: toRgba(COLORS.semantic.success[600], 0.3),
     icon: CheckCircle2,
   },
+  ARCHIVED: {
+    label: 'Lưu trữ',
+    color: COLORS.ui.text.muted,
+    bg: COLORS.ui.background.secondary,
+    border: COLORS.ui.border.medium,
+    icon: FilePlus,
+  },
 };
 
-export const StatusBadge = ({ status, className, size = 'default' }: { status: ProjectStatus; className?: string; size?: 'sm' | 'default' }) => {
-  const config = STATUS_CONFIG[status];
-  const Icon = config.icon;
+export const StatusBadge = ({ status, className, size = 'default' }: { status: ProjectStatus | string; className?: string; size?: 'sm' | 'default' }) => {
+  const normalizedStatus = normalizeStatus(status);
+  const config = STATUS_CONFIG[normalizedStatus] ?? STATUS_CONFIG[DEFAULT_STATUS];
+  const Icon = config?.icon ?? FilePlus;
+  const label = config?.label ?? 'Khởi tạo';
+  const color = config?.color ?? COLORS.ui.text.muted;
+  const bg = config?.bg ?? COLORS.ui.background.secondary;
+  const border = config?.border ?? COLORS.ui.border.medium;
   
   return (
     <span
@@ -66,10 +105,10 @@ export const StatusBadge = ({ status, className, size = 'default' }: { status: P
         size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs',
         className
       )}
-      style={{ color: config.color, backgroundColor: config.bg, borderColor: config.border }}
+      style={{ color, backgroundColor: bg, borderColor: border }}
     >
       <Icon className={cn(size === 'sm' ? 'w-2.5 h-2.5 mr-0.5' : 'w-3 h-3 mr-1')} />
-      {config.label}
+      {label}
     </span>
   );
 };

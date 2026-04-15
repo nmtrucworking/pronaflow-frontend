@@ -616,6 +616,27 @@ const PreferenceSettings = () => {
     root.setAttribute('lang', language);
     root.setAttribute('data-density', density);
 
+    const snapshot = {
+      theme,
+      colorMode,
+      fontFamily,
+      fontScale,
+      language,
+      timezone,
+      dateFormat,
+      timeFormat,
+      density,
+      sidebarAutoCollapse,
+      startWeek,
+      savedAt: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem('pronaflow-preferences', JSON.stringify(snapshot));
+    } catch {
+      // Ignore storage failures in mock/private mode.
+    }
+
     window.dispatchEvent(new CustomEvent('pronaflow-preferences-updated', {
       detail: {
         density,
@@ -629,7 +650,7 @@ const PreferenceSettings = () => {
         fontScale,
       },
     }));
-  }, [density, sidebarAutoCollapse, language, timezone, dateFormat, timeFormat, startWeek, fontFamily, fontScale]);
+  }, [theme, colorMode, density, sidebarAutoCollapse, language, timezone, dateFormat, timeFormat, startWeek, fontFamily, fontScale]);
 
   const previewDateTime = useMemo(() => {
     const sampleDate = new Date('2026-03-01T14:35:00.000Z');

@@ -63,7 +63,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   );
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex min-h-[500px] items-center justify-center">
         <div className="text-center">
           <div className="inline-block">
             <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
@@ -76,7 +76,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
 
   if (isEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4 animate-in fade-in duration-500">
+      <div className="flex min-h-[500px] flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl">
           <Inbox className="w-8 h-8 text-slate-400" />
         </div>
@@ -89,9 +89,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   }
 
   return (
-    <main className="flex-1 overflow-y-auto">
+    <main className="flex-1 min-h-0 overflow-hidden">
       {viewMode === 'GRID' && (
-        <div className={cn(isCompact ? 'p-4' : 'p-6')}>
+        <div className={cn('h-full min-h-[500px] overflow-y-auto', isCompact ? 'p-4' : 'p-6')}>
           <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 animate-in fade-in duration-500 auto-rows-max', isCompact ? 'gap-3' : 'gap-5')}>
             {projects.map((project, index) => (
               <div 
@@ -115,10 +115,10 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       )}
 
       {viewMode === 'LIST' && (
-        <div className={cn(isCompact ? 'p-3' : 'p-4')}>
+        <div className={cn('h-full min-h-[500px] overflow-y-auto', isCompact ? 'p-3' : 'p-4')}>
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             {/* List Header */}
-            <div className={cn('hidden md:grid grid-cols-12 gap-4 px-6 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 sticky top-0 z-20', isCompact ? 'py-2' : 'py-3')}>
+            <div className={cn('hidden md:grid grid-cols-12 gap-4 px-5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 sticky top-0 z-20', isCompact ? 'py-2' : 'py-3')}>
               <div className="col-span-4">
                 <SortableHeader column="name">Dự án</SortableHeader>
               </div>
@@ -155,8 +155,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({
       )}
 
       {viewMode === 'KANBAN' && (
-        <div className="p-6">
-          <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="h-full min-h-[500px] overflow-y-auto p-4 lg:p-6">
+          <div className="flex gap-4 overflow-x-auto pb-4 min-w-max">
             {KANBAN_STATUSES.map((status) => (
               <KanbanColumn
                 key={status}

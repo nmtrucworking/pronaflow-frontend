@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { LayoutGrid, List as ListIcon, Kanban as KanbanIcon, Search, Plus, Settings2, Clipboard } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Kanban as KanbanIcon, Search, Plus, Settings2, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ViewMode } from '../constants/viewModes';
 import type { ProjectStatus, ProjectPriority } from '@/types/project';
@@ -63,40 +63,40 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   const hasActiveFilters = statusFilter !== 'ALL' || priorityFilter !== 'ALL';
   return (
-    <header className="px-6 py-6 bg-gradient-to-b from-white to-slate-50 border-b border-slate-200 flex-shrink-0 z-10">
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <header className="px-4 py-4 bg-white border-b border-slate-200 flex-shrink-0 z-10 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-              <Clipboard className="w-8 h-8 text-indigo-600" />
+            <h1 className="text-2xl md:text-[2rem] font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
+              <FolderKanban className="w-7 h-7 text-indigo-600" />
               Tất cả dự án
             </h1>
-            <p className="text-slate-600 mt-1">Quản lý, theo dõi tiến độ và cộng tác trên các dự án của bạn</p>
+            <p className="text-sm text-slate-500 mt-1 max-w-2xl">Quản lý, theo dõi tiến độ và cộng tác trên các dự án của bạn.</p>
           </div>
 
           <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
             {/* Create Button - Primary Action */}
             <button
               onClick={onCreateClick}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all duration-200 group"
-              aria-label="Create new project"
+              className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 group"
+              aria-label="Quick create project"
             >
-              <Plus className="w-4.5 h-4.5 group-hover:rotate-90 transition-transform" />
-              <span className="hidden md:inline">Tạo dự án</span>
+              <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+              <span className="hidden md:inline">Tạo nhanh</span>
             </button>
           </div>
         </div>
 
         {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
           <div className="flex-1 flex items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-sm group">
+            <div className="relative flex-1 max-w-md group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
               <input
                 type="text"
                 placeholder="Tìm dự án, từ khóa, người quản lý..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-slate-200 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 hover:border-slate-300 placeholder-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 hover:border-slate-300 placeholder-slate-400"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
@@ -107,7 +107,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               <Popover.Trigger asChild>
                 <button
                   className={cn(
-                    "flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium border-2 rounded-lg transition-all duration-200 active:scale-95 group relative",
+                    "flex items-center gap-2 px-3 py-2 text-sm font-medium border rounded-xl transition-all duration-200 active:scale-95 group relative",
                     hasActiveFilters
                       ? "text-indigo-700 bg-indigo-50 border-indigo-300 hover:border-indigo-400 hover:bg-indigo-100"
                       : "text-slate-700 bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
@@ -123,7 +123,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content
-                  className="z-50 w-80 bg-white rounded-xl border-2 border-slate-200 shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200"
+                  className="z-50 w-80 bg-white rounded-xl border border-slate-200 shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200"
                   sideOffset={8}
                   align="end"
                 >
@@ -197,7 +197,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </div>
 
           {/* View Mode Switcher */}
-          <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
             {viewModeOptions.map(({ value, label, hint, icon: Icon }) => {
               const active = viewMode === value;
 
@@ -206,7 +206,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   key={value}
                   onClick={() => onViewModeChange(value)}
                   className={cn(
-                    'min-w-[98px] rounded-xl px-3 py-2.5 text-left transition-all duration-200 flex flex-col gap-1 group',
+                    'min-w-[88px] rounded-xl px-2.5 py-2 text-left transition-all duration-200 flex flex-col gap-1 group',
                     active
                       ? 'bg-gradient-to-br from-indigo-50 via-white to-indigo-100 text-indigo-700 shadow-sm ring-1 ring-indigo-200'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -215,7 +215,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   title={hint}
                 >
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-3.5 h-3.5" />
                     {label}
                   </span>
                   <span className={cn('text-[10px] leading-tight', active ? 'text-indigo-600' : 'text-slate-500')}>
