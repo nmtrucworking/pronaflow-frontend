@@ -36,9 +36,7 @@ jobs:
         run: npm ci
 
       - name: Build application
-        env:
-          VITE_API_MODE: mock
-        run: npm run build:pages
+        run: npm run build:pages:mock
 
       - name: Disable Jekyll processing
         run: touch ./dist/.nojekyll
