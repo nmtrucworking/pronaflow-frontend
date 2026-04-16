@@ -8,13 +8,39 @@ import type {
   AxiosResponse 
 } from 'axios';
 
+const isGitHubPagesHost = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return window.location.hostname.endsWith('github.io');
+};
+
+const resolveApiMode = (): string => {
+  const envMode = (import.meta.env.VITE_API_MODE ?? '').toLowerCase();
+
+  if (envMode) {
+    return envMode;
+  }
+
+  return isGitHubPagesHost() ? 'mock' : 'backend';
+};
+
+const resolveApiBaseUrl = (): string => {
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  return isGitHubPagesHost() ? '/api/v1' : 'http://localhost:8000/api/v1';
+};
+
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  'http://localhost:8000/api/v1';
+  resolveApiBaseUrl();
 
 export const API_ROOT_URL = API_BASE_URL.replace(/\/v1\/?$/, '');
-export const API_MODE = (import.meta.env.VITE_API_MODE ?? 'backend').toLowerCase();
+export const API_MODE = resolveApiMode();
 export const isMockApiMode = API_MODE === 'mock';
 
 type RetryRequestConfig = InternalAxiosRequestConfig & {

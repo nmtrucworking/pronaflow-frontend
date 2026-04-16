@@ -11,8 +11,16 @@ import {
 } from '@/mocks/workspaces';
 import { MOCK_DOMAIN_DATASET } from '@/mocks/domainCatalog';
 
-const API_MODE = (import.meta.env.VITE_API_MODE ?? 'backend').toLowerCase();
-const isMockApiMode = API_MODE === 'mock';
+const isGitHubPagesHost = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return window.location.hostname.endsWith('github.io');
+};
+
+const API_MODE = (import.meta.env.VITE_API_MODE ?? '').toLowerCase();
+const isMockApiMode = API_MODE === 'mock' || isGitHubPagesHost();
 
 const MOCK_DELAY_MS = Number(import.meta.env.VITE_MOCK_API_DELAY_MS ?? 0);
 
